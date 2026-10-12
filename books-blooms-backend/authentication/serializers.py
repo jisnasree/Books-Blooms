@@ -1,3 +1,4 @@
+import re
 from .models import User
 from rest_framework import serializers
 
@@ -10,7 +11,29 @@ class UserSerializer(serializers.ModelSerializer):
             'password': {'write_only': True},
             'email': {'required': True},
         }
+    
+    def validate_password(self, value):
+        if len(value) < 8:
+            raise serializers.ValidationError(
+                "Password must be at least 8 characters long."
+            )
+        if not re.search(r"[A-Za-z]", value):
+            raise serializers.ValidationError(
+            "Password must contain at least one letter."
+        )
 
+        if not re.search(r"\d", value):
+            raise serializers.ValidationError(
+            "Password must contain at least one digit."
+        )
+
+        if not re.search(r"[^A-Za-z0-9\s]", value):
+            raise serializers.ValidationError(
+            "Password must contain at least one special character."
+        )
+
+        return value
+        
     def validate_email(self, value):
         value = value.strip().lower()
         if User.objects.filter(email__iexact=value).exists():
