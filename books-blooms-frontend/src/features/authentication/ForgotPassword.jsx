@@ -1,6 +1,6 @@
 import Footer from "../../components/Footer"
 import Header from "../../components/Header"
-import { useNavigate } from "react-router-dom";
+import { useNavigate , Link} from "react-router-dom";
 import { useState } from "react";
 
 function ForgotPassword() {
