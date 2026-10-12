@@ -4,7 +4,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import UserSerializer, VerifyEmailSerializer, ResendEmailCodeSerializer, LoginSerializer,ForgotPasswordSerializer,VerifyResetCodeSerializer
+from .serializers import UserSerializer, VerifyEmailSerializer, ResendEmailCodeSerializer, LoginSerializer,ForgotPasswordSerializer,VerifyResetCodeSerializer,SetNewPasswordSerializer
 from .models import EmailOTPChallenge, User
 import hmac
 import hashlib
@@ -12,8 +12,10 @@ from django.conf import settings
 from datetime import timedelta
 from django.utils import timezone
 from django.core.mail import send_mail
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, password_validation
+from django.core.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
+from django.core import signing
 
 
 # Create your views here.
@@ -183,7 +185,7 @@ class LoginView(APIView):
              )
             if user is None:
                 return Response(
-                {"messgae":"invalid email"},
+                {"message":"invalid email or password"},
                 status = status.HTTP_401_UNAUTHORIZED
                )
             if user.email_verified_at is None:
@@ -200,7 +202,7 @@ class LoginView(APIView):
             })
     
         return Response(
-            serializer.errors(),
+            serializer.errors,
             status = status.HTTP_400_BAD_REQUEST
     )
         
@@ -214,10 +216,10 @@ class ForgotPasswordView(APIView):
             otp = str(secrets.randbelow(1000000)).zfill(6)
             
             code_hash = hmac.new(
-                            settings.SECRET_KEY.encode(),
-                            otp.encode(),
-                            hashlib.sha256
-                            ).hexdigest()
+                settings.SECRET_KEY.encode(),
+                otp.encode(),
+                hashlib.sha256
+                ).hexdigest()
             
             expires_at = timezone.now() + timedelta(minutes=10)
             EmailOTPChallenge.objects.create(
@@ -282,16 +284,24 @@ class VerifyResetCode(APIView):
             ).hexdigest()
             
             if(code_hash == challenge.code_hash):
-                user.email_verified_at = timezone.now()
-                user.save()
-                    
+                        
                 challenge.consumed_at = timezone.now()
                 challenge.save()
-                return Response({
-                   "message" : "Reset code verified successfully"
+                
+                reset_token = signing.dumps(
+                {
+                    "user_id": str(user.pk),
+                    "purpose": "password-reset",
+                    "password_hash": user.password,
                 },
-                 status = status.HTTP_200_OK
+                salt="books-blooms-password-reset"
                 )
+                return Response({
+                    "message" : "Reset code verified successfully",
+                    "reset_token": reset_token
+                },
+                status = status.HTTP_200_OK
+            )
             
             return Response({
                 "message" :" Invalid code"
@@ -304,6 +314,53 @@ class VerifyResetCode(APIView):
             status = status.HTTP_400_BAD_REQUEST
         )  
         
-# class PasswordResetCodeView(APIView):
-#     def post(self,request):
-  
+class SetNewPasswordView(APIView):
+    def post(self,request):
+        serializer = SetNewPasswordSerializer(data= request.data)
+        if serializer.is_valid():
+            reset_token = serializer.validated_data["reset_token"]
+            new_password = serializer.validated_data["new_password"]
+
+            try:
+                data = signing.loads(
+                    reset_token,
+                    salt="books-blooms-password-reset",
+                    max_age=600
+                )
+                user = User.objects.get(id=data["user_id"])
+
+            except (signing.BadSignature, User.DoesNotExist, KeyError):
+                return Response(
+                    {"message": "Invalid or expired reset token."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if (
+                data.get("purpose") != "password-reset"
+                or data.get("password_hash") != user.password
+            ):
+                return Response(
+                    {"message": "Invalid reset token."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            try:
+                password_validation.validate_password(new_password, user)
+            except ValidationError as error:
+                return Response(
+                    {"new_password": error.messages},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user.set_password(new_password)
+            user.save(update_fields=["password"])
+
+            return Response(
+                {"message": "Password reset successful."},
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            serializer.errors,
+            status = status.HTTP_400_BAD_REQUEST
+        )          
