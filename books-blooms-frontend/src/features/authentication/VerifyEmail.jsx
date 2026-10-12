@@ -79,7 +79,7 @@ function VerifyEmail() {
             <div className="mb-4 text-4xl">✉️</div>
 
             <h2 className="text-2xl font-bold text-green-900">
-              Verify Your Email
+              Verify reset code
             </h2>
 
             <p className="mt-3 text-sm leading-6 text-gray-600">

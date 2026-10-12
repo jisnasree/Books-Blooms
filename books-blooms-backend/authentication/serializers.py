@@ -37,7 +37,6 @@ class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
-
 class ForgotPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField()
     
@@ -45,6 +44,21 @@ class VerifyResetCodeSerializer(serializers.Serializer):
     email = serializers.EmailField()
     code = serializers.CharField(max_length=6)
     
+class SetNewPasswordSerislizer(serializers.Serializer):
+    new_password = serializers.CharField(write_only=True)
+    
+class SetNewPasswordSerializer(serializers.Serializer):
+    reset_token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True,min_length=8)
+    confirm_password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        if data["new_password"] != data["confirm_password"]:
+            raise serializers.ValidationError(
+                {"confirm_password": "Passwords do not match."}
+            )
+
+        return data
 
 
 

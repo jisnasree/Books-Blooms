@@ -9,5 +9,5 @@ urlpatterns = [
     path('login/', views.LoginView.as_view()),
     path('forgot/', views.ForgotPasswordView.as_view()),
     path('forgot/verify-reset-code/', views.VerifyResetCode.as_view()),
-    # path('forgot/password-reset/', views.PasswordResetCodeView.as_view()),
+    path('forgot/password-reset/', views.SetNewPasswordView.as_view()),
     ]
