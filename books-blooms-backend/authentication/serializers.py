@@ -55,4 +55,3 @@ class VerifyResetCodeSerializer(serializers.Serializer):
 
 
 
-

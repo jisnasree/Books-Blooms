@@ -40,9 +40,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'authentication',
     'rest_framework.authtoken',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -141,3 +143,7 @@ EMAIL_HOST_USER = 'mybooksblooms@gmail.com'
 EMAIL_HOST_PASSWORD = 'wnwq mohb odpv mvus'
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]

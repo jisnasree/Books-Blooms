@@ -166,7 +166,7 @@ class ResendEmailCodeView(APIView):
             })
                 
         return Response(
-            serializer.errors(),
+            serializer.errors,
             status = status.HTTP_400_BAD_REQUEST)
         
 class LoginView(APIView):
@@ -195,7 +195,7 @@ class LoginView(APIView):
            
             token,created = Token.objects.get_or_create(user=user)
             return Response({
-                "messgae":"Login successful",
+                "message":"Login successful",
                 "token" :  token.key
             })
     
@@ -259,7 +259,22 @@ class VerifyResetCode(APIView):
                 user = user,
                 purpose = "Password-reset"
             ).order_by('-created_at').first()
-        
+            
+    
+            #  Check if OTP has already been used
+            if challenge.consumed_at is not None:
+                return Response(
+                {"message": "OTP has already been used"},
+                status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Check if OTP has expired
+            if timezone.now() > challenge.expires_at:
+                return Response(
+                {"message": "OTP has expired"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+                            
             code_hash = hmac.new(
                 settings.SECRET_KEY.encode(),
                 code.encode(),
@@ -267,6 +282,11 @@ class VerifyResetCode(APIView):
             ).hexdigest()
             
             if(code_hash == challenge.code_hash):
+                user.email_verified_at = timezone.now()
+                user.save()
+                    
+                challenge.consumed_at = timezone.now()
+                challenge.save()
                 return Response({
                    "message" : "Reset code verified successfully"
                 },
@@ -284,4 +304,6 @@ class VerifyResetCode(APIView):
             status = status.HTTP_400_BAD_REQUEST
         )  
         
-       
+# class PasswordResetCodeView(APIView):
+#     def post(self,request):
+  
