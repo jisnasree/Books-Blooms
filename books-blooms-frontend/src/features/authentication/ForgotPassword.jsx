@@ -92,12 +92,12 @@ function ForgotPassword() {
 
                         <p className="mt-6 text-center text-sm text-gray-500">
                            Remember your password?{" "}
-                            <a
-                                href="/login"
+                            <Link
+                                to="/login"
                                 className="font-semibold text-rose-900 hover:underline"
                             >
                                 Back to Login
-                            </a>
+                            </Link>
                         </p>
                     </form>
                 </div>

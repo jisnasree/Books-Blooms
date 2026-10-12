@@ -140,12 +140,12 @@ function VerifyEmail() {
 
           <p className="mt-6 text-center text-sm text-gray-500">
             Already verified?{" "}
-            <a
-              href="/login"
+            <Link
+              to="/login"
               className="font-semibold text-rose-900 hover:underline"
             >
               Sign in
-            </a>
+            </Link>
           </p>
         </div>
       </main>

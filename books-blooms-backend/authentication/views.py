@@ -4,7 +4,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import UserSerializer, VerifyEmailSerializer, ResendEmailCodeSerializer, LoginSerializer,ForgotPasswordSerializer,VerifyResetCodeSerializer,SetNewPasswordSerislizer
+from .serializers import UserSerializer, VerifyEmailSerializer, ResendEmailCodeSerializer, LoginSerializer,ForgotPasswordSerializer,VerifyResetCodeSerializer,SetNewPasswordSerializer
 from .models import EmailOTPChallenge, User
 import hmac
 import hashlib
@@ -316,7 +316,7 @@ class VerifyResetCode(APIView):
         
 class SetNewPasswordView(APIView):
     def post(self,request):
-        serializer = SetNewPasswordSerislizer(data= request.data)
+        serializer = SetNewPasswordSerializer(data= request.data)
         if serializer.is_valid():
             reset_token = serializer.validated_data["reset_token"]
             new_password = serializer.validated_data["new_password"]

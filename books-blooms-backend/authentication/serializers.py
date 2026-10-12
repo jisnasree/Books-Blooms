@@ -50,16 +50,7 @@ class SetNewPasswordSerislizer(serializers.Serializer):
 class SetNewPasswordSerializer(serializers.Serializer):
     reset_token = serializers.CharField()
     new_password = serializers.CharField(write_only=True,min_length=8)
-    confirm_password = serializers.CharField(write_only=True)
-
-    def validate(self, data):
-        if data["new_password"] != data["confirm_password"]:
-            raise serializers.ValidationError(
-                {"confirm_password": "Passwords do not match."}
-            )
-
-        return data
-
+    # confirm_password = serializers.CharField(write_only=True)
 
 
 

@@ -1,6 +1,7 @@
 
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import { Link } from "react-router-dom";
 
 function PasswordUpdateSuccess() {
   return (
@@ -38,12 +39,12 @@ function PasswordUpdateSuccess() {
           </p>
 
           {/* Return to Login */}
-          <a
-            href="/login"
+          <Link
+            to="/login"
             className="mt-8 inline-block w-full rounded-lg bg-green-900 px-4 py-3 font-semibold text-white transition hover:bg-rose-800"
           >
             RETURN TO LOGIN
-          </a>
+          </Link>
         </div>
       </main>
 

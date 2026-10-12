@@ -2,66 +2,74 @@ import Footer from "../../components/Footer"
 import Header from "../../components/Header"
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-function SetNewPassword() {
-    const navigate = useNavigate();
+import { useLocation } from "react-router-dom";
 
+function SetNewPassword() {
+    
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-        setError("");
-        setMessage("");
+    const navigate = useNavigate();
+    const location = useLocation();
+    const resetToken = location.state?.resetToken;
+   
+const handleSubmit = async (event) => {
+    event.preventDefault()
+    setError("");
 
-        if (password.length < 8) {
-            setError("Password must be at least 8 characters.");
-            return;
-        }
+    if (password.length < 8) {
+        setError("Password must be at least 8 characters.");
+        return;
+    }
 
-        if (password !== confirmPassword) {
-            setError("Passwords do not match.");
-            return;
-        }
+    if (password !== confirmPassword) {
+        setError("Passwords do not match.");
+        return;
+    }
 
-        try {
-            const response = await fetch(
-                "http://127.0.0.1:8000/forgot/password-reset/",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        reset_token: resetToken,
-                        new_password: password,
-                    }),
-                }
-            );
+    if (!resetToken) {
+        setError("Reset token is missing. Please start again.");
+        return;
+    }
+    setLoading(true);
 
-            const data = await response.json();
-
-             if (!response.ok) {
-                setError(
-                    Object.values(data)
-                        .flat()
-                        .join(" ") || "Unable to update your password."
-                );
-                return;
+    try {
+        const response = await fetch(
+            "http://127.0.0.1:8000/api/forgot/set-new-password/",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    reset_token: resetToken,
+                    new_password: password,
+                }),
             }
+        );
 
-            // Navigate only after Django confirms success
-            navigate("/password-update-success", {replace: true,});
-        } catch (error) {
+        const data = await response.json()
+
+        if (!response.ok) {
             setError(
-                "Unable to connect to the server. Please try again."
+                Object.values(data).flat().join(" ") ||
+                "Unable to update your password."
             );
-        } finally {
-            setLoading(false);
+            return;
         }
-    };
-    setMessage("Password validation successful.");
+        navigate("/password-update-success", {
+            replace: true,
+        });
+    } catch (error) {
+        console.error("Request failed:", error);
+        setError("Unable to connect to the server. Please try again.");
+    } finally {
+        setLoading(false);
+    }
+};
 
 
     return (

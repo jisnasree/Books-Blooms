@@ -57,7 +57,6 @@ function VerifyCode() {
 
       navigate("/set-new-password", {
       state: {
-        email: email,
         resetToken: data.reset_token,
       },
     });
