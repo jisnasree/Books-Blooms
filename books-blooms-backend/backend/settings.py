@@ -144,6 +144,7 @@ EMAIL_HOST_PASSWORD = 'wnwq mohb odpv mvus'
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
