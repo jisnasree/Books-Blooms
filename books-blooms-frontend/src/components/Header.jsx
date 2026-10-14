@@ -2,6 +2,7 @@
 function Header() {
     return (
         <header className="border-b border-rose-100 bg-[#F6F1E8]">
+            
             <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
                 {/* Brand */}
                 <a href="/" className="flex items-center gap-3">
@@ -37,7 +38,7 @@ function Header() {
                     <input
                         type="text"
                         placeholder="Search title, author, or keyword"
-                        className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-800 text-sm placeholder-gray-400 outline-none focus:border-rose-800 focus:ring-2 focus:ring-rose-200"
+                        className="w-full rounded-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-800 text-sm placeholder-gray-400 outline-none focus:border-rose-800 focus:ring-2 focus:ring-rose-200"
                     />
                 </div>
 

@@ -1,4 +1,4 @@
-
+import Home from "./features/catalog/pages/Home"
 import Login from "./features/authentication/Login"
 import Register from "./features/authentication/Register"
 import VerifyEmail from "./features/authentication/VerifyEmail"
@@ -12,6 +12,7 @@ function App() {
   return (
     <main className="min-h-screen bg-gray-50 bg-[#FBFAF7]">
       <Routes>
+        <Route path="/" element={<Home />}></Route>
         <Route path="/login" element = {<Login />}> </Route>
         <Route path="/register" element ={<Register />}></Route>
         <Route path="/verify-email" element = {<VerifyEmail />}> </Route>
