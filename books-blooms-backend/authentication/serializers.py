@@ -1,5 +1,6 @@
 import re
 from .models import User
+from django.utils import timezone
 from rest_framework import serializers
 
 class UserSerializer(serializers.ModelSerializer):
@@ -42,7 +43,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop('password')
-        user = User(username=validated_data['email'], **validated_data)
+        user = User(username=validated_data['email'],terms_accepted_at=timezone.now(), **validated_data)
         user.set_password(password)
         user.save()
         return user
