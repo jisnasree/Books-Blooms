@@ -1,4 +1,4 @@
-import Home from "./features/catalog/pages/Home"
+import Home from "./features/catalog/Home"
 import Login from "./features/authentication/Login"
 import Register from "./features/authentication/Register"
 import VerifyEmail from "./features/authentication/VerifyEmail"

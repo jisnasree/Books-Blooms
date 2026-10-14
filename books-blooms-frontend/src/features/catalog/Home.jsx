@@ -1,7 +1,7 @@
 
-import heroImage from "../../../assets/hero2.png";
-import Header from "../../../components/Header";
-import Footer from "../../../components/Footer";
+import heroImage from "../../assets/hero2.png";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
 import BookList from "./BookList";
 
 function Home() {
