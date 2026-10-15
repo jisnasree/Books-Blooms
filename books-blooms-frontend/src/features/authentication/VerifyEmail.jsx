@@ -2,7 +2,7 @@ import Header from "../../components/Header"
 import Footer from "../../components/Footer";
 import { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { BASE_URL } from "../../constants";
+import { AUTH_VERIFY_EMAIL_URL } from "../../constants";
 
 function VerifyEmail() {
 
@@ -32,7 +32,7 @@ function VerifyEmail() {
 
     try {
       const response = await fetch(
-        BASE_URL + "auth/register/verify-email/",
+        AUTH_VERIFY_EMAIL_URL,
         {
           method: "POST",
           headers: {
