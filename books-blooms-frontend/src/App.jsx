@@ -16,8 +16,6 @@ import Categories from "./features/admin/Categories"
 import Customers from "./features/admin/Customers"
 
 
-
-
 function App() {
 
   return (
