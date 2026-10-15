@@ -1,3 +1,54 @@
+import { useState, useEffect } from "react";
+
+function AdminDashboard() {
+  const [summary, setSummary] = useState({
+    totalBooks: null,
+    totalAuthors: null,
+    totalCategories: null,
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function fetchDashboardSummary() {
+      try {
+     
+          // const token = sessionStorage.getItem("authToken");
+
+          const response = await fetch(
+            "http://127.0.0.1:8000/admin/dashboard/summary/",
+            {
+              method: "GET",
+              headers: {
+                        Authorization: `Token ${sessionStorage.getItem("authToken")}`,
+                        },
+              // headers: {
+              //   Authorization: `Token ${token}`,
+              // },
+            }
+          );
+
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to load dashboard data (${response.status})`
+          );
+        }
+
+        const data = await response.json();
+        setSummary(data);
+      } catch (err) {
+        setError(err.message || "Unable to load dashboard data.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchDashboardSummary();
+  }, []);
+
+
 const summaryCards = [
   {
     title: "Total Books",
@@ -31,7 +82,6 @@ const summaryCards = [
   },
 ];
 
-function AdminDashboard() {
   return (
     <div className="space-y-8">
 
@@ -41,6 +91,19 @@ function AdminDashboard() {
           Dashboard Overview
         </h1>
       </section>
+
+      {/* Loading and error messages */}
+      {loading && (
+        <p className="text-sm text-stone-500">
+          Loading dashboard summary...
+        </p>
+      )}
+
+      {error && (
+        <p role="alert" className="text-sm text-red-600">
+          {error}
+        </p>
+      )}
 
       {/* Summary cards */}
       <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
@@ -60,7 +123,7 @@ function AdminDashboard() {
             </div>
 
             <p className="mt-5 text-3xl font-bold text-[#3F302D]">
-              {card.value}
+              {loading && card.value === null ? "…" : card.value}
             </p>
 
             <p className="mt-2 text-sm text-stone-500">

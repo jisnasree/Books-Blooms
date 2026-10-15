@@ -2,6 +2,7 @@ import Footer from "../../components/Footer"
 import Header from "../../components/Header"
 import { useNavigate , Link} from "react-router-dom";
 import { useState } from "react";
+import { BASE_URL } from "../../constants";
 
 function ForgotPassword() {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ function ForgotPassword() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/forgot/",
+        BASE_URL + "auth/forgot/",
         {
           method: "POST",
           headers: {
