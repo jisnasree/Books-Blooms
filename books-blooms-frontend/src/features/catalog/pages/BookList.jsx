@@ -1,11 +1,12 @@
 
 import { useEffect, useState } from "react";
+import { BASE_URL } from "../../../constants";
 
 function BookList() {
   const [books, setBooks] = useState([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/books/")
+    fetch(BASE_URL + "books/")
       .then((response) => response.json())
       .then((data) => {
         setBooks(data);

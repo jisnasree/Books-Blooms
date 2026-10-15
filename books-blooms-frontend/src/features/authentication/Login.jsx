@@ -3,7 +3,7 @@ import Header from "../../components/Header"
 import { Link } from 'react-router-dom'
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BASE_URL } from "../../constants";
+import { AUTH_LOGIN_URL } from "../../constants";
 
 function Login(){
 
@@ -22,7 +22,7 @@ function Login(){
 
     try {
       const response = await fetch(
-        BASE_URL + 'auth/login/',
+        AUTH_LOGIN_URL,
         {
           method: "POST",
           headers: {

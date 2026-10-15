@@ -3,7 +3,7 @@ import Header from "../../components/Header"
 import Footer from "../../components/Footer"
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom"
-import { BASE_URL } from "../../constants";
+import { AUTH_REGISTER_URL } from "../../constants";
 
 function Register() {
 
@@ -46,7 +46,7 @@ function Register() {
 
         try {
             const response = await fetch(
-                BASE_URL + "auth/register/",
+                AUTH_REGISTER_URL,
                 {
                     method: "POST",
                     headers: {

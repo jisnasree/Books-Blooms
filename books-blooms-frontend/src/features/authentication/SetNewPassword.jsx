@@ -3,7 +3,7 @@ import Header from "../../components/Header"
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import { BASE_URL } from "../../constants";
+import { AUTH_SET_NEW_PWD_URL } from "../../constants";
 
 function SetNewPassword() {
     
@@ -39,7 +39,7 @@ const handleSubmit = async (event) => {
 
     try {
         const response = await fetch(
-            BASE_URL + "auth/forgot/set-new-password/",
+            AUTH_SET_NEW_PWD_URL,
             {
                 method: "POST",
                 headers: {
