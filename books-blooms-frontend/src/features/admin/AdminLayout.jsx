@@ -4,7 +4,7 @@ const menuItems = [
   { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
   { label: "Books", path: "/admin/books", icon: "📚" },
   { label: "Orders", path: "/admin/orders", icon: "📦" },
-  { label: "Customers", path: "/admin/customers", icon: "👥" },
+  // { label: "Customers", path: "/admin/customers", icon: "👥" },
   { label: "Authors", path: "/admin/authors", icon: "✍️" },
   { label: "Categories", path: "/admin/categories", icon: "🗂️" },
 ];

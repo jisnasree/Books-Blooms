@@ -9,25 +9,25 @@ const summaryCards = [
     title: "Total Orders",
     value: "—",
     description: "Orders placed",
-    icon: "🛍",
+    icon: "📦",
   },
-  {
-    title: "Customers",
-    value: "—",
-    description: "Registered customers",
-    icon: "♙",
-  },
+//   {
+//     title: "Customers",
+//     value: "—",
+//     description: "Registered customers",
+//     icon: "👥",
+//   },
   {
     title: "Authors",
     value: "—",
     description: "Registered Authors",
-    icon: "♙",
+    icon: "✍️",
   },
   {
     title: "Categories",
     value: "—",
     description: "Registered Categories",
-    icon: "₹",
+    icon: "🗂️",
   },
 ];
 
@@ -40,9 +40,6 @@ function AdminDashboard() {
         <h1 className="text-2xl font-bold text-[#3F302D]">
           Dashboard Overview
         </h1>
-        <p className="mt-2 text-sm text-stone-500">
-          Here's an overview of your Books & Blooms store.
-        </p>
       </section>
 
       {/* Summary cards */}
@@ -77,9 +74,6 @@ function AdminDashboard() {
       <section className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm">
         <div className="mb-5">
           <h2 className="text-lg font-semibold">Recent Orders</h2>
-          <p className="mt-1 text-sm text-stone-500">
-            The latest customer orders will appear here.
-          </p>
         </div>
 
         <div className="overflow-x-auto">
