@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ADMIN_DASHBOARD_URL } from "../../constants";
 
 function AdminDashboard() {
   const [summary, setSummary] = useState({
@@ -13,21 +14,21 @@ function AdminDashboard() {
   useEffect(() => {
     async function fetchDashboardSummary() {
       try {
-     
-          // const token = sessionStorage.getItem("authToken");
 
-          const response = await fetch(
-            "http://127.0.0.1:8000/admin/dashboard/summary/",
-            {
-              method: "GET",
-              headers: {
-                        Authorization: `Token ${sessionStorage.getItem("authToken")}`,
-                        },
-              // headers: {
-              //   Authorization: `Token ${token}`,
-              // },
-            }
-          );
+        // const token = sessionStorage.getItem("authToken");
+
+        const response = await fetch(
+          ADMIN_DASHBOARD_URL,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Token ${sessionStorage.getItem("authToken")}`,
+            },
+            // headers: {
+            //   Authorization: `Token ${token}`,
+            // },
+          }
+        );
 
 
         if (!response.ok) {
@@ -49,38 +50,32 @@ function AdminDashboard() {
   }, []);
 
 
-const summaryCards = [
-  {
-    title: "Total Books",
-    value: "—",
-    description: "Books in your catalog",
-    icon: "📚",
-  },
-  {
-    title: "Total Orders",
-    value: "—",
-    description: "Orders placed",
-    icon: "📦",
-  },
-//   {
-//     title: "Customers",
-//     value: "—",
-//     description: "Registered customers",
-//     icon: "👥",
-//   },
-  {
-    title: "Authors",
-    value: "—",
-    description: "Registered Authors",
-    icon: "✍️",
-  },
-  {
-    title: "Categories",
-    value: "—",
-    description: "Registered Categories",
-    icon: "🗂️",
-  },
-];
+  const summaryCards = [
+    {
+      title: "Total Books",
+      value: summary.totalBooks,
+      description: "Books in your catalog",
+      icon: "📚",
+    },
+    {
+      title: "Total Orders",
+      value: "—",
+      description: "Orders placed",
+      icon: "📦",
+    },
+    {
+      title: "Authors",
+      value: summary.totalAuthors,
+      description: "Registered Authors",
+      icon: "✍️",
+    },
+    {
+      title: "Categories",
+      value: summary.totalCategories,
+      description: "Registered Categories",
+      icon: "🗂️",
+    },
+  ];
 
   return (
     <div className="space-y-8">

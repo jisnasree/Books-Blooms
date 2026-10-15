@@ -12,7 +12,8 @@ export const AUTH_VERIFY_CODE_URL = AUTH_BASE_URL + 'forgot/verify-reset-code/'
 export const AUTH_VERIFY_EMAIL_URL = AUTH_BASE_URL + 'register/verify-email/'
 export const AUTH_RESEND_CODE_URL = AUTH_BASE_URL + 'register/resend-code/'
 
-
+export const ADMIN_BASE_URL = BASE_URL + 'admin/'
+export const ADMIN_DASHBOARD_URL = ADMIN_BASE_URL + 'dashboard/summary/'
 
 // Error Messages
 export const ERROR_UNABLE_TO_PROCESS = 'Unable to process your request.'
