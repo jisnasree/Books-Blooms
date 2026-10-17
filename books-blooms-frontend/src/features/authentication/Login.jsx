@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AUTH_LOGIN_URL } from "../../constants";
+import { HOME_URL } from "../../constants";
 
 function Login() {
 
@@ -23,7 +24,7 @@ function Login() {
 
         try {
             const response = await fetch(
-                "http://127.0.0.1:8000/auth/login/",
+                AUTH_LOGIN_URL,
                 {
                     method: "POST",
                     headers: {
@@ -54,7 +55,7 @@ function Login() {
             console.log("Login successful:", data);
 
             // Navigate to the admin dashboard.
-            navigate("/admin/dashboard");
+            navigate(HOME_URL);
         } catch (err) {
             setError("Unable to connect to the server. Please try again.");
         } finally {
