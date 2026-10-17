@@ -3,6 +3,7 @@ import Header from "../../components/Header"
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
+import { AUTH_SET_NEW_PWD_URL } from "../../constants";
 
 function SetNewPassword() {
     
@@ -38,7 +39,7 @@ const handleSubmit = async (event) => {
 
     try {
         const response = await fetch(
-            "http://127.0.0.1:8000/api/forgot/set-new-password/",
+            AUTH_SET_NEW_PWD_URL,
             {
                 method: "POST",
                 headers: {

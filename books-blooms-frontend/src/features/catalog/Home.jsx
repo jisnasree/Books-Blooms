@@ -9,7 +9,7 @@ function Home() {
     <section className="min-h-screen flex flex-col bg-[#FBFAF7]">
         <Header />
          
-            <div className="mx-auto grid max-w-7xl items-center gap-10 px-6 py-16 md:grid-cols-2 md:py-24">
+            <div className="mx-auto grid max-w-7xl items-center gap-10 px-6 py-16 md:grid-cols-2 md:py-16 bg-[#F6F1E8] mt-8 ">
 
                 {/* Left side: Hero text */}
                 <div className="space-y-6">

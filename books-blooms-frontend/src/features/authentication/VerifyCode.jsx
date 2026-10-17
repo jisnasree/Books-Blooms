@@ -2,8 +2,7 @@ import Header from "../../components/Header"
 import Footer from "../../components/Footer";
 import { useState } from "react";
 import { useLocation, useNavigate,} from "react-router-dom";
-
-
+import { AUTH_VERIFY_CODE_URL } from "../../constants";
 function VerifyCode() {
 
   const navigate = useNavigate();
@@ -31,7 +30,7 @@ function VerifyCode() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/forgot/verify-reset-code/",
+        AUTH_VERIFY_CODE_URL,
         {
           method: "POST",
           headers: {
