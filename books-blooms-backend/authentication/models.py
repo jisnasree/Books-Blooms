@@ -4,6 +4,11 @@ from django.contrib.auth.models import AbstractUser
 class User(AbstractUser):
     terms_accepted_at = models.DateTimeField(null=True, blank=True)
     email_verified_at = models.DateTimeField(null=True, blank=True)
+    profile_image = models.ImageField(
+        upload_to="profile_images/",
+        blank=True,
+        null=True
+    )
     
     
 class EmailOTPChallenge(models.Model):

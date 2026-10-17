@@ -6,7 +6,7 @@ export const UserContext = createContext(null)
 
 // 2. Create the provider component
 export function UserProvider({ children }) {
-    const [user, setUser] = useState({ isAdmin: false, isAuthenticated: false })
+    const [user, setUser] = useState({ isAdmin: false, isAuthenticated: false ,first_name: ""})
 
     useEffect(() => {
         console.log(user, "user")

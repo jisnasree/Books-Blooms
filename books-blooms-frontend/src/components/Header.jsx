@@ -6,7 +6,7 @@ function Header() {
     return (
         <header className="border-b border-rose-100 bg-[#F6F1E8]">
 
-            <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+            <nav className="mx-auto flex max-w-7xl items-center justify-between py-4">
                 {/* Brand */}
                 <a href="/" className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-700 text-white">
@@ -37,7 +37,7 @@ function Header() {
                 </div>
 
 
-                <div className="w-96">
+                <div className="w-72">
                     <input
                         type="text"
                         placeholder="Search title, author, or keyword"
@@ -47,23 +47,25 @@ function Header() {
 
 
                 {/* Actions */}
-                <div className="flex items-center gap-3">
-                    <a
-                        href="/cart"
-                        aria-label="Shopping cart"
-                        className="rounded-lg p-2 text-gray-700 hover:bg-rose-50"
-                    >
-                        🛒
-                    </a>
 
+                {user.isAuthenticated ? (
+                    <div className="flex flex-col items-center gap-1">
+                        <span className="text-green-800">
+                            Welcome {user.first_name}!
+                        </span>
+                        <button className="rounded-lg px-4 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-50">
+                            Sign Out
+                        </button>
+                    </div>
+                ) : (
                     <a
                         href="/login"
                         className="hidden rounded-lg px-4 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-50 sm:inline-block"
                     >
-                        {user.isAuthenticated ? "Sign Out" : " Sign In"}
+                        Sign In
                     </a>
+                )}
 
-                </div>
             </nav>
         </header>
     );

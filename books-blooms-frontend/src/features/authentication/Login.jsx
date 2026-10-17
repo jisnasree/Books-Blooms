@@ -57,7 +57,7 @@ function Login() {
             // Save the token for future authenticated API requests.
             sessionStorage.setItem("authToken", data.token);
             console.log("Login successful:", data);
-            setUser({ isAdmin: data.isAdmin, isAuthenticated: data.isAuthenticated })
+            setUser({ isAdmin: data.isAdmin, isAuthenticated: data.isAuthenticated, first_name: data.first_name })
 
             // Navigate to the admin dashboard.
             navigate(HOME_URL);
