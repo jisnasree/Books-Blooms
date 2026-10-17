@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { CATALOG_BOOKS_URL } from "../../constants";
 import { CATALOG_AUTHORS_LIST_URL } from "../../constants";
 
-function Books() {
+function BooksManagement() {
   const [books, setBooks] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -446,4 +446,4 @@ function Books() {
   );
 }
 
-export default Books;
+export default BooksManagement;
