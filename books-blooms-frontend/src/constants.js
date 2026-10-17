@@ -12,6 +12,13 @@ export const AUTH_VERIFY_CODE_URL = AUTH_BASE_URL + 'forgot/verify-reset-code/'
 export const AUTH_VERIFY_EMAIL_URL = AUTH_BASE_URL + 'register/verify-email/'
 export const AUTH_RESEND_CODE_URL = AUTH_BASE_URL + 'register/resend-code/'
 
+export const ADMIN_BASE_URL = BASE_URL + 'admin/'
+export const ADMIN_DASHBOARD_URL = ADMIN_BASE_URL + 'dashboard/summary/'
+
+
+export const CATALOG_BASE_URL = BASE_URL + 'catalog/'
+export const CATALOG_BOOKS_URL = CATALOG_BASE_URL + 'books/'
+export const CATALOG_AUTHORS_LIST_URL = CATALOG_BASE_URL + 'authors/'
 
 
 // Error Messages
