@@ -1,8 +1,36 @@
 import { useContext } from "react";
 import { UserContext } from "../context/UserContext";
+import { AUTH_LOGOUT_URL } from "../constants";
 
 function Header() {
-    const { user, setUser } = useContext(UserContext);
+    const { user, setUser ,logout} = useContext(UserContext);
+
+    const handleLogout = async () => {
+        const token = sessionStorage.getItem("authToken");
+
+        try {
+            if (token) {
+                const response = await fetch(
+                    AUTH_LOGOUT_URL,
+                    {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Token ${token}`,
+                        },
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("Logout failed");
+                }
+            }
+        } catch (error) {
+            console.error("Logout API error:", error);
+            return;
+        }
+
+        logout();
+    };
     return (
         <header className="border-b border-rose-100 bg-[#F6F1E8]">
 
@@ -53,7 +81,7 @@ function Header() {
                         <span className="text-green-800">
                             Welcome {user.first_name}!
                         </span>
-                        <button className="rounded-lg px-4 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-50">
+                        <button className="rounded-lg px-4 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-50" onClick={handleLogout}>
                             Sign Out
                         </button>
                     </div>

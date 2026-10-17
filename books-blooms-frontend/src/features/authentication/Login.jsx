@@ -7,6 +7,7 @@ import { AUTH_LOGIN_URL } from "../../constants";
 import { HOME_URL } from "../../constants";
 import { useContext } from "react";
 import { UserContext } from "../../context/UserContext";
+import { ADMIN_URL } from "../../constants";
 
 function Login() {
 
@@ -49,7 +50,6 @@ function Login() {
                     data.non_field_errors?.[0] ||
                     "Login failed. Please check your details."
                 );
-                setUser({ isAdmin: data.isAdmin, isAuthenticated: data.isAuthenticated })
                 return;
             }
 
@@ -58,8 +58,9 @@ function Login() {
             sessionStorage.setItem("authToken", data.token);
             console.log("Login successful:", data);
             setUser({ isAdmin: data.isAdmin, isAuthenticated: data.isAuthenticated, first_name: data.first_name })
-
-            // Navigate to the admin dashboard.
+            //data.isAdmin ? navigate(ADMIN_URL) : navigate(HOME_URL);
+            
+            // // Navigate to the admin dashboard.
             navigate(HOME_URL);
         } catch (err) {
             setError("Unable to connect to the server. Please try again.");

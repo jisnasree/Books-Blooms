@@ -24,6 +24,7 @@ from django.contrib.auth import authenticate, password_validation
 from django.core.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
 from django.core import signing
+from rest_framework.permissions import IsAuthenticated
 
 
 # Create your views here.
@@ -199,6 +200,18 @@ class LoginView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        request.user.auth_token.delete()
+
+        return Response(
+            {"message": "Logout successful"},
+            status=status.HTTP_200_OK,
+        )
 
 
 class ForgotPasswordView(APIView):
