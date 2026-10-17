@@ -186,7 +186,7 @@ class LoginView(APIView):
             return Response(
                 {
                     "message": "Login successful",
-                    "isLoggedIn": True,
+                    "isAuthenticated": True,
                     "token": token.key,
                     "isAdmin": user.is_staff,
                 }

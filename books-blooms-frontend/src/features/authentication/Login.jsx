@@ -5,6 +5,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AUTH_LOGIN_URL } from "../../constants";
 import { HOME_URL } from "../../constants";
+import { useContext } from "react";
+import { UserContext } from "../../context/UserContext";
 
 function Login() {
 
@@ -13,6 +15,7 @@ function Login() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("")
+    const { user, setUser } = useContext(UserContext);
 
     const navigate = useNavigate();
     const handleSubmit = async (e) => {
@@ -46,6 +49,7 @@ function Login() {
                     data.non_field_errors?.[0] ||
                     "Login failed. Please check your details."
                 );
+                setUser({ isAdmin: data.isAdmin, isAuthenticated: data.isAuthenticated })
                 return;
             }
 
@@ -53,6 +57,7 @@ function Login() {
             // Save the token for future authenticated API requests.
             sessionStorage.setItem("authToken", data.token);
             console.log("Login successful:", data);
+            setUser({ isAdmin: data.isAdmin, isAuthenticated: data.isAuthenticated })
 
             // Navigate to the admin dashboard.
             navigate(HOME_URL);
