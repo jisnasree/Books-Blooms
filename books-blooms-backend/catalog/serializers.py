@@ -1,7 +1,11 @@
 
 from rest_framework import serializers
-from .models import Book
-from .models import Book, PhysicalVariant
+from .models import Author, Book, PhysicalVariant
+
+class AuthorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Author
+        fields = ["id", "name"]
 
 
 class PhysicalVariantSerializer(serializers.ModelSerializer):
@@ -40,6 +44,14 @@ class BookSerializer(serializers.ModelSerializer):
             "physical_variants",  
         ]
 
-        
+
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "author_name",
+            "categories",
+            "physical_variants",
+        ]
 
 

@@ -70,6 +70,12 @@ function AdminDashboard() {
       icon: "✍️",
     },
     {
+      title: "Customers",
+      value: "—",
+      description: "Registered Customers",
+      icon: "👥",
+    },
+    {
       title: "Categories",
       value: summary.totalCategories,
       description: "Registered Categories",
@@ -101,7 +107,7 @@ function AdminDashboard() {
       )}
 
       {/* Summary cards */}
-      <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-5">
         {summaryCards.map((card) => (
           <div
             key={card.title}

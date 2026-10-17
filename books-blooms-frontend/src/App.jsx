@@ -23,6 +23,7 @@ function App() {
       <Routes>
           {/* Home */}
         <Route path="/" element={<Home />}></Route>
+        <Route path="/books" element = {<Login />}> </Route>
 
         {/* Authentication */}
         <Route path="/login" element = {<Login />}> </Route>
@@ -44,6 +45,9 @@ function App() {
           <Route path="customers" element={<Customers />} />
         </Route>
 
+
+         {/* Catalogs */}
+        
 
       </Routes>
     </main>
