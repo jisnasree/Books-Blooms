@@ -9,11 +9,11 @@ import { Routes, Route } from "react-router-dom"
 import VerifyCode from "./features/authentication/VerifyCode"
 import AdminLayout from "./features/admin/AdminLayout"
 import AdminDashboard from "./features/admin/AdminDashboard"
-import Books from "./features/admin/Books"
-import Orders from "./features/admin/Orders"
-import Authors from "./features/admin/Authors"
-import Categories from "./features/admin/Categories"
-import Customers from "./features/admin/Customers"
+import OrdersManagement from "./features/admin/OrdersManagement"
+import AuthorsManagement from "./features/admin/AuthorsManagement"
+import CategoriesManagement from "./features/admin/CategoriesManagement"
+import CustomersManagement from "./features/admin/CustomersManagement"
+import BooksManagement from "./features/admin/BooksManagement"
 
 
 function App() {
@@ -38,11 +38,11 @@ function App() {
          <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="books" element={<Books />} />
-          <Route path="orders" element={<Orders />} />
-          <Route path="authors" element={<Authors />} />
-          <Route path="categories" element={<Categories />} />
-          <Route path="customers" element={<Customers />} />
+          <Route path="books" element={<BooksManagement />} />
+          <Route path="orders" element={<OrdersManagement />} />
+          <Route path="authors" element={<AuthorsManagement />} />
+          <Route path="categories" element={<CategoriesManagement />} />
+          <Route path="customers" element={<CustomersManagement />} />
         </Route>
 
 

@@ -1,5 +1,5 @@
-function Customers() {
+function CustomersManagement() {
   return <h1 className="text-2xl font-bold">Customers Management</h1>;
 }
 
-export default Customers;
+export default CustomersManagement;
