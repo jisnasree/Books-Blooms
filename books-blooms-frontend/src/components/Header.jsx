@@ -1,5 +1,8 @@
+import { useContext } from "react";
+import { UserContext } from "../context/UserContext";
 
 function Header() {
+    const { user, setUser } = useContext(UserContext);
     return (
         <header className="border-b border-rose-100 bg-[#F6F1E8]">
             
@@ -52,14 +55,21 @@ function Header() {
                     >
                         🛒
                     </a>
-
-                    <a
+                    {user.isAuthenticated ?
+                    (<a
+                        href="/login"
+                        className="hidden rounded-lg px-4 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-50 sm:inline-block"
+                    >
+                        Sign Out
+                    </a> )
+                    :
+                    (<a
                         href="/login"
                         className="hidden rounded-lg px-4 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-50 sm:inline-block"
                     >
                         Sign In
-                    </a>
-
+                    </a>)
+                   }
                    
                 </div>
             </nav>
