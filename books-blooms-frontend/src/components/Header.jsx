@@ -5,7 +5,7 @@ function Header() {
     const { user, setUser } = useContext(UserContext);
     return (
         <header className="border-b border-rose-100 bg-[#F6F1E8]">
-            
+
             <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
                 {/* Brand */}
                 <a href="/" className="flex items-center gap-3">
@@ -55,22 +55,14 @@ function Header() {
                     >
                         🛒
                     </a>
-                    {user.isAuthenticated ?
-                    (<a
+
+                    <a
                         href="/login"
                         className="hidden rounded-lg px-4 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-50 sm:inline-block"
                     >
-                        Sign Out
-                    </a> )
-                    :
-                    (<a
-                        href="/login"
-                        className="hidden rounded-lg px-4 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-50 sm:inline-block"
-                    >
-                        Sign In
-                    </a>)
-                   }
-                   
+                        {user.isAuthenticated ? "Sign Out" : " Sign In"}
+                    </a>
+
                 </div>
             </nav>
         </header>
