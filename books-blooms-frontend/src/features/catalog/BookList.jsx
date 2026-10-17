@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { CATALOG_BOOKS_URL } from "../../../constants";
+import { CATALOG_BOOKS_URL } from "../../constants";
 
 function BookList() {
   const [books, setBooks] = useState([]);
