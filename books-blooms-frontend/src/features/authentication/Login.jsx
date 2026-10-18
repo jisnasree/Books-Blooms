@@ -58,10 +58,10 @@ function Login() {
             sessionStorage.setItem("authToken", data.token);
             console.log("Login successful:", data);
             setUser({ isAdmin: data.isAdmin, isAuthenticated: data.isAuthenticated, first_name: data.first_name })
-            //data.isAdmin ? navigate(ADMIN_URL) : navigate(HOME_URL);
+            data.isAdmin ? navigate(ADMIN_URL) : navigate(HOME_URL);
             
             // // Navigate to the admin dashboard.
-            navigate(HOME_URL);
+            //navigate(HOME_URL);
         } catch (err) {
             setError("Unable to connect to the server. Please try again.");
         } finally {
