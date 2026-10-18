@@ -5,7 +5,7 @@ export const BASE_URL = 'http://127.0.0.1:8000/api/'
 
 export const AUTH_BASE_URL = BASE_URL + 'auth/'
 export const AUTH_REGISTER_URL = AUTH_BASE_URL + 'register/'
-export const AUTH_ADMIN_LOGIN_URL = AUTH_BASE_URL + 'login/'
+// export const AUTH_ADMIN_LOGIN_URL = AUTH_BASE_URL + 'login/'
 export const AUTH_LOGIN_URL = AUTH_BASE_URL + 'login/'
 export const AUTH_FORGOT_PWD_URL = AUTH_BASE_URL + 'forgot/'
 export const AUTH_SET_NEW_PWD_URL = AUTH_BASE_URL + 'forgot/set-new-password/'

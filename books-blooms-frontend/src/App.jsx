@@ -15,6 +15,7 @@ import CategoriesManagement from "./features/admin/CategoriesManagement"
 import CustomersManagement from "./features/admin/CustomersManagement"
 import BooksManagement from "./features/admin/BooksManagement"
 import { UserProvider } from "./context/UserContext"
+import ProtectedRoute from "./components/ProtectedRoute";
 
 
 
@@ -38,16 +39,17 @@ function App() {
           <Route path="/password-update-success" element={<PasswordUpdateSuccess />}></Route>
 
           {/* Admin section */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="books" element={<BooksManagement />} />
-            <Route path="orders" element={<OrdersManagement />} />
-            <Route path="authors" element={<AuthorsManagement />} />
-            <Route path="categories" element={<CategoriesManagement />} />
-            <Route path="customers" element={<CustomersManagement />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="books" element={<BooksManagement />} />
+              <Route path="orders" element={<OrdersManagement />} />
+              <Route path="authors" element={<AuthorsManagement />} />
+              <Route path="categories" element={<CategoriesManagement />} />
+              <Route path="customers" element={<CustomersManagement />} />
+            </Route>
           </Route>
-
 
           {/* Catalogs */}
 
