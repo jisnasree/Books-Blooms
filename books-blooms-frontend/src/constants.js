@@ -14,6 +14,9 @@ export const AUTH_VERIFY_EMAIL_URL = AUTH_BASE_URL + 'register/verify-email/'
 export const AUTH_RESEND_CODE_URL = AUTH_BASE_URL + 'register/resend-code/'
 export const AUTH_LOGOUT_URL = AUTH_BASE_URL + 'logout/'
 
+export const AUTH_CUSTOMERS_LIST_URL = AUTH_BASE_URL + 'customers/'
+
+
 
 export const ADMIN_BASE_URL = BASE_URL + 'admin/'
 export const ADMIN_DASHBOARD_URL = ADMIN_BASE_URL + 'dashboard/summary/'

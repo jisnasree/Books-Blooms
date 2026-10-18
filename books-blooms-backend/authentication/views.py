@@ -2,6 +2,7 @@ import secrets
 
 from django.shortcuts import render
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import (
@@ -25,6 +26,8 @@ from django.core.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
 from django.core import signing
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAdminUser
+from .serializers import CustomerSerializer
 
 
 # Create your views here.
@@ -354,3 +357,13 @@ class SetNewPasswordView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CustomerListView(ListAPIView):
+    serializer_class = CustomerSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return User.objects.filter(is_staff=False, is_superuser=False).order_by(
+            "-date_joined"
+        )

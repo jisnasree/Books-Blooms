@@ -9,7 +9,7 @@ class User(AbstractUser):
         blank=True,
         null=True
     )
-    
+    is_blocked = models.BooleanField(default=False)
     
 class EmailOTPChallenge(models.Model):
     user = models.ForeignKey(

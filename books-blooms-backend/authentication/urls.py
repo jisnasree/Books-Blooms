@@ -3,6 +3,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    #authentication URLs
     path('register/', views.CreateUserView.as_view()),
     path('register/verify-email/', views.VerifyEmailView.as_view()),
     path('register/resend-code/', views.ResendEmailCodeView.as_view()),
@@ -11,4 +12,7 @@ urlpatterns = [
     path('forgot/verify-reset-code/', views.VerifyResetCode.as_view()),
     path('forgot/set-new-password/', views.SetNewPasswordView.as_view()),
     path('logout/', views.LogoutView.as_view()),
+    
+     # Customer management
+    path('customers/', views.CustomerListView.as_view()),
     ]
