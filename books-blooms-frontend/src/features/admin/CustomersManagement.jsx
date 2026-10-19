@@ -1,12 +1,14 @@
 
 import { useEffect, useState } from "react";
 import { AUTH_CUSTOMERS_LIST_URL } from "../../constants";
+import { AUTH_CUSTOMER_BLOCK_URL } from "../../constants";
 
 function CustomersManagement() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   useEffect(() => {
     async function fetchCustomers() {
@@ -52,6 +54,50 @@ function CustomersManagement() {
   if (loading) return <p>Loading customers...</p>;
   if (error) return <p className="text-red-600">{error}</p>;
 
+  async function handleBlockToggle(customer) {
+    const action = customer.is_blocked ? "unblock" : "block";
+
+    const confirmed = window.confirm(
+      `Are you sure you want to ${action} this customer?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const token = sessionStorage.getItem("authToken");
+
+      const response = await fetch(
+        `${AUTH_CUSTOMER_BLOCK_URL}${customer.id}/block/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Token ${token}`,
+          },
+          body: JSON.stringify({
+            is_blocked: !customer.is_blocked,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to update customer status.");
+      }
+
+      setCustomers((previousCustomers) =>
+        previousCustomers.map((item) =>
+          item.id === customer.id
+            ? { ...item, is_blocked: data.is_blocked }
+            : item
+        )
+      );
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
   return (
     <div className="p-6">
       <h1 className="mb-6 text-2xl font-bold">
@@ -91,7 +137,7 @@ function CustomersManagement() {
               <th className="border p-3 text-left">Last Name</th>
               <th className="border p-3 text-left">Email</th>
               <th className="border p-3 text-left">Joined</th>
-              <th className="border p-3 text-left">Status</th>
+              <th className="border p-3 text-left">Actions</th>
             </tr>
           </thead>
 
@@ -105,8 +151,30 @@ function CustomersManagement() {
                 <td className="border p-3">
                   {new Date(customer.date_joined).toLocaleDateString()}
                 </td>
+                {/* 
                 <td className="border p-3">
-                  {customer.is_active ? "Active" : "Inactive"}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCustomer(customer)}
+                    className={`rounded-lg px-3 py-2 text-white ${customer.is_blocked
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "bg-red-600 hover:bg-red-700"
+                      }`}
+                  >
+                    {customer.is_blocked ? "Unblock" : "Block"}
+                  </button>
+                </td> */}
+                <td className="border p-3">
+                  <button
+                    type="button"
+                    onClick={() => handleBlockToggle(customer)}
+                    className={`rounded-lg px-3 py-2 text-white ${customer.is_blocked
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "bg-red-600 hover:bg-red-700"
+                      }`}
+                  >
+                    {customer.is_blocked ? "Unblock" : "Block"}
+                  </button>
                 </td>
               </tr>
             ))}

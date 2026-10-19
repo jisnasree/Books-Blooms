@@ -179,6 +179,14 @@ class LoginView(APIView):
                     },
                     status=status.HTTP_401_UNAUTHORIZED,
                 )
+            if user.is_blocked:
+                return Response(
+                    {
+                        "message": "Your account has been blocked.",
+                        "isAuthenticated": False,
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
             if user.email_verified_at is None:
                 return Response(
                     {"message": "please verify your email"},
@@ -203,18 +211,6 @@ class LoginView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        request.user.auth_token.delete()
-
-        return Response(
-            {"message": "Logout successful"},
-            status=status.HTTP_200_OK,
-        )
 
 
 class ForgotPasswordView(APIView):
@@ -366,4 +362,50 @@ class CustomerListView(ListAPIView):
     def get_queryset(self):
         return User.objects.filter(is_staff=False, is_superuser=False).order_by(
             "-date_joined"
+        )
+
+
+class CustomerBlockView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def patch(self, request, user_id):
+        try:
+            customer = User.objects.get(id=user_id, is_staff=False, is_superuser=False)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Customer not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        is_blocked = request.data.get("is_blocked")
+
+        if not isinstance(is_blocked, bool):
+            return Response(
+                {"error": "is_blocked must be true or false."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        customer.is_blocked = is_blocked
+        customer.save(update_fields=["is_blocked"])
+
+        return Response(
+            {
+                "message": (
+                    "Customer blocked successfully."
+                    if is_blocked
+                    else "Customer unblocked successfully."
+                ),
+                "is_blocked": customer.is_blocked,
+            }
+        )
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        request.user.auth_token.delete()
+
+        return Response(
+            {"message": "Logout successful"},
+            status=status.HTTP_200_OK,
         )

@@ -13,6 +13,8 @@ export const AUTH_VERIFY_CODE_URL = AUTH_BASE_URL + 'forgot/verify-reset-code/'
 export const AUTH_VERIFY_EMAIL_URL = AUTH_BASE_URL + 'register/verify-email/'
 export const AUTH_RESEND_CODE_URL = AUTH_BASE_URL + 'register/resend-code/'
 export const AUTH_LOGOUT_URL = AUTH_BASE_URL + 'logout/'
+export const AUTH_CUSTOMER_BLOCK_URL = AUTH_BASE_URL + 'customers/'
+
 
 export const AUTH_CUSTOMERS_LIST_URL = AUTH_BASE_URL + 'customers/'
 
@@ -26,6 +28,8 @@ export const ADMIN_DASHBOARD_URL = ADMIN_BASE_URL + 'dashboard/summary/'
 export const CATALOG_BASE_URL = BASE_URL + 'catalog/'
 export const CATALOG_BOOKS_URL = CATALOG_BASE_URL + 'books/'
 export const CATALOG_AUTHORS_LIST_URL = CATALOG_BASE_URL + 'authors/'
+export const CATALOG_CATEGORIES_URL = CATALOG_BASE_URL + 'categories/'
+
 
 
 // Error Messages

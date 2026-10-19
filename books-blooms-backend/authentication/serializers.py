@@ -86,6 +86,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             "email",
             "date_joined",
             "is_active",
+            "is_blocked"
         ]
 
 

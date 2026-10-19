@@ -15,4 +15,5 @@ urlpatterns = [
     
      # Customer management
     path('customers/', views.CustomerListView.as_view()),
+    path('customers/<int:user_id>/block/', views.CustomerBlockView.as_view()),
     ]
