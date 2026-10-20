@@ -2,7 +2,7 @@ import secrets
 
 from django.shortcuts import render
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import (
@@ -13,6 +13,7 @@ from .serializers import (
     ForgotPasswordSerializer,
     VerifyResetCodeSerializer,
     SetNewPasswordSerializer,
+    UserProfileSerializer,
 )
 from .models import EmailOTPChallenge, User
 import hmac
@@ -27,7 +28,9 @@ from rest_framework.authtoken.models import Token
 from django.core import signing
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import BasePermission
 from .serializers import CustomerSerializer
+from .permissions import IsNotBlocked
 
 
 # Create your views here.
@@ -409,3 +412,12 @@ class LogoutView(APIView):
             {"message": "Logout successful"},
             status=status.HTTP_200_OK,
         )
+
+
+
+class UserProfileView(RetrieveUpdateAPIView):
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated, IsNotBlocked]
+
+    def get_object(self):
+        return self.request.user

@@ -10,6 +10,7 @@ class User(AbstractUser):
         null=True
     )
     is_blocked = models.BooleanField(default=False)
+    phone_number = models.CharField(max_length=20,blank=True)
     
 class EmailOTPChallenge(models.Model):
     user = models.ForeignKey(

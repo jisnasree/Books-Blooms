@@ -57,10 +57,10 @@ function Header() {
                         Home
                     </a>
                     <a href="/books" className="text-sm text-gray-600 hover:text-rose-700">
-                        Books
+                        Shop
                     </a>
                     <a href="/categories" className="text-sm text-gray-600 hover:text-rose-700">
-                        Categories
+                        Contact Us
                     </a>
                 </div>
 
