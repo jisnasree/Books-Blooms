@@ -49,9 +49,6 @@ class BookSerializer(serializers.ModelSerializer):
             "id",
             "created_at",
             "updated_at",
-            "author_name",
-            "categories",
-            "physical_variants",
         ]
 
 

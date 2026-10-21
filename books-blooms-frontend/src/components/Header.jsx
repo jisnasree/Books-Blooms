@@ -10,31 +10,9 @@ function Header() {
 
 
     const handleLogout = async () => {
-        const token = sessionStorage.getItem("authToken");
-
-        try {
-            if (token) {
-                const response = await fetch(
-                    AUTH_LOGOUT_URL,
-                    {
-                        method: "POST",
-                        headers: {
-                            Authorization: `Token ${token}`,
-                        },
-                    }
-                );
-
-                if (!response.ok) {
-                    throw new Error("Logout failed");
-                }
-            }
-        } catch (error) {
-            console.error("Logout API error:", error);
-            return;
-        }
-
-        logout();
+        await logout();
     };
+    console.log("Header user:", user);
     return (
         <header className="border-b border-rose-100 bg-[#F6F1E8]">
 
@@ -101,7 +79,9 @@ function Header() {
                 {user.isAuthenticated ? (
                     <div className="flex items-center gap-3">
                         <span className="text-sm font-medium text-green-800">
-                            Welcome {user.first_name}!
+                            {user.isAuthenticated && (
+                                <span>Welcome, {user.first_name}</span>
+                            )}
                         </span>
 
                         <div className="relative">
@@ -137,7 +117,7 @@ function Header() {
 
                                     <Link
                                         type="button"
-                                        to="/logout"
+                                        to="/login"
                                         onClick={handleLogout}
                                         className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-rose-50"
                                     >

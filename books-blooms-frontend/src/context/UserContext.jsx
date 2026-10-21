@@ -1,6 +1,6 @@
 
 import { createContext, useState, useEffect } from "react";
-import { AUTH_PROFILE_URL } from "../constants";
+import { AUTH_PROFILE_URL, AUTH_LOGOUT_URL } from "../constants";
 
 // 1. Create the context
 export const UserContext = createContext(null);
@@ -58,8 +58,27 @@ export function UserProvider({ children }) {
         console.log(user, "user");
     }, [user]);
 
-    // 5. Log out the user
-    function logout() {
+
+    
+    async function logout() {
+    const token = sessionStorage.getItem("authToken");
+
+    console.log("Logout function called");
+
+    try {
+        if (token) {
+            const response = await fetch(AUTH_LOGOUT_URL, {
+                method: "POST",
+                headers: {
+                    Authorization: `Token ${token}`,
+                },
+            });
+
+            console.log("Logout API status:", response.status);
+        }
+    } catch (error) {
+        console.error("Error logging out:", error);
+    } finally {
         sessionStorage.removeItem("authToken");
 
         setUser({
@@ -68,7 +87,10 @@ export function UserProvider({ children }) {
             first_name: "",
             profile_image: null,
         });
+
+        console.log("Local logout cleanup completed");
     }
+}
     // Pass both the state and the setter function down  
     // 6. Share user data and functions with child components
     return (

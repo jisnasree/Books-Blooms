@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CATALOG_AUTHORS_LIST_URL } from "../../constants";
+import { CATALOG_AUTHORS_URL } from "../../constants";
 
 function AuthorsManagement() {
   const [authors, setAuthors] = useState([]);
@@ -19,7 +19,7 @@ function AuthorsManagement() {
         const token = sessionStorage.getItem("authToken");
 
         const response = await fetch(
-          CATALOG_AUTHORS_LIST_URL,
+          CATALOG_AUTHORS_URL,
           {
             headers: {
               Authorization: `Token ${token}`,
@@ -67,7 +67,7 @@ function AuthorsManagement() {
       const token = sessionStorage.getItem("authToken");
 
       const response = await fetch(
-        CATALOG_AUTHORS_LIST_URL,
+        CATALOG_AUTHORS_URL,
         {
           method: "POST",
           headers: {
@@ -116,7 +116,7 @@ function AuthorsManagement() {
       const token = sessionStorage.getItem("authToken");
 
       const response = await fetch(
-        `${CATALOG_AUTHORS_LIST_URL}${editingAuthorId}/`,
+        `${CATALOG_AUTHORS_URL}${editingAuthorId}/`,
         {
           method: "PATCH",
           headers: {
@@ -197,9 +197,9 @@ function AuthorsManagement() {
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-gray-500 bg-white">
         <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50 text-gray-600">
+          <thead className="bg-gray-100 text-gray-600">
             <tr>
               <th className="px-4 py-3">ID</th>
               <th className="px-4 py-3">Author Name</th>

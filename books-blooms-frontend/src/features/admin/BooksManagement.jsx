@@ -2,8 +2,7 @@
 import { useEffect, useState } from "react";
 
 // Import API URLs used to fetch and save books and authors.
-import { CATALOG_BOOKS_URL } from "../../constants";
-import { CATALOG_AUTHORS_LIST_URL } from "../../constants";
+import { CATALOG_BOOKS_URL, CATALOG_AUTHORS_URL, CATALOG_CATEGORIES_URL } from "../../constants";
 
 function BooksManagement() {
   const [books, setBooks] = useState([]);
@@ -18,8 +17,14 @@ function BooksManagement() {
     cover_url: "",
     rating: "",
     featured: false,
+    category: "",
+    format: "Paperback",
+    price: "",
+    currency: "INR",
+    stock_quantity: "",
   });
   const [authors, setAuthors] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   // Fetch all books from the Django API
   useEffect(() => {
@@ -76,7 +81,7 @@ function BooksManagement() {
         const token = sessionStorage.getItem("authToken");
 
         const response = await fetch(
-          CATALOG_AUTHORS_LIST_URL,
+          CATALOG_AUTHORS_URL,
           {
             headers: {
               Authorization: `Token ${token}`,
@@ -185,6 +190,33 @@ function BooksManagement() {
       featured: false,
     });
   };
+
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const token = sessionStorage.getItem("authToken");
+
+        const response = await fetch(CATALOG_CATEGORIES_URL, {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch categories.");
+        }
+
+        const data = await response.json();
+        setCategories(Array.isArray(data) ? data : data.results || []);
+      } catch (err) {
+        setError(err.message || "Failed to load categories.");
+      }
+    }
+
+    fetchCategories();
+  }, []);
+
+
   return (
     <div className="p-6">
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -265,6 +297,102 @@ function BooksManagement() {
                   ))}
                 </select>
               </div>
+
+
+              <div>
+                <label
+                  htmlFor="category"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                >
+                  Category *
+                </label>
+
+                <select
+                  id="category"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm"
+                >
+                  <option value="">Select a category</option>
+
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+
+              <div>
+                <label
+                  htmlFor="price"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                >
+                  Price (INR) *
+                </label>
+
+                <input
+                  id="price"
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  min="0.01"
+                  step="0.01"
+                  required
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                  placeholder="Enter book price"
+                />
+              </div>
+
+
+              <div>
+                <label
+                  htmlFor="format"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                >
+                  Format *
+                </label>
+
+                <select
+                  id="format"
+                  name="format"
+                  value={formData.format}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm"
+                >
+                  <option value="Paperback">Paperback</option>
+                  <option value="Hardcover">Hardcover</option>
+                </select>
+              </div>
+
+
+              <div>
+                <label
+                  htmlFor="stock_quantity"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                >
+                  Stock Quantity *
+                </label>
+
+                <input
+                  id="stock_quantity"
+                  type="number"
+                  name="stock_quantity"
+                  value={formData.stock_quantity}
+                  onChange={handleChange}
+                  min="0"
+                  step="1"
+                  required
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                  placeholder="Enter available quantity"
+                />
+              </div>
+
 
               <div>
                 <label className="mb-1 block text-sm font-medium">
