@@ -29,6 +29,7 @@ from django.core import signing
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import BasePermission
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .serializers import CustomerSerializer
 from .permissions import IsNotBlocked
 
@@ -418,6 +419,7 @@ class LogoutView(APIView):
 class UserProfileView(RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated, IsNotBlocked]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_object(self):
         return self.request.user

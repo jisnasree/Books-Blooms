@@ -15,5 +15,6 @@ urlpatterns = [
     
      # Customer management
     path('customers/', views.CustomerListView.as_view()),
-    path('customers/<int:user_id>/block/', views.CustomerBlockView.as_view()),
+    path('customer/<int:user_id>/block/', views.CustomerBlockView.as_view()),
+    path('profile/', views.UserProfileView.as_view()),
     ]

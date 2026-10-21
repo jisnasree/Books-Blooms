@@ -13,7 +13,9 @@ export const AUTH_VERIFY_CODE_URL = AUTH_BASE_URL + 'forgot/verify-reset-code/'
 export const AUTH_VERIFY_EMAIL_URL = AUTH_BASE_URL + 'register/verify-email/'
 export const AUTH_RESEND_CODE_URL = AUTH_BASE_URL + 'register/resend-code/'
 export const AUTH_LOGOUT_URL = AUTH_BASE_URL + 'logout/'
-export const AUTH_CUSTOMER_BLOCK_URL = AUTH_BASE_URL + 'customers/'
+export const AUTH_CUSTOMER_BLOCK_URL = AUTH_BASE_URL + 'customer/'
+export const AUTH_PROFILE_URL = AUTH_BASE_URL + 'profile/'
+
 
 
 export const AUTH_CUSTOMERS_LIST_URL = AUTH_BASE_URL + 'customers/'

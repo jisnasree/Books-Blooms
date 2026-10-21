@@ -1,9 +1,13 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { UserContext } from "../context/UserContext";
 import { AUTH_LOGOUT_URL } from "../constants";
+import { Link } from "react-router-dom";
 
 function Header() {
-    const { user, setUser ,logout} = useContext(UserContext);
+    const { user, logout } = useContext(UserContext);
+    const [showDropdown, setShowDropdown] = useState(false);
+    console.log("Current user:", user);
+
 
     const handleLogout = async () => {
         const token = sessionStorage.getItem("authToken");
@@ -76,7 +80,7 @@ function Header() {
 
                 {/* Actions */}
 
-                {user.isAuthenticated ? (
+                {/* {user.isAuthenticated ? (
                     <div className="flex flex-col items-center gap-1">
                         <span className="text-green-800">
                             Welcome {user.first_name}!
@@ -84,6 +88,64 @@ function Header() {
                         <button className="rounded-lg px-4 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-50" onClick={handleLogout}>
                             Sign Out
                         </button>
+                    </div>
+                ) : (
+                    <a
+                        href="/login"
+                        className="hidden rounded-lg px-4 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-50 sm:inline-block"
+                    >
+                        Sign In
+                    </a>
+                )} */}
+
+                {user.isAuthenticated ? (
+                    <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-green-800">
+                            Welcome {user.first_name}!
+                        </span>
+
+                        <div className="relative">
+                            <button
+                                type="button"
+                                onClick={() => setShowDropdown((prev) => !prev)}
+                                className="flex h-10 w-10 items-center justify-center overflow-hidden ounded-full border-2 border-rose-200 bg-rose-100 text-lg font-semibold text-rose-700 hover:bg-rose-200"
+                                aria-label="Profile menu"
+                                aria-expanded={showDropdown}
+                            >
+                                {user.profile_image ? (
+                                    <img
+                                        src={user.profile_image}
+                                        alt="Profile"
+                                        className="h-full w-full rounded-full object-cover"
+                                    />
+                                ) : (
+                                    (user.first_name || user.email || "U")
+                                        .charAt(0)
+                                        .toUpperCase()
+                                )}
+                            </button>
+
+                            {showDropdown && (
+                                <div className="absolute right-0 z-50 mt-2 w-44 rounded-xl border border-rose-100 bg-white py-2 shadow-lg">
+                                    <Link
+                                        to="/account"
+                                        onClick={() => setShowDropdown(false)}
+                                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-rose-50"
+                                    >
+                                        My Account
+                                    </Link>
+
+                                    <Link
+                                        type="button"
+                                        to="/logout"
+                                        onClick={handleLogout}
+                                        className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-rose-50"
+                                    >
+                                        Sign Out
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 ) : (
                     <a

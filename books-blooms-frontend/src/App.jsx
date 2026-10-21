@@ -16,11 +16,11 @@ import CustomersManagement from "./features/admin/CustomersManagement"
 import BooksManagement from "./features/admin/BooksManagement"
 import { UserProvider } from "./context/UserContext"
 import ProtectedRoute from "./components/ProtectedRoute";
-
+import Profile from "./features/authentication/Profile"
+import Account from "./features/authentication/Account"
 
 
 function App() {
-
   return (
     <UserProvider>
       <main className="min-h-screen bg-gray-50 bg-[#FBFAF7]">
@@ -28,6 +28,12 @@ function App() {
           {/* Home */}
           <Route path="/" element={<Home />}></Route>
           <Route path="/books" element={<Login />}> </Route>
+
+           {/* Profile */}
+          <Route path="/profile" element={<Profile />}></Route>
+
+           {/* Account */}
+          <Route path="/account" element={<Account />}></Route>
 
           {/* Authentication */}
           <Route path="/login" element={<Login />}> </Route>
