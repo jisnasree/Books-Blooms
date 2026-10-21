@@ -111,8 +111,6 @@ function Profile() {
     );
   }
 
-    console.log("Profile image:", user.profile_image);
-console.log("User data:", user);
   return (
     <div className="min-h-screen bg-[#FBFAF7] px-4 py-10 sm:px-6">
       <Header />
@@ -210,8 +208,8 @@ console.log("User data:", user);
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(event) =>
-                    setSelectedImage(event.target.files[0] || null)
+                  onChange={(e) =>
+                    setSelectedImage(e.target.files[0] || null)
                   }
                   className="block w-full rounded-lg border border-gray-300 p-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-rose-50 file:px-3 file:py-2 file:font-medium file:text-rose-700"
                 />
@@ -221,6 +219,13 @@ console.log("User data:", user);
                     Selected: {selectedImage.name}
                   </p>
                 )}
+                {/* {selectedImage && (
+                  <img
+                    src={URL.createObjectURL(selectedImage)}
+                    alt="Profile preview"
+                    className="mt-3 h-24 w-24 rounded-full object-cover"
+                  />
+                )} */}
               </div>
 
               <div>

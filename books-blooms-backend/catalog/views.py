@@ -30,9 +30,22 @@ class BookDetailView(RetrieveUpdateDestroyAPIView):
         return [IsAdminUser()]
 
 
-class AuthorsListView(ListAPIView):
+
+class AuthorsListView(ListCreateAPIView):
     queryset = Author.objects.all().order_by("name")
     serializer_class = AuthorSerializer
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsAdminUser()]
+
+
+class AuthorDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
+    permission_classes = [IsAdminUser]
+
 
 
 class CategoryListView(ListCreateAPIView):

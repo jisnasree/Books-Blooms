@@ -3,7 +3,12 @@ import { useContext } from "react";
 import { UserContext } from "../context/UserContext";
 
 function ProtectedRoute() {
-  const { user } = useContext(UserContext);
+  const { user, loading } = useContext(UserContext);
+
+    // Wait until authentication has been checked.
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   if (!user.isAuthenticated) {
     return <Navigate to="/login" replace />;

@@ -45,8 +45,8 @@ export function UserProvider({ children }) {
             console.error("Error fetching profile:", error);
         }
         finally {
-        setLoading(false);
-    }
+            setLoading(false);
+        }
     }
 
     // 4. Fetch the profile when the application loads
@@ -73,7 +73,7 @@ export function UserProvider({ children }) {
     // 6. Share user data and functions with child components
     return (
         <UserContext.Provider
-            value={{ user, setUser, logout, fetchProfile,loading }}
+            value={{ user, setUser, logout, fetchProfile, loading }}
         >
             {children}
         </UserContext.Provider>
