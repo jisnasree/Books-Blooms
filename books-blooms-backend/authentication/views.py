@@ -115,12 +115,22 @@ class VerifyEmailView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ResendEmailCodeView(APIView):
+class ResendEmailVerificationCodeView(APIView):
     def post(self, request):
         serializer = ResendEmailCodeSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.validated_data["email"]
             user = User.objects.get(email=email)
+            if user is None:
+                return Response(
+                     {"message": "If the account exists, a verification code will be sent."},
+                     status=status.HTTP_200_OK,
+            )
+            if user.email_verified_at is not None:
+                 return Response(
+                   {"message": "Email address is already verified."},
+                   status=status.HTTP_400_BAD_REQUEST,
+            )
 
             last_challenge = (
                 EmailOTPChallenge.objects.filter(
