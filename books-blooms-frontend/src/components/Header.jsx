@@ -1,18 +1,43 @@
 import { useContext, useState } from "react";
 import { UserContext } from "../context/UserContext";
-import { AUTH_LOGOUT_URL } from "../constants";
 import { Link } from "react-router-dom";
+import { AUTH_LOGOUT_URL } from "../constants";
 
 function Header() {
-    const { user, logout } = useContext(UserContext);
+    const { user,setUser } = useContext(UserContext);
     const [showDropdown, setShowDropdown] = useState(false);
     console.log("Current user:", user);
 
 
-    const handleLogout = async () => {
-        await logout();
-    };
-    console.log("Header user:", user);
+    async function handleLogout() {
+        const token = sessionStorage.getItem("authToken");
+        try {
+            if (token) {
+                const response = await fetch(AUTH_LOGOUT_URL, {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Token ${token}`,
+                    },
+                });
+
+                console.log("Logout API status:", response.status);
+            }
+        } catch (error) {
+            console.error("Error logging out:", error);
+        } finally {
+            sessionStorage.removeItem("authToken");
+
+            setUser({
+                isAdmin: false,
+                isAuthenticated: false,
+                first_name: "",
+                profile_image: null,
+            });
+
+            console.log("Local logout cleanup completed");
+        }
+    }
+
     return (
         <header className="border-b border-rose-100 bg-[#F6F1E8]">
 

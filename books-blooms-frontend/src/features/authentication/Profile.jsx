@@ -6,17 +6,14 @@ import Footer from "../../components/Footer";
 import { UserContext } from "../../context/UserContext";
 
 function Profile() {
-  //const [profile, setProfile] = useState(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
-
-  //const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  //const { user, setUser, fetchProfile } = useContext(UserContext);
+
   const { user, setUser, loading } = useContext(UserContext);
   //populate form fields when the shared profile data loads
   useEffect(() => {
@@ -79,30 +76,12 @@ function Profile() {
       setSelectedImage(null);
       setMessage("Profile updated successfully!");
 
-      //     setProfile(updatedProfile);
-      //     setFirstName(updatedProfile.first_name || "");
-      //     setLastName(updatedProfile.last_name || "");
-      //     setPhoneNumber(updatedProfile.phone_number || "");
-      //     setSelectedImage(null);
-      //     setMessage("Profile updated successfully!");
     } catch (err) {
       setError(err.message);
     } finally {
       setSaving(false);
     }
   }
-
-  if (loading) {
-    return <p className="p-6">Loading profile...</p>;
-  }
-
-  // if (!profile) {
-  //   return (
-  //     <p className="p-6 text-red-600">
-  //       {error || "Profile not found."}
-  //     </p>
-  //   );
-  // }
   if (!user.isAuthenticated) {
     return (
       <p className="p-6 text-red-600">

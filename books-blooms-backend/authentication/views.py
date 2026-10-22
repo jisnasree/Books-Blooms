@@ -57,7 +57,7 @@ class CreateUserView(APIView):
             )
             send_mail(
                 subject="BookBloom Email Verification",
-                message=f"Your BookBloom verification code for verifying the email is {otp}.",
+                message=f"Hi {user.first_name} {user.last_name}, your BookBloom verification code for verifying the email is {otp}.",
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
             )
@@ -66,7 +66,7 @@ class CreateUserView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class VerifyEmailView(APIView):
+class EmailVerificationCodeView(APIView):
     def post(self, request):
         serializer = VerifyEmailSerializer(data=request.data)
 
@@ -123,14 +123,16 @@ class ResendEmailVerificationCodeView(APIView):
             user = User.objects.get(email=email)
             if user is None:
                 return Response(
-                     {"message": "If the account exists, a verification code will be sent."},
-                     status=status.HTTP_200_OK,
-            )
+                    {
+                        "message": "If the account exists, a verification code will be sent."
+                    },
+                    status=status.HTTP_200_OK,
+                )
             if user.email_verified_at is not None:
-                 return Response(
-                   {"message": "Email address is already verified."},
-                   status=status.HTTP_400_BAD_REQUEST,
-            )
+                return Response(
+                    {"message": "Email address is already verified."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             last_challenge = (
                 EmailOTPChallenge.objects.filter(
@@ -234,6 +236,17 @@ class ForgotPasswordView(APIView):
             email = serializer.validated_data["email"]
             user = User.objects.filter(email=email).first()
 
+            if user is None:
+                return Response(
+                    {
+                        "message": (
+                            "If an account exists with this email, "
+                            "password reset instructions will be sent."
+                        )
+                    },
+                    status=status.HTTP_200_OK,
+                )
+
             otp = str(secrets.randbelow(1000000)).zfill(6)
 
             code_hash = hmac.new(
@@ -264,7 +277,90 @@ class ForgotPasswordView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class VerifyResetCode(APIView):
+class ResendPasswordResetCodeView(APIView):
+    def post(self, request):
+        serializer = ForgotPasswordSerializer(data=request.data)
+
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+            user = User.objects.filter(email=email).first()
+
+            # Return a generic response if the account doesn't exist.
+            if user is None:
+                return Response(
+                    {
+                        "message": (
+                            "If an account exists with this email, "
+                            "password reset instructions will be sent."
+                        )
+                    },
+                    status=status.HTTP_200_OK,
+                )
+
+            # Check the 30-second cooldown for password-reset codes.
+            last_challenge = (
+                EmailOTPChallenge.objects.filter(
+                    user=user,
+                    purpose="Password-reset",
+                )
+                .order_by("-created_at")
+                .first()
+            )
+
+            if last_challenge is not None:
+                time_since_last_code = timezone.now() - last_challenge.created_at
+
+                if time_since_last_code.total_seconds() < 30:
+                    return Response(
+                        {
+                            "message": (
+                                "Please wait 30 seconds before "
+                                "requesting another code."
+                            )
+                        },
+                        status=status.HTTP_429_TOO_MANY_REQUESTS,
+                    )
+
+            # Generate a new six-digit OTP.
+            otp = str(secrets.randbelow(1000000)).zfill(6)
+
+            code_hash = hmac.new(
+                settings.SECRET_KEY.encode(),
+                otp.encode(),
+                hashlib.sha256,
+            ).hexdigest()
+
+            expires_at = timezone.now() + timedelta(minutes=10)
+
+            EmailOTPChallenge.objects.create(
+                user=user,
+                purpose="Password-reset",
+                code_hash=code_hash,
+                expires_at=expires_at,
+            )
+
+            send_mail(
+                subject="BookBloom Password Reset",
+                message=("Your BookBloom password reset code is " f"{otp}."),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+            )
+
+            return Response(
+                {
+                    "message": "If an account exists with this email, "
+                    "password reset instructions will be sent."
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class ForgotPassordVerifyResetCode(APIView):
     def post(self, request):
         serializer = VerifyResetCodeSerializer(data=request.data)
         if serializer.is_valid():
@@ -423,7 +519,6 @@ class LogoutView(APIView):
             {"message": "Logout successful"},
             status=status.HTTP_200_OK,
         )
-
 
 
 class UserProfileView(RetrieveUpdateAPIView):
