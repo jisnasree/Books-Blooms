@@ -1,9 +1,12 @@
 
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { CATALOG_BOOKS_URL } from "../../constants";
 
 function BookList() {
   const [books, setBooks] = useState([]);
+  const navigate = useNavigate();
+
   useEffect(() => {
     fetch(CATALOG_BOOKS_URL)
       .then((response) => response.json())
@@ -22,7 +25,8 @@ function BookList() {
         {books.map((book) => (
           <div
             key={book.id}
-            className="rounded-xl border border-rose-100 p-4"
+            onClick={() => navigate(`/books/${book.id}`)}
+            className="rounded-xl border border-rose-100 p-4 cursor-pointer hover:shadow-lg transition-shadow"
           >
             {book.cover_url && (
               <img

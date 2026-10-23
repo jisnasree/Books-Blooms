@@ -18,7 +18,9 @@ import { UserProvider } from "./context/UserContext"
 import ProtectedRoute from "./components/ProtectedRoute";
 import Profile from "./features/authentication/Profile"
 import Account from "./features/authentication/Account"
-
+import BookDetails from "./features/catalog/BookDetails"
+import BookCatalog from "./features/catalog/BookCatalog"
+import ContactUs from "./features/ContactUs"
 
 function App() {
   return (
@@ -27,7 +29,11 @@ function App() {
         <Routes>
           {/* Home */}
           <Route path="/" element={<Home />}></Route>
-          <Route path="/books" element={<Login />}> </Route>
+          {/* <Route path="/books" element={<Login />}> </Route> */}
+          <Route path="/shop" element={<BookCatalog />} />
+          <Route path="/contact" element={<ContactUs />} />
+          <Route path="/books/:id" element={<BookDetails />} />
+          
 
            {/* Profile */}
           <Route path="/profile" element={<Profile />}></Route>

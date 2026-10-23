@@ -29,11 +29,11 @@ export const ADMIN_BASE_URL = BASE_URL + 'admin/'
 export const ADMIN_DASHBOARD_URL = ADMIN_BASE_URL + 'dashboard/summary/'
 
 
-
 export const CATALOG_BASE_URL = BASE_URL + 'catalog/'
 export const CATALOG_BOOKS_URL = CATALOG_BASE_URL + 'books/'
 export const CATALOG_AUTHORS_URL = CATALOG_BASE_URL + 'authors/'
 export const CATALOG_CATEGORIES_URL = CATALOG_BASE_URL + 'categories/'
+
 
 
 

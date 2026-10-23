@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 
 // Import API URLs used to fetch and save books and authors.
 import { CATALOG_BOOKS_URL, CATALOG_AUTHORS_URL, CATALOG_CATEGORIES_URL } from "../../constants";
+import BooksTable from "./BooksTable";
+import BookForm from "./BookForm";
 
 function BooksManagement() {
   const [books, setBooks] = useState([]);
@@ -23,6 +25,7 @@ function BooksManagement() {
     currency: "INR",
     stock_quantity: "",
   });
+  const [editingBook, setEditingBook] = useState(null);
   const [authors, setAuthors] = useState([]);
   const [categories, setCategories] = useState([]);
 
@@ -65,6 +68,7 @@ function BooksManagement() {
     fetchBooks();
   }, []);
 
+
   // Filter books by title or author
   const filteredBooks = books.filter((book) => {
     const search = searchTerm.trim().toLowerCase();
@@ -73,6 +77,7 @@ function BooksManagement() {
       book.author_name?.toLowerCase().includes(search)
     );
   });
+
 
   // Get Authors list
   useEffect(() => {
@@ -97,7 +102,6 @@ function BooksManagement() {
 
         setAuthors(Array.isArray(data) ? data : data.results || []);
       } catch (err) {
-        ``
         setError(err.message || "Failed to load authors.");
       }
     };
@@ -105,17 +109,7 @@ function BooksManagement() {
     fetchAuthors();
   }, []);
 
-  if (loading) {
-    return <p className="p-6">Loading books...</p>;
-  }
 
-  if (error) {
-    return (
-      <p className="p-6 text-red-600" role="alert">
-        {error}
-      </p>
-    );
-  }
 
   //Authors dropdown 
   const handleChange = (e) => {
@@ -127,7 +121,9 @@ function BooksManagement() {
     }));
   };
 
+
   //send bookdetails to Django and save in the database
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -136,8 +132,15 @@ function BooksManagement() {
 
       const token = sessionStorage.getItem("authToken");
 
-      const response = await fetch(CATALOG_BOOKS_URL, {
-        method: "POST",
+      // Choose POST for adding or PATCH for updating.
+      const isEditing = Boolean(editingBook);
+
+      const url = isEditing
+        ? `${CATALOG_BOOKS_URL}${editingBook.id}/`
+        : CATALOG_BOOKS_URL;
+
+      const response = await fetch(url, {
+        method: isEditing ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Token ${token}`,
@@ -149,6 +152,10 @@ function BooksManagement() {
           cover_url: formData.cover_url,
           rating: formData.rating === "" ? null : Number(formData.rating),
           featured: formData.featured,
+          format: formData.format,
+          price: Number(formData.price),
+          currency: formData.currency,
+          stock_quantity: Number(formData.stock_quantity),
         }),
       });
 
@@ -157,26 +164,73 @@ function BooksManagement() {
       if (!response.ok) {
         throw new Error(
           Object.values(data).flat().join(" ") ||
-          "Failed to add book."
+          "Failed to save book."
         );
       }
 
-      // Add the newly created book to the existing list
-      const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
+      if (isEditing) {
+        // Replace the old book with the updated book.
+        setBooks((previousBooks) =>
+          previousBooks.map((book) =>
+            book.id === editingBook.id ? data : book
+          )
+        );
+      } else {
+        // Add the new book to the list.
+        setBooks((previousBooks) => [...previousBooks, data]);
+      }
 
-        setFormData((previousData) => ({
-          ...previousData,
-          [name]: type === "checkbox" ? checked : value,
-        }));
-      };
-
-      // Close the popup and reset the form
+      setEditingBook(null);
       handleCloseForm();
     } catch (err) {
       setError(err.message || "Something went wrong.");
     }
   };
+
+
+  const handleDelete = async (book) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${book.title}"?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setError("");
+
+      const token = sessionStorage.getItem("authToken");
+
+      const response = await fetch(
+        `${CATALOG_BOOKS_URL}${book.id}/`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+
+        throw new Error(
+          Object.values(data).flat().join(" ") ||
+          "Failed to delete book."
+        );
+      }
+
+      // Remove the deleted book from the table.
+      setBooks((previousBooks) =>
+        previousBooks.filter((item) => item.id !== book.id)
+      );
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
+    }
+  };
+
+
 
   const handleCloseForm = () => {
     setShowForm(false);
@@ -188,8 +242,14 @@ function BooksManagement() {
       cover_url: "",
       rating: "",
       featured: false,
+      category: "",
+      format: "Paperback",
+      price: "",
+      currency: "INR",
+      stock_quantity: "",
     });
   };
+
 
   useEffect(() => {
     async function fetchCategories() {
@@ -216,7 +276,17 @@ function BooksManagement() {
     fetchCategories();
   }, []);
 
+  if (loading) {
+    return <p className="p-6">Loading books...</p>;
+  }
 
+  if (error) {
+    return (
+      <p className="p-6 text-red-600" role="alert">
+        {error}
+      </p>
+    );
+  }
   return (
     <div className="p-6">
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -233,241 +303,19 @@ function BooksManagement() {
       </div>
 
 
+
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-2xl overflow-hidden rounded-xl bg-white shadow-xl">
-            {/* Popup Header */}
-            <div className="flex items-center justify-between border-b px-6 py-4">
-              <h2 className="text-xl font-semibold text-gray-800">
-                Add New Book
-              </h2>
-
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="text-2xl text-gray-500 hover:text-gray-800"
-                aria-label="Close popup"
-              >
-                &times;
-              </button>
-            </div>
-
-            {/* Popup Form */}
-            <form
-              onSubmit={handleSubmit}
-              className="max-h-[75vh] space-y-4 overflow-y-auto p-6"
-            >
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Book Title *
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                  placeholder="Enter book title"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="author"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
-                  Author *
-                </label>
-
-                <select
-                  id="author"
-                  name="author"
-                  value={formData.author}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm"
-                >
-                  <option value="">Select an author</option>
-
-                  {authors.map((author) => (
-                    <option key={author.id} value={author.id}>
-                      {author.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-
-              <div>
-                <label
-                  htmlFor="category"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
-                  Category *
-                </label>
-
-                <select
-                  id="category"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm"
-                >
-                  <option value="">Select a category</option>
-
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-
-              <div>
-                <label
-                  htmlFor="price"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
-                  Price (INR) *
-                </label>
-
-                <input
-                  id="price"
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleChange}
-                  min="0.01"
-                  step="0.01"
-                  required
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                  placeholder="Enter book price"
-                />
-              </div>
-
-
-              <div>
-                <label
-                  htmlFor="format"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
-                  Format *
-                </label>
-
-                <select
-                  id="format"
-                  name="format"
-                  value={formData.format}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm"
-                >
-                  <option value="Paperback">Paperback</option>
-                  <option value="Hardcover">Hardcover</option>
-                </select>
-              </div>
-
-
-              <div>
-                <label
-                  htmlFor="stock_quantity"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
-                  Stock Quantity *
-                </label>
-
-                <input
-                  id="stock_quantity"
-                  type="number"
-                  name="stock_quantity"
-                  value={formData.stock_quantity}
-                  onChange={handleChange}
-                  min="0"
-                  step="1"
-                  required
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                  placeholder="Enter available quantity"
-                />
-              </div>
-
-
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Description *
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  required
-                  rows="4"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                  placeholder="Enter book description"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Cover Image URL
-                </label>
-                <input
-                  type="url"
-                  name="cover_url"
-                  value={formData.cover_url}
-                  onChange={handleChange}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                  placeholder="Enter cover image URL"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Rating
-                </label>
-                <input
-                  type="number"
-                  name="rating"
-                  value={formData.rating}
-                  onChange={handleChange}
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                  placeholder="For example, 4.5"
-                />
-              </div>
-
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="featured" checked={formData.featured} onChange={handleChange} />
-                Featured book
-              </label>
-
-              {/* Popup Footer */}
-              <div className="flex justify-end gap-3 border-t pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="rounded-lg border border-gray-300 px-5 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  className="rounded-lg bg-green-800 px-5 py-2 text-sm font-medium text-white hover:bg-green-900"
-                >
-                  Save Book
-                </button>
-
-
-              </div>
-            </form>
-          </div>
-        </div>
+        <BookForm
+          formData={formData}
+          authors={authors}
+          categories={categories}
+          onChange={handleChange}
+          onSubmit={handleSubmit}
+          onClose={handleCloseForm}
+          editingBook={editingBook}
+        />
       )}
+
 
       {/* Search books */}
       <div className="mb-6">
@@ -498,74 +346,33 @@ function BooksManagement() {
         </div>
       </div>
 
+
+
       {/* Books table */}
-      <div className="overflow-x-auto rounded-lg border bg-white">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-gray-100 text-gray-600">
-            <tr>
-              <th className="px-4 py-3">Title</th>
-              <th className="px-4 py-3">Author</th>
-              <th className="px-4 py-3">Format</th>
-              <th className="px-4 py-3">Price</th>
-              <th className="px-4 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {filteredBooks.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center">
-                  No books match your search.
-                </td>
-              </tr>
-            ) : (
-              filteredBooks.map((book) => (
-                <tr key={book.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-4 font-medium text-gray-800">
-                    {book.title}
-                  </td>
-
-                  <td className="px-4 py-4 text-gray-600">
-                    {book.author_name || "—"}
-                  </td>
-
-                  <td className="px-4 py-4 text-gray-600">
-                    {book.physical_variants
-                      ?.map((variant) => variant.format)
-                      .join(", ") || "—"}
-                  </td>
-
-                  <td className="px-4 py-4 text-gray-600">
-                    {book.physical_variants
-                      ?.map(
-                        (variant) =>
-                          `${variant.currency} ${Number(variant.price).toFixed(2)}`
-                      )
-                      .join(", ") || "—"}
-                  </td>
-
-                  <td className="px-4 py-4">
-                    <button
-                      type="button"
-                      className="mr-3 text-blue-700 hover:underline"
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      type="button"
-                      className="text-red-600 hover:underline"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-
-
-        </table>
-      </div>
+      <BooksTable
+        books={filteredBooks}
+        onEdit={(book) => {
+          setEditingBook(book);
+          setFormData({
+            title: book.title || "",
+            author: String(book.author || book.author_id || ""),
+            description: book.description || "",
+            cover_url: book.cover_url || "",
+            rating: book.rating ?? "",
+            featured: book.featured ?? false,
+            category: book.categories?.[0]?.id
+              ? String(book.categories[0].id)
+              : "",
+            format: book.physical_variants?.[0]?.format || "Paperback",
+            price: book.physical_variants?.[0]?.price || "",
+            currency: book.physical_variants?.[0]?.currency || "INR",
+            stock_quantity:
+              book.physical_variants?.[0]?.stock_quantity ?? "",
+          });
+          setShowForm(true);
+        }}
+        onDelete={handleDelete}
+      />
       {/* Result count */}
       <p className="mt-4 text-sm text-gray-500">
         Showing {filteredBooks.length} of {books.length} books

@@ -60,15 +60,15 @@ function Header() {
 
                 {/* Navigation links */}
                 <div className="hidden items-center gap-8 md:flex">
-                    <a href="/" className="text-sm font-medium text-rose-800 hover:text-rose-600">
+                    <Link to="/" className="text-sm font-medium text-rose-800 hover:text-rose-600">
                         Home
-                    </a>
-                    <a href="/books" className="text-sm text-gray-600 hover:text-rose-700">
+                    </Link>
+                    <Link to="/shop" className="text-sm text-gray-600 hover:text-rose-700">
                         Shop
-                    </a>
-                    <a href="/categories" className="text-sm text-gray-600 hover:text-rose-700">
+                    </Link>
+                    <Link to="/contact" className="text-sm text-gray-600 hover:text-rose-700">
                         Contact Us
-                    </a>
+                    </Link>
                 </div>
 
 
