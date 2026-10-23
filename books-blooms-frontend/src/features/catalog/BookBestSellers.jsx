@@ -3,26 +3,57 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CATALOG_BOOKS_URL } from "../../constants";
 
-function BookList() {
+function BookBestSellers() {
   const [books, setBooks] = useState([]);
   const navigate = useNavigate();
+  const [startIndex, setStartIndex] = useState(0);
 
   useEffect(() => {
     fetch(CATALOG_BOOKS_URL)
       .then((response) => response.json())
       .then((data) => {
-        setBooks(data);
+        setBooks(data.filter((book) => book.featured));
       });
   }, []);
 
+  const visibleBooks = books.slice(startIndex, startIndex + 4);
+
   return (
     <section className="mx-auto w-full max-w-7xl px-6 py-12 border-b border-gray-200">
-      <h2 className="text-3xl font-bold text-[#45332F]">
-        Featured Books
-      </h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold text-[#45332F]">
+          Bestsellers
+        </h2>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-6 text-center">
-        {books.map((book) => (
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() =>
+              setStartIndex((prev) => Math.max(prev - 1, 0))
+            }
+            disabled={startIndex === 0}
+            className="rounded-lg border-rose-200 px-4 py-2 text-[#45332F] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            ← Previous
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              setStartIndex((prev) =>
+                Math.min(prev + 1, Math.max(books.length - 4, 0))
+              )
+            }
+            disabled={startIndex >= Math.max(books.length - 4, 0)}
+            className="rounded-lg border-rose-200 px-4 py-2 text-[#45332F] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Next →
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 text-center transition-all duration-300">
+        {visibleBooks.map((book) => (
           <div
             key={book.id}
             onClick={() => navigate(`/books/${book.id}`)}
@@ -79,7 +110,7 @@ function BookList() {
     </section>
   );
 }
-export default BookList
+export default BookBestSellers
 
 
 

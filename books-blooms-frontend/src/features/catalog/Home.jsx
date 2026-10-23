@@ -2,7 +2,7 @@
 import heroImage from "../../assets/hero2.png";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import BookList from "./BookList";
+import BookBestSellers from "./BookBestSellers";
 import { useNavigate } from "react-router-dom";
 
 function Home() {
@@ -46,7 +46,7 @@ const navigate = useNavigate();
                 </div>
 
             </div>
-        <BookList />
+        <BookBestSellers />
         <Footer />
     </section>
   );
