@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'catalog',
     'admin_books_blooms',
+    'cart',
 ]
 
 MIDDLEWARE = [

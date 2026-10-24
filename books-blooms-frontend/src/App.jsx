@@ -21,6 +21,7 @@ import Account from "./features/authentication/Account"
 import BookDetails from "./features/catalog/BookDetails"
 import BookCatalog from "./features/catalog/BookCatalog"
 import ContactUs from "./features/ContactUs"
+import Cart from "./features/cart/Cart"
 
 function App() {
   return (
@@ -33,7 +34,9 @@ function App() {
           <Route path="/shop" element={<BookCatalog />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/books/:id" element={<BookDetails />} />
-          
+
+           {/* Home */}
+           <Route path="/cart" element={<Cart />} />
 
            {/* Profile */}
           <Route path="/profile" element={<Profile />}></Route>
