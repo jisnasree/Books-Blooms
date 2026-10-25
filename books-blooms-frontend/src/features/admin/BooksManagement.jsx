@@ -156,6 +156,7 @@ function BooksManagement() {
           price: Number(formData.price),
           currency: formData.currency,
           stock_quantity: Number(formData.stock_quantity),
+          category_ids: formData.category ? [Number(formData.category)] : [],
         }),
       });
 
