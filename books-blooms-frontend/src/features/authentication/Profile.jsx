@@ -82,10 +82,14 @@ function Profile() {
       setSaving(false);
     }
   }
+  if (loading) {
+    return <p className="p-6">Loading profile...</p>;
+  }
+
   if (!user.isAuthenticated) {
     return (
       <p className="p-6 text-red-600">
-        {error || "Please log in to view your profile."}
+        Please log in to view your profile.
       </p>
     );
   }

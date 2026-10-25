@@ -6,6 +6,7 @@ function AdminDashboard() {
     totalBooks: null,
     totalAuthors: null,
     totalCategories: null,
+    totalCustomers: null,
   });
 
   const [loading, setLoading] = useState(true);
@@ -71,7 +72,7 @@ function AdminDashboard() {
     },
     {
       title: "Customers",
-      value: "—",
+      value: summary.totalCustomers,
       description: "Registered Customers",
       icon: "👥",
     },
