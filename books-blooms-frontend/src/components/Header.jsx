@@ -2,12 +2,13 @@ import { useContext, useState } from "react";
 import { UserContext } from "../context/UserContext";
 import { Link } from "react-router-dom";
 import { AUTH_LOGOUT_URL } from "../constants";
+import { CartContext } from "../context/CartContext";
 
 function Header() {
-    const { user,setUser } = useContext(UserContext);
-    const [showDropdown, setShowDropdown] = useState(false);
-    console.log("Current user:", user);
 
+    const { cartCount } = useContext(CartContext);
+    const { user, setUser } = useContext(UserContext);
+    const [showDropdown, setShowDropdown] = useState(false);
 
     async function handleLogout() {
         const token = sessionStorage.getItem("authToken");
@@ -81,26 +82,6 @@ function Header() {
                 </div>
 
 
-                {/* Actions */}
-
-                {/* {user.isAuthenticated ? (
-                    <div className="flex flex-col items-center gap-1">
-                        <span className="text-green-800">
-                            Welcome {user.first_name}!
-                        </span>
-                        <button className="rounded-lg px-4 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-50" onClick={handleLogout}>
-                            Sign Out
-                        </button>
-                    </div>
-                ) : (
-                    <a
-                        href="/login"
-                        className="hidden rounded-lg px-4 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-50 sm:inline-block"
-                    >
-                        Sign In
-                    </a>
-                )} */}
-
                 {user.isAuthenticated ? (
                     <div className="flex items-center gap-3">
                         <span className="text-sm font-medium text-green-800">
@@ -160,7 +141,20 @@ function Header() {
                         Sign In
                     </a>
                 )}
-
+                
+                {/* Cart */}
+                <Link
+                    to="/cart"
+                    className="flex items-center gap-2 text-sm font-medium text-green-800 hover:text-rose-700"
+                >
+                    <span className="text-xl">🛒</span>
+                    Cart
+                    {cartCount > 0 && (
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-700 px-1 text-xs font-semibold text-white">
+                            {cartCount}
+                        </span>
+                    )}
+                </Link>
             </nav>
         </header>
     );
