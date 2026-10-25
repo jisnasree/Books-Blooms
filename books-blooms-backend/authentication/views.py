@@ -34,6 +34,20 @@ from .serializers import CustomerSerializer
 from .permissions import IsNotBlocked
 
 
+def generate_otp():
+    # Generate a six-digit OTP
+    otp = str(secrets.randbelow(1000000)).zfill(6)
+
+    # Hash the OTP before storing it
+    code_hash = hmac.new(
+        settings.SECRET_KEY.encode(),
+        otp.encode(),
+        hashlib.sha256,
+    ).hexdigest()
+
+    return otp, code_hash
+
+
 # Create your views here.
 class CreateUserView(APIView):
     def post(self, request):
@@ -41,11 +55,7 @@ class CreateUserView(APIView):
         if serializer.is_valid():
             user = serializer.save()
 
-            otp = str(secrets.randbelow(1000000)).zfill(6)
-
-            code_hash = hmac.new(
-                settings.SECRET_KEY.encode(), otp.encode(), hashlib.sha256
-            ).hexdigest()
+            otp, code_hash = generate_otp()
 
             expires_at = timezone.now() + timedelta(minutes=10)
 
@@ -153,12 +163,7 @@ class ResendEmailVerificationCodeView(APIView):
                         status=status.HTTP_429_TOO_MANY_REQUESTS,
                     )
 
-            otp = str(secrets.randbelow(1000000)).zfill(6)
-
-            code_hash = hmac.new(
-                settings.SECRET_KEY.encode(), otp.encode(), hashlib.sha256
-            ).hexdigest()
-
+            otp, code_hash = generate_otp()
             expires_at = timezone.now() + timedelta(minutes=10)
 
             EmailOTPChallenge.objects.create(
@@ -170,7 +175,7 @@ class ResendEmailVerificationCodeView(APIView):
 
             send_mail(
                 subject="BookBloom Email Verification",
-                message=f"Your BookBloom verification code is {otp}.",
+                message=f"Hi {user.first_name} {user.last_name}, your BookBloom verification code for verifying the email is {otp}.",
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
             )
@@ -247,11 +252,7 @@ class ForgotPasswordView(APIView):
                     status=status.HTTP_200_OK,
                 )
 
-            otp = str(secrets.randbelow(1000000)).zfill(6)
-
-            code_hash = hmac.new(
-                settings.SECRET_KEY.encode(), otp.encode(), hashlib.sha256
-            ).hexdigest()
+            otp, code_hash = generate_otp()
 
             expires_at = timezone.now() + timedelta(minutes=10)
             EmailOTPChallenge.objects.create(
@@ -263,7 +264,7 @@ class ForgotPasswordView(APIView):
 
             send_mail(
                 subject="BookBloom Email Verification",
-                message=f"Your BookBloom verification code for resetting the password is {otp}.",
+                message=f"Hi {user.first_name} {user.last_name}, your BookBloom verification code for resetting the password is {otp}.",
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
             )
@@ -322,13 +323,7 @@ class ResendPasswordResetCodeView(APIView):
                     )
 
             # Generate a new six-digit OTP.
-            otp = str(secrets.randbelow(1000000)).zfill(6)
-
-            code_hash = hmac.new(
-                settings.SECRET_KEY.encode(),
-                otp.encode(),
-                hashlib.sha256,
-            ).hexdigest()
+            otp, code_hash = generate_otp()
 
             expires_at = timezone.now() + timedelta(minutes=10)
 
@@ -341,7 +336,7 @@ class ResendPasswordResetCodeView(APIView):
 
             send_mail(
                 subject="BookBloom Password Reset",
-                message=("Your BookBloom password reset code is " f"{otp}."),
+                message=f"Hi {user.first_name} {user.last_name}, your BookBloom verification code for resetting the password is {otp}.",
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
             )
