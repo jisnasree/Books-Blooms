@@ -32,8 +32,13 @@ from rest_framework.permissions import BasePermission
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .serializers import CustomerSerializer
 from .permissions import IsNotBlocked
+import logging
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+from rest_framework.permissions import AllowAny
+from django.contrib.auth import get_user_model
 
-
+logger = logging.getLogger(__name__)
 def generate_otp():
     # Generate a six-digit OTP
     otp = str(secrets.randbelow(1000000)).zfill(6)
@@ -235,6 +240,96 @@ class LoginView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class GoogleLoginView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        credential = request.data.get("credential")
+
+        if not credential:
+            return Response(
+                {"message": "Google credential is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            google_user = id_token.verify_oauth2_token(
+                credential,
+                google_requests.Request(),
+                settings.GOOGLE_CLIENT_ID,
+            )
+        except ValueError:
+            return Response(
+                {"message": "Invalid Google credential."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        except Exception:
+            logger.exception("Google credential verification failed")
+            return Response(
+                {"message": "Google authentication is temporarily unavailable."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        email = google_user.get("email", "").strip().lower()
+
+        if not email or not google_user.get("email_verified"):
+            return Response(
+                {"message": "A verified Google email is required."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        User = get_user_model()
+        user = User.objects.filter(email__iexact=email).first()
+
+        if user is None:
+            user = User.objects.create_user(
+                username=email,
+                email=email,
+                first_name=google_user.get("given_name", ""),
+                last_name=google_user.get("family_name", ""),
+            )
+            user.email_verified_at = __import__("django.utils.timezone", fromlist=["now"]).now()
+            user.save(update_fields=["email_verified_at"])
+
+        if user.is_blocked:
+            return Response(
+                {
+                    "message": "Your account has been blocked.",
+                    "isAuthenticated": False,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if not user.email_verified_at:
+            user.email_verified_at = __import__("django.utils.timezone", fromlist=["now"]).now()
+            user.save(update_fields=["email_verified_at"])
+
+        token, created = Token.objects.get_or_create(user=user)
+
+        return Response(
+            {
+                "message": "Google login successful",
+                "isAuthenticated": True,
+                "token": token.key,
+                "isAdmin": user.is_staff,
+                "first_name": user.first_name,
+                "email": user.email,
+                "phone_number": user.phone_number,
+                "last_name": user.last_name,
+                "profile_image": (
+                    request.build_absolute_uri(user.profile_image.url)
+                    if user.profile_image
+                    else None
+                ),
+            },
+            status=status.HTTP_200_OK,
+        )
+
 
 
 class ForgotPasswordView(APIView):
