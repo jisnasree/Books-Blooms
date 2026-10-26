@@ -176,7 +176,7 @@ function EmailVerificationCode() {
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-green-900 px-4 py-3 font-semibold text-white transition hover:bg-rose-800"
+              className="w-full rounded-xl px-4 py-3 font-semibold text-white bg-gradient-to-r from-amber-400 via-orange-500 to-orange-700 hover:from-amber-500 hover:via-orange-600 hover:to-orange-800"
             >
               Verify Email
             </button>
@@ -196,15 +196,6 @@ function EmailVerificationCode() {
                     ? `Resend code in ${countdown}s`
                     : "Resend Code"}
               </button>
-              {/* <button
-                type="button"
-                onClick={handleResendCode}
-                disabled={countdown > 0}
-              >
-                {countdown > 0
-                  ? `Resend code in ${countdown}s`
-                  : "Resend Code"}
-              </button> */}
             </p>
           </form>
 

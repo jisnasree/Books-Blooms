@@ -134,7 +134,7 @@ function ForgotPasswordVerifyCode() {
           <div className="mb-6 text-center">
             <div className="mb-4 text-4xl">✉️</div>
 
-            <h2 className="text-2xl font-bold text-green-900">
+            <h2 className="text-2xl font-bold">
               Verify reset code
             </h2>
 
@@ -186,13 +186,10 @@ function ForgotPasswordVerifyCode() {
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-green-900 px-4 py-3 font-semibold text-white transition hover:bg-rose-800"
+              className="w-full rounded-xl px-4 py-3 font-semibold text-white bg-gradient-to-r from-amber-400 via-orange-500 to-orange-700 hover:from-amber-500 hover:via-orange-600 hover:to-orange-800"
             >
               Verify Code
             </button>
-
-            <p className="text-center text-sm text-gray-600">
-              Didn't receive the code?{" "}
 
               <p className="text-center text-sm text-gray-600">
                 Didn't receive the code?{" "}
@@ -208,8 +205,6 @@ function ForgotPasswordVerifyCode() {
                       ? `Resend code in ${countdown}s`
                       : "Resend Code"}
                 </button>
-              </p>
-
             </p>
           </form>
 

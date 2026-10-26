@@ -41,7 +41,7 @@ function PasswordUpdateSuccess() {
           {/* Return to Login */}
           <Link
             to="/login"
-            className="mt-8 inline-block w-full rounded-lg bg-green-900 px-4 py-3 font-semibold text-white transition hover:bg-rose-800"
+            className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-amber-400 via-orange-500 to-orange-700 px-4 py-3 font-semibold text-white transition hover:from-amber-500 hover:via-orange-600 hover:to-orange-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700"
           >
             RETURN TO LOGIN
           </Link>
