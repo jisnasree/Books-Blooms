@@ -223,6 +223,9 @@ class LoginView(APIView):
                     "token": token.key,
                     "isAdmin": user.is_staff,
                     "first_name": user.first_name,
+                    "email": user.email,
+                    "phone_number": user.phone_number,
+                    "last_name": user.last_name,
                     "profile_image": (
                         request.build_absolute_uri(user.profile_image.url)
                         if user.profile_image

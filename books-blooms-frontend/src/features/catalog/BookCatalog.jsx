@@ -48,10 +48,9 @@ function BookCatalog() {
             .catch((error) => {
                 console.error("Error fetching categories:", error);
             });
-            
+
     }, []);
-console.log("Categories API:", categories);
-console.log("First book categories:", books[0]?.categories);
+
     // Search books by title or author
     const filteredBooks = books.filter((book) => {
 
@@ -67,13 +66,13 @@ console.log("First book categories:", books[0]?.categories);
             (book.categories || []).some(
                 (category) => String(category.id) === String(selectedCategory)
             );
-console.log(
-    "Book categories:",
-    books.map((book) => ({
-        title: book.title,
-        categories: book.categories,
-    }))
-);
+        // console.log(
+        //     "Book categories:",
+        //     books.map((book) => ({
+        //         title: book.title,
+        //         categories: book.categories,
+        //     }))
+        // );
         // Filter by price
         const price = Number(book.physical_variants?.[0]?.price);
         const matchesPrice =
@@ -163,8 +162,8 @@ console.log(
                                 ))}
                             </select>
                             <p className="mt-2 text-sm text-gray-500">
-    Selected category ID: {selectedCategory || "All"}
-</p>
+                                Selected category ID: {selectedCategory || "All"}
+                            </p>
 
                         </div>
 
@@ -316,6 +315,9 @@ console.log(
                                             {/* Author */}
                                             <p className="mt-1 text-sm text-gray-500">
                                                 {book.author_name}
+                                            </p>
+                                            <p className="mt-1 text-sm text-gray-500">
+                                                {book.physical_variants?.[0].format}
                                             </p>
 
                                             {/* Price */}

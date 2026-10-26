@@ -137,6 +137,9 @@ function BookDetails() {
             <p className="mt-3 text-gray-600">
               By {book.author_name}
             </p>
+             <p className="mt-3 text-gray-600">
+               {book.physical_variants?.[0].format}
+            </p>
 
             {/* Rating */}
             <div className="mt-4 flex items-center gap-2">

@@ -64,7 +64,7 @@ function Header() {
                     <Link to="/" className="text-sm font-medium text-rose-800 hover:text-rose-600">
                         Home
                     </Link>
-                    <Link to="/shop" className="text-sm text-gray-600 hover:text-rose-700">
+                    <Link to="/books" className="text-sm text-gray-600 hover:text-rose-700">
                         Shop
                     </Link>
                     <Link to="/contact" className="text-sm text-gray-600 hover:text-rose-700">
@@ -141,7 +141,7 @@ function Header() {
                         Sign In
                     </a>
                 )}
-                
+
                 {/* Cart */}
                 <Link
                     to="/cart"

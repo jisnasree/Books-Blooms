@@ -28,7 +28,7 @@ function ContactUs() {
     event.preventDefault();
 
     setNotice(
-      "Your form is ready, but message submission has not been connected yet."
+      ""
     );
   }
 

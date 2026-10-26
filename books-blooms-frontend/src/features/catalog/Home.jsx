@@ -29,7 +29,7 @@ const navigate = useNavigate();
 
                 <button
                     type="button"
-                     onClick={() => navigate("/shop")}
+                     onClick={() => navigate("/books")}
                     className="rounded-lg bg-green-800 px-7 py-3 font-semibold text-white transition hover:bg-rose-900"
                 >
                     Explore Books →

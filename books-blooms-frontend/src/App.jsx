@@ -30,12 +30,11 @@ function App() {
         <Routes>
           {/* Home */}
           <Route path="/" element={<Home />}></Route>
-          {/* <Route path="/books" element={<Login />}> </Route> */}
-          <Route path="/shop" element={<BookCatalog />} />
+          <Route path="/books" element={<BookCatalog />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/books/:id" element={<BookDetails />} />
 
-           {/* Home */}
+           {/* Cart */}
            <Route path="/cart" element={<Cart />} />
 
            {/* Profile */}
