@@ -9,161 +9,202 @@ import { useContext } from "react";
 import { UserContext } from "../../context/UserContext";
 import { ADMIN_URL } from "../../constants";
 import GoogleLoginButton from "./GoogleLoginButton"
+import loginImage from "../../assets/login.png";
 
 function Login() {
 
-        const [email, setEmail] = useState("");
-        const [password, setPassword] = useState("");
-        const [error, setError] = useState("");
-        const [loading, setLoading] = useState(false);
-        const [message, setMessage] = useState("")
-        const { user, setUser } = useContext(UserContext);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState("")
+    const { user, setUser } = useContext(UserContext);
 
-        const navigate = useNavigate();
-        const handleSubmit = async (e) => {
-            e.preventDefault();
+    const navigate = useNavigate();
+    const handleSubmit = async (e) => {
+        e.preventDefault();
 
-            setError("");
-            setMessage("");
-            setLoading(true);
+        setError("");
+        setMessage("");
+        setLoading(true);
 
-            try {
-                const response = await fetch(
-                    AUTH_LOGIN_URL,
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            email: email,
-                            password: password,
-                        }),
-                    }
-                );
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    setError(
-                        data.message ||
-                        data.detail ||
-                        data.non_field_errors?.[0] ||
-                        "Login failed. Please check your details."
-                    );
-                    return;
+        try {
+            const response = await fetch(
+                AUTH_LOGIN_URL,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                    }),
                 }
+            );
 
-                setMessage(data.message || "Login successful!");
-                // Save the token for future authenticated API requests.
-                sessionStorage.setItem("authToken", data.token);
-                console.log("Login successful:", data);
-                //setUser({ isAdmin: data.isAdmin, isAuthenticated: data.isAuthenticated, first_name: data.first_name })
-                setUser(data)
-                data.isAdmin ? navigate(ADMIN_URL) : navigate(HOME_URL);
-                setLoading(false)
+            const data = await response.json();
 
-                // // Navigate to the admin dashboard.
-                //navigate(HOME_URL);
-            } catch (err) {
-                setError("Unable to connect to the server. Please try again.");
-            } finally {
-                setLoading(false);
+            if (!response.ok) {
+                setError(
+                    data.message ||
+                    data.detail ||
+                    data.non_field_errors?.[0] ||
+                    "Login failed. Please check your details."
+                );
+                return;
             }
-        };
+
+            setMessage(data.message || "Login successful!");
+            // Save the token for future authenticated API requests.
+            sessionStorage.setItem("authToken", data.token);
+            console.log("Login successful:", data);
+            //setUser({ isAdmin: data.isAdmin, isAuthenticated: data.isAuthenticated, first_name: data.first_name })
+            setUser(data)
+            data.isAdmin ? navigate(ADMIN_URL) : navigate(HOME_URL);
+            setLoading(false)
+
+            // // Navigate to the admin dashboard.
+            //navigate(HOME_URL);
+        } catch (err) {
+            setError("Unable to connect to the server. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
-        return (
-            <div className="min-h-screen flex flex-col bg-[#FBFAF7]">
-                <Header />
-                <main className="flex flex-1 items-center justify-center px-4 py-8">
-                    <div className="mx-auto w-full max-w-lg p-6 bg-white border border-gray-200 space-y-4">
-                        <h2 className="mb-6 text-left text-2xl font-bold text-black-900">
-                            Login as an existing User
-                        </h2>
+    return (
+        <div className="flex min-h-screen flex-col bg-orange-50/40">
+            <Header />
 
-                        <form className="space-y-4" onSubmit={handleSubmit}>
-                            <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700">
-                                    Email Address
-                                </label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    placeholder="name@example.in"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none focus:border-rose-800 focus:ring-2 focus:ring-rose-200"
-                                    required
-                                />
-                            </div>
+            <main className="flex flex-1 items-center justify-center px-4 py-8 sm:px-6 lg:py-12">
+                <div className="grid w-full max-w-6xl overflow-hidden rounded-3xl bg-white shadow-xl ring-1 ring-orange-100 md:min-h-[600px] md:grid-cols-2">
+                    <section className="relative min-h-72 overflow-hidden md:min-h-full">
+                        <img
+                            src={loginImage}
+                            alt="Hands typing on a laptop"
+                            className="absolute inset-0 h-full w-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/10" />
 
-                            <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700">
-                                    Password
-                                </label>
-                                <input
-                                    type="password"
-                                    name="password"
-                                    placeholder="Create a password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none focus:border-rose-800 focus:ring-2 focus:ring-rose-200"
-                                    required
-                                />
-                            </div>
-
-                            <button
-                                type="submit"
-                                className="w-full rounded-lg bg-green-900 px-4 py-3 font-semibold text-white transition hover:bg-rose-900"
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-7 text-center text-white sm:p-10">
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-200">
+                                Already have an account?
+                            </p>
+                            
+                            <p className="mt-3 max-w-sm text-sm leading-6 text-white/85">
+                                Sign in and pick up where your next favorite story begins.
+                            </p>
+                            <Link
+                                to="/register"
+                                className="mt-6 inline-flex rounded-lg px-5 py-3 text-sm font-semibold text-white transition bg-gradient-to-r from-amber-400 via-orange-500 to-orange-700 hover:from-amber-500 hover:via-orange-600 hover:to-orange-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                             >
-                                Login
-                            </button>
+                                New here? Create an account
+                            </Link>
+                        </div>
+                    </section>
 
-                            {error && (
-                                <p className="text-sm text-red-600" role="alert">
-                                    {error}
-                                </p>
-                            )}
+                    <section className="flex items-center justify-center p-6 sm:p-10 lg:p-14">
+                        <div className="w-full max-w-md">
+                            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-orange-700">
+                                Welcome back
+                            </p>
+                            <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+                                Sign in to your account
+                            </h2>
+                            <p className="mt-2 text-sm text-slate-600">
+                                Enter your details to continue browsing.
+                            </p>
 
-                            {message && (
-                                <p className="text-sm text-green-700" role="status">
-                                    {message}
-                                </p>
-                            )}
+                            <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+                                <div>
+                                    <label
+                                        htmlFor="login-email"
+                                        className="mb-1.5 block text-sm font-medium text-slate-700"
+                                    >
+                                        Email address
+                                    </label>
+                                    <input
+                                        id="login-email"
+                                        type="email"
+                                        name="email"
+                                        autoComplete="email"
+                                        placeholder="name@example.com"
+                                        value={email}
+                                        onChange={(event) => setEmail(event.target.value)}
+                                        className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-orange-600 focus:ring-4 focus:ring-orange-100"
+                                        required
+                                    />
+                                </div>
 
+                                <div>
+                                    <div className="mb-1.5 flex items-center justify-between gap-3">
+                                        <label
+                                            htmlFor="login-password"
+                                            className="block text-sm font-medium text-slate-700"
+                                        >
+                                            Password
+                                        </label>
+                                        <Link
+                                            to="/forgot-password"
+                                            className="text-sm font-semibold text-orange-700 hover:text-orange-800 hover:underline"
+                                        >
+                                            Forgot password?
+                                        </Link>
+                                    </div>
+                                    <input
+                                        id="login-password"
+                                        type="password"
+                                        name="password"
+                                        autoComplete="current-password"
+                                        placeholder="Enter your password"
+                                        value={password}
+                                        onChange={(event) => setPassword(event.target.value)}
+                                        className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-orange-600 focus:ring-4 focus:ring-orange-100"
+                                        required
+                                    />
+                                </div>
 
-                            <p className="mt-4 text-left text-sm text-gray-600">
-                                Forgot password?{" "}
-                                <Link
-                                    to="/forgot-password"
-                                    className="font-semibold text-rose-900 hover:text-rose-800 hover:underline"
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full rounded-xl px-4 py-3 font-semibold text-white bg-gradient-to-r from-amber-400 via-orange-500 to-orange-700 hover:from-amber-500 hover:via-orange-600 hover:to-orange-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
-                                    Reset Here
-                                </Link>
-                            </p>
+                                    {loading ? "Signing in..." : "Sign in"}
+                                </button>
 
-                            <p className="mt-4 text-left text-sm text-gray-600">
-                                Don't have an acoount?{" "}
-                                <Link
-                                    to="/register"
-                                    className="font-semibold text-rose-900 hover:text-rose-800 hover:underline"
-                                >
-                                    SignUp Here
-                                </Link>
-                            </p>
-                        </form>
-                        <p className="mt-4 text-sm text-gray-600">
-                               <GoogleLoginButton />
-                            </p>
-                        {/* <div className="mt-6 flex justify-center">
-                            <GoogleLoginButton />
-                        </div> */}
-                    </div>
-                </main>
+                                {error && (
+                                    <p className="text-sm text-red-600" role="alert">
+                                        {error}
+                                    </p>
+                                )}
 
-                <Footer />
-            </div>
-        );
-    }
-export default Login
+                                {message && (
+                                    <p className="text-sm text-green-700" role="status">
+                                        {message}
+                                    </p>
+                                )}
+                            </form>
+
+                            <div className="my-6 flex items-center gap-4">
+                                <span className="h-px flex-1 bg-slate-200" />
+                                <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                                    Or continue with
+                                </span>
+                                <span className="h-px flex-1 bg-slate-200" />
+                            </div>
+
+                            <div className="flex justify-center">
+                                <GoogleLoginButton />
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </main>
+
+            <Footer />
+        </div>
+    );
+}
+export default Login;
