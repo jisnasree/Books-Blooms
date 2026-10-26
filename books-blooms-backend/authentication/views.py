@@ -2,6 +2,7 @@ import secrets
 
 from django.shortcuts import render
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import (
@@ -12,6 +13,7 @@ from .serializers import (
     ForgotPasswordSerializer,
     VerifyResetCodeSerializer,
     SetNewPasswordSerializer,
+    UserProfileSerializer,
 )
 from .models import EmailOTPChallenge, User
 import hmac
@@ -24,6 +26,31 @@ from django.contrib.auth import authenticate, password_validation
 from django.core.exceptions import ValidationError
 from rest_framework.authtoken.models import Token
 from django.core import signing
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import BasePermission
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from .serializers import CustomerSerializer
+from .permissions import IsNotBlocked
+import logging
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+from rest_framework.permissions import AllowAny
+from django.contrib.auth import get_user_model
+
+logger = logging.getLogger(__name__)
+def generate_otp():
+    # Generate a six-digit OTP
+    otp = str(secrets.randbelow(1000000)).zfill(6)
+
+    # Hash the OTP before storing it
+    code_hash = hmac.new(
+        settings.SECRET_KEY.encode(),
+        otp.encode(),
+        hashlib.sha256,
+    ).hexdigest()
+
+    return otp, code_hash
 
 
 # Create your views here.
@@ -33,11 +60,7 @@ class CreateUserView(APIView):
         if serializer.is_valid():
             user = serializer.save()
 
-            otp = str(secrets.randbelow(1000000)).zfill(6)
-
-            code_hash = hmac.new(
-                settings.SECRET_KEY.encode(), otp.encode(), hashlib.sha256
-            ).hexdigest()
+            otp, code_hash = generate_otp()
 
             expires_at = timezone.now() + timedelta(minutes=10)
 
@@ -49,7 +72,7 @@ class CreateUserView(APIView):
             )
             send_mail(
                 subject="BookBloom Email Verification",
-                message=f"Your BookBloom verification code for verifying the email is {otp}.",
+                message=f"Hi {user.first_name} {user.last_name}, your BookBloom verification code for verifying the email is {otp}.",
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
             )
@@ -58,7 +81,7 @@ class CreateUserView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class VerifyEmailView(APIView):
+class EmailVerificationCodeView(APIView):
     def post(self, request):
         serializer = VerifyEmailSerializer(data=request.data)
 
@@ -107,12 +130,24 @@ class VerifyEmailView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ResendEmailCodeView(APIView):
+class ResendEmailVerificationCodeView(APIView):
     def post(self, request):
         serializer = ResendEmailCodeSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.validated_data["email"]
             user = User.objects.get(email=email)
+            if user is None:
+                return Response(
+                    {
+                        "message": "If the account exists, a verification code will be sent."
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            if user.email_verified_at is not None:
+                return Response(
+                    {"message": "Email address is already verified."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             last_challenge = (
                 EmailOTPChallenge.objects.filter(
@@ -133,12 +168,7 @@ class ResendEmailCodeView(APIView):
                         status=status.HTTP_429_TOO_MANY_REQUESTS,
                     )
 
-            otp = str(secrets.randbelow(1000000)).zfill(6)
-
-            code_hash = hmac.new(
-                settings.SECRET_KEY.encode(), otp.encode(), hashlib.sha256
-            ).hexdigest()
-
+            otp, code_hash = generate_otp()
             expires_at = timezone.now() + timedelta(minutes=10)
 
             EmailOTPChallenge.objects.create(
@@ -150,7 +180,7 @@ class ResendEmailCodeView(APIView):
 
             send_mail(
                 subject="BookBloom Email Verification",
-                message=f"Your BookBloom verification code is {otp}.",
+                message=f"Hi {user.first_name} {user.last_name}, your BookBloom verification code for verifying the email is {otp}.",
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
             )
@@ -175,6 +205,14 @@ class LoginView(APIView):
                     },
                     status=status.HTTP_401_UNAUTHORIZED,
                 )
+            if user.is_blocked:
+                return Response(
+                    {
+                        "message": "Your account has been blocked.",
+                        "isAuthenticated": False,
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
             if user.email_verified_at is None:
                 return Response(
                     {"message": "please verify your email"},
@@ -186,13 +224,112 @@ class LoginView(APIView):
             return Response(
                 {
                     "message": "Login successful",
-                    "isLoggedIn": True,
+                    "isAuthenticated": True,
                     "token": token.key,
                     "isAdmin": user.is_staff,
+                    "first_name": user.first_name,
+                    "email": user.email,
+                    "phone_number": user.phone_number,
+                    "last_name": user.last_name,
+                    "profile_image": (
+                        request.build_absolute_uri(user.profile_image.url)
+                        if user.profile_image
+                        else None
+                    ),
                 }
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class GoogleLoginView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        credential = request.data.get("credential")
+
+        if not credential:
+            return Response(
+                {"message": "Google credential is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            google_user = id_token.verify_oauth2_token(
+                credential,
+                google_requests.Request(),
+                settings.GOOGLE_CLIENT_ID,
+            )
+        except ValueError:
+            return Response(
+                {"message": "Invalid Google credential."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        except Exception:
+            logger.exception("Google credential verification failed")
+            return Response(
+                {"message": "Google authentication is temporarily unavailable."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        email = google_user.get("email", "").strip().lower()
+
+        if not email or not google_user.get("email_verified"):
+            return Response(
+                {"message": "A verified Google email is required."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        User = get_user_model()
+        user = User.objects.filter(email__iexact=email).first()
+
+        if user is None:
+            user = User.objects.create_user(
+                username=email,
+                email=email,
+                first_name=google_user.get("given_name", ""),
+                last_name=google_user.get("family_name", ""),
+            )
+            user.email_verified_at = __import__("django.utils.timezone", fromlist=["now"]).now()
+            user.save(update_fields=["email_verified_at"])
+
+        if user.is_blocked:
+            return Response(
+                {
+                    "message": "Your account has been blocked.",
+                    "isAuthenticated": False,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if not user.email_verified_at:
+            user.email_verified_at = __import__("django.utils.timezone", fromlist=["now"]).now()
+            user.save(update_fields=["email_verified_at"])
+
+        token, created = Token.objects.get_or_create(user=user)
+
+        return Response(
+            {
+                "message": "Google login successful",
+                "isAuthenticated": True,
+                "token": token.key,
+                "isAdmin": user.is_staff,
+                "first_name": user.first_name,
+                "email": user.email,
+                "phone_number": user.phone_number,
+                "last_name": user.last_name,
+                "profile_image": (
+                    request.build_absolute_uri(user.profile_image.url)
+                    if user.profile_image
+                    else None
+                ),
+            },
+            status=status.HTTP_200_OK,
+        )
+
 
 
 class ForgotPasswordView(APIView):
@@ -202,11 +339,18 @@ class ForgotPasswordView(APIView):
             email = serializer.validated_data["email"]
             user = User.objects.filter(email=email).first()
 
-            otp = str(secrets.randbelow(1000000)).zfill(6)
+            if user is None:
+                return Response(
+                    {
+                        "message": (
+                            "If an account exists with this email, "
+                            "password reset instructions will be sent."
+                        )
+                    },
+                    status=status.HTTP_200_OK,
+                )
 
-            code_hash = hmac.new(
-                settings.SECRET_KEY.encode(), otp.encode(), hashlib.sha256
-            ).hexdigest()
+            otp, code_hash = generate_otp()
 
             expires_at = timezone.now() + timedelta(minutes=10)
             EmailOTPChallenge.objects.create(
@@ -218,7 +362,7 @@ class ForgotPasswordView(APIView):
 
             send_mail(
                 subject="BookBloom Email Verification",
-                message=f"Your BookBloom verification code for resetting the password is {otp}.",
+                message=f"Hi {user.first_name} {user.last_name}, your BookBloom verification code for resetting the password is {otp}.",
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
             )
@@ -232,7 +376,84 @@ class ForgotPasswordView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class VerifyResetCode(APIView):
+class ResendPasswordResetCodeView(APIView):
+    def post(self, request):
+        serializer = ForgotPasswordSerializer(data=request.data)
+
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+            user = User.objects.filter(email=email).first()
+
+            # Return a generic response if the account doesn't exist.
+            if user is None:
+                return Response(
+                    {
+                        "message": (
+                            "If an account exists with this email, "
+                            "password reset instructions will be sent."
+                        )
+                    },
+                    status=status.HTTP_200_OK,
+                )
+
+            # Check the 30-second cooldown for password-reset codes.
+            last_challenge = (
+                EmailOTPChallenge.objects.filter(
+                    user=user,
+                    purpose="Password-reset",
+                )
+                .order_by("-created_at")
+                .first()
+            )
+
+            if last_challenge is not None:
+                time_since_last_code = timezone.now() - last_challenge.created_at
+
+                if time_since_last_code.total_seconds() < 30:
+                    return Response(
+                        {
+                            "message": (
+                                "Please wait 30 seconds before "
+                                "requesting another code."
+                            )
+                        },
+                        status=status.HTTP_429_TOO_MANY_REQUESTS,
+                    )
+
+            # Generate a new six-digit OTP.
+            otp, code_hash = generate_otp()
+
+            expires_at = timezone.now() + timedelta(minutes=10)
+
+            EmailOTPChallenge.objects.create(
+                user=user,
+                purpose="Password-reset",
+                code_hash=code_hash,
+                expires_at=expires_at,
+            )
+
+            send_mail(
+                subject="BookBloom Password Reset",
+                message=f"Hi {user.first_name} {user.last_name}, your BookBloom verification code for resetting the password is {otp}.",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+            )
+
+            return Response(
+                {
+                    "message": "If an account exists with this email, "
+                    "password reset instructions will be sent."
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class ForgotPassordVerifyResetCode(APIView):
     def post(self, request):
         serializer = VerifyResetCodeSerializer(data=request.data)
         if serializer.is_valid():
@@ -335,3 +556,68 @@ class SetNewPasswordView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CustomerListView(ListAPIView):
+    serializer_class = CustomerSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return User.objects.filter(is_staff=False, is_superuser=False).order_by(
+            "-date_joined"
+        )
+
+
+class CustomerBlockView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def patch(self, request, user_id):
+        try:
+            customer = User.objects.get(id=user_id, is_staff=False, is_superuser=False)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Customer not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        is_blocked = request.data.get("is_blocked")
+
+        if not isinstance(is_blocked, bool):
+            return Response(
+                {"error": "is_blocked must be true or false."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        customer.is_blocked = is_blocked
+        customer.save(update_fields=["is_blocked"])
+
+        return Response(
+            {
+                "message": (
+                    "Customer blocked successfully."
+                    if is_blocked
+                    else "Customer unblocked successfully."
+                ),
+                "is_blocked": customer.is_blocked,
+            }
+        )
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        request.user.auth_token.delete()
+
+        return Response(
+            {"message": "Logout successful"},
+            status=status.HTTP_200_OK,
+        )
+
+
+class UserProfileView(RetrieveUpdateAPIView):
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated, IsNotBlocked]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_object(self):
+        return self.request.user

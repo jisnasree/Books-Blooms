@@ -1,9 +1,48 @@
+import { useContext, useState } from "react";
+import { UserContext } from "../context/UserContext";
+import { Link } from "react-router-dom";
+import { AUTH_LOGOUT_URL } from "../constants";
+import { CartContext } from "../context/CartContext";
 
 function Header() {
+
+    const { cartCount } = useContext(CartContext);
+    const { user, setUser } = useContext(UserContext);
+    const [showDropdown, setShowDropdown] = useState(false);
+
+    async function handleLogout() {
+        const token = sessionStorage.getItem("authToken");
+        try {
+            if (token) {
+                const response = await fetch(AUTH_LOGOUT_URL, {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Token ${token}`,
+                    },
+                });
+
+                console.log("Logout API status:", response.status);
+            }
+        } catch (error) {
+            console.error("Error logging out:", error);
+        } finally {
+            sessionStorage.removeItem("authToken");
+
+            setUser({
+                isAdmin: false,
+                isAuthenticated: false,
+                first_name: "",
+                profile_image: null,
+            });
+
+            console.log("Local logout cleanup completed");
+        }
+    }
+
     return (
         <header className="border-b border-rose-100 bg-[#F6F1E8]">
-            
-            <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+
+            <nav className="mx-auto flex max-w-7xl items-center justify-between py-4">
                 {/* Brand */}
                 <a href="/" className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-700 text-white">
@@ -22,19 +61,19 @@ function Header() {
 
                 {/* Navigation links */}
                 <div className="hidden items-center gap-8 md:flex">
-                    <a href="/" className="text-sm font-medium text-rose-800 hover:text-rose-600">
+                    <Link to="/" className="text-sm font-medium text-rose-800 hover:text-rose-600">
                         Home
-                    </a>
-                    <a href="/books" className="text-sm text-gray-600 hover:text-rose-700">
-                        Books
-                    </a>
-                    <a href="/categories" className="text-sm text-gray-600 hover:text-rose-700">
-                        Categories
-                    </a>
+                    </Link>
+                    <Link to="/books" className="text-sm text-gray-600 hover:text-rose-700">
+                        Shop
+                    </Link>
+                    <Link to="/contact" className="text-sm text-gray-600 hover:text-rose-700">
+                        Contact Us
+                    </Link>
                 </div>
 
 
-                <div className="w-96">
+                <div className="w-72">
                     <input
                         type="text"
                         placeholder="Search title, author, or keyword"
@@ -43,25 +82,79 @@ function Header() {
                 </div>
 
 
-                {/* Actions */}
-                <div className="flex items-center gap-3">
-                    <a
-                        href="/cart"
-                        aria-label="Shopping cart"
-                        className="rounded-lg p-2 text-gray-700 hover:bg-rose-50"
-                    >
-                        🛒
-                    </a>
+                {user.isAuthenticated ? (
+                    <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-green-800">
+                            {user.isAuthenticated && (
+                                <span>Welcome, {user.first_name}</span>
+                            )}
+                        </span>
 
+                        <div className="relative">
+                            <button
+                                type="button"
+                                onClick={() => setShowDropdown((prev) => !prev)}
+                                className="flex h-10 w-10 items-center justify-center overflow-hidden ounded-full border-2 border-rose-200 bg-rose-100 text-lg font-semibold text-rose-700 hover:bg-rose-200"
+                                aria-label="Profile menu"
+                                aria-expanded={showDropdown}
+                            >
+                                {user.profile_image ? (
+                                    <img
+                                        src={user.profile_image}
+                                        alt="Profile"
+                                        className="h-full w-full rounded-full object-cover"
+                                    />
+                                ) : (
+                                    (user.first_name || user.email || "U")
+                                        .charAt(0)
+                                        .toUpperCase()
+                                )}
+                            </button>
+
+                            {showDropdown && (
+                                <div className="absolute right-0 z-50 mt-2 w-44 rounded-xl border border-rose-100 bg-white py-2 shadow-lg">
+                                    <Link
+                                        to="/account"
+                                        onClick={() => setShowDropdown(false)}
+                                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-rose-50"
+                                    >
+                                        My Account
+                                    </Link>
+
+                                    <Link
+                                        type="button"
+                                        to="/login"
+                                        onClick={handleLogout}
+                                        className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-rose-50"
+                                    >
+                                        Sign Out
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                ) : (
                     <a
                         href="/login"
                         className="hidden rounded-lg px-4 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-50 sm:inline-block"
                     >
                         Sign In
                     </a>
+                )}
 
-                   
-                </div>
+                {/* Cart */}
+                <Link
+                    to="/cart"
+                    className="flex items-center gap-2 text-sm font-medium text-green-800 hover:text-rose-700"
+                >
+                    <span className="text-xl">🛒</span>
+                    Cart
+                    {cartCount > 0 && (
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-700 px-1 text-xs font-semibold text-white">
+                            {cartCount}
+                        </span>
+                    )}
+                </Link>
             </nav>
         </header>
     );

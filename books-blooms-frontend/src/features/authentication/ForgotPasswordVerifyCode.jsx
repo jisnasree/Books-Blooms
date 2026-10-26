@@ -1,14 +1,29 @@
 import Header from "../../components/Header"
 import Footer from "../../components/Footer";
-import { useState } from "react";
-import { useLocation, useNavigate,} from "react-router-dom";
-import { AUTH_VERIFY_CODE_URL } from "../../constants";
-function VerifyCode() {
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate, } from "react-router-dom";
+import { AUTH_FORGOT_PWD_VERIFY_CODE_URL, AUTH_FORGOT_PWD_RESEND_CODE_URL } from "../../constants";
+function ForgotPasswordVerifyCode() {
 
   const navigate = useNavigate();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const [countdown, setCountdown] = useState(0);
+  const [resending, setResending] = useState(false);
+  const [message, setMessage] = useState("");
+
+
+  useEffect(() => {
+    if (countdown <= 0) return;
+
+    const timer = setTimeout(() => {
+      setCountdown((previous) => previous - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
   const location = useLocation();
   const email = location.state?.email || "";
@@ -16,6 +31,45 @@ function VerifyCode() {
   function handleChange(e) {
     setCode(e.target.value)
   }
+
+
+
+  const handleResendCode = async () => {
+    setError("");
+    setMessage("");
+    setResending(true);
+
+    try {
+      const response = await fetch(AUTH_FORGOT_PWD_RESEND_CODE_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(
+          typeof data === "object"
+            ? Object.values(data).flat().join(" ")
+            : "Unable to resend the code."
+        );
+        return;
+      }
+
+      setMessage("If an account exists with this email, a new password-reset code will be sent.");
+      setCountdown(30);
+    } catch (error) {
+      console.error("Resend password-reset code error:", error);
+      setError("Unable to connect to the server. Please try again.");
+    } finally {
+      setResending(false);
+    }
+  };
+
+
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -30,7 +84,7 @@ function VerifyCode() {
 
     try {
       const response = await fetch(
-        AUTH_VERIFY_CODE_URL,
+        AUTH_FORGOT_PWD_VERIFY_CODE_URL,
         {
           method: "POST",
           headers: {
@@ -55,10 +109,10 @@ function VerifyCode() {
       }
 
       navigate("/set-new-password", {
-      state: {
-        resetToken: data.reset_token,
-      },
-    });
+        state: {
+          resetToken: data.reset_token,
+        },
+      });
     }
     catch (error) {
       console.error("Email verification error:", error);
@@ -106,6 +160,12 @@ function VerifyCode() {
                 </p>
               )}
 
+              {message && (
+                <p className="text-sm text-green-700" role="status">
+                  {message}
+                </p>
+              )}
+
               <input
                 id="verification_code"
                 name="code"
@@ -121,8 +181,8 @@ function VerifyCode() {
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 text-center text-xl tracking-[0.5em] outline-none focus:border-rose-800 focus:ring-2 focus:ring-rose-200"
               />
             </div>
-            
-           
+
+
 
             <button
               type="submit"
@@ -133,16 +193,27 @@ function VerifyCode() {
 
             <p className="text-center text-sm text-gray-600">
               Didn't receive the code?{" "}
-              <button
-                type="button"
-                className="font-semibold text-rose-900 hover:underline"
-              >
-                Resend in 30 sec
-              </button>
+
+              <p className="text-center text-sm text-gray-600">
+                Didn't receive the code?{" "}
+                <button
+                  type="button"
+                  onClick={handleResendCode}
+                  disabled={countdown > 0 || resending}
+                  className="font-semibold text-rose-900 hover:underline disabled:cursor-not-allowed disabled:text-gray-400"
+                >
+                  {resending
+                    ? "Sending..."
+                    : countdown > 0
+                      ? `Resend code in ${countdown}s`
+                      : "Resend Code"}
+                </button>
+              </p>
+
             </p>
           </form>
 
-         
+
         </div>
       </main>
 
@@ -150,5 +221,5 @@ function VerifyCode() {
     </div>
   );
 }
-export default VerifyCode
+export default ForgotPasswordVerifyCode
 

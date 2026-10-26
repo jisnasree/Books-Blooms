@@ -4,7 +4,13 @@ from django.contrib.auth.models import AbstractUser
 class User(AbstractUser):
     terms_accepted_at = models.DateTimeField(null=True, blank=True)
     email_verified_at = models.DateTimeField(null=True, blank=True)
-    
+    profile_image = models.ImageField(
+        upload_to="profile_images/",
+        blank=True,
+        null=True
+    )
+    is_blocked = models.BooleanField(default=False)
+    phone_number = models.CharField(max_length=20,blank=True)
     
 class EmailOTPChallenge(models.Model):
     user = models.ForeignKey(

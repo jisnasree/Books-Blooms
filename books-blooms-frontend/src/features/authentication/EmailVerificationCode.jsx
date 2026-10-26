@@ -1,11 +1,10 @@
 import Header from "../../components/Header"
 import Footer from "../../components/Footer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { AUTH_VERIFY_EMAIL_URL } from "../../constants";
+import { AUTH_VERIFY_EMAIL_URL, AUTH_EMAIL_RESEND_CODE_URL } from "../../constants";
 
-function VerifyEmail() {
-
+function EmailVerificationCode() {
   const navigate = useNavigate();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -14,10 +13,60 @@ function VerifyEmail() {
 
   const location = useLocation();
   const email = location.state?.email || "";
+  const [countdown, setCountdown] = useState(0);
+  const [resending, setResending] = useState(false);
 
-  function handleChange(e) {
+
+  useEffect(() => {
+    if (countdown <= 0) return;
+
+    const timer = setTimeout(() => {
+      setCountdown((previous) => previous - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [countdown]);
+
+
+  function handleEmailVerificationCode(e) {
     setCode(e.target.value)
   }
+
+  const handleResendCode = async () => {
+    setError("");
+    setMessage("");
+    setResending(true);
+
+    try {
+      const response = await fetch(AUTH_EMAIL_RESEND_CODE_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(
+          typeof data === "object"
+            ? Object.values(data).flat().join(" ")
+            : "Unable to resend the code."
+        );
+        return;
+      }
+
+      setMessage("A new verification code has been sent.");
+      setCountdown(30);
+    } catch (error) {
+      console.error("Resend code error:", error);
+      setError("Unable to connect to the server. Please try again.");
+    } finally {
+      setResending(false);
+    }
+  };
+
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -103,13 +152,18 @@ function VerifyEmail() {
                   {error}
                 </p>
               )}
+              {message && (
+                <p className="text-sm text-green-700" role="status">
+                  {message}
+                </p>
+              )}
 
               <input
                 id="verification_code"
                 name="code"
                 type="text"
                 value={code}
-                onChange={handleChange}
+                onChange={handleEmailVerificationCode}
                 inputMode="numeric"
                 maxLength={6}
                 pattern="[0-9]{6}"
@@ -129,12 +183,28 @@ function VerifyEmail() {
 
             <p className="text-center text-sm text-gray-600">
               Didn't receive the code?{" "}
+
               <button
                 type="button"
-                className="font-semibold text-rose-900 hover:underline"
+                onClick={handleResendCode}
+                disabled={countdown > 0 || resending}
+                className="font-semibold text-rose-900 hover:underline disabled:cursor-not-allowed disabled:text-gray-400"
               >
-                Resend in 30 sec
+                {resending
+                  ? "Sending..."
+                  : countdown > 0
+                    ? `Resend code in ${countdown}s`
+                    : "Resend Code"}
               </button>
+              {/* <button
+                type="button"
+                onClick={handleResendCode}
+                disabled={countdown > 0}
+              >
+                {countdown > 0
+                  ? `Resend code in ${countdown}s`
+                  : "Resend Code"}
+              </button> */}
             </p>
           </form>
 
@@ -154,4 +224,4 @@ function VerifyEmail() {
     </div>
   );
 }
-export default VerifyEmail
+export default EmailVerificationCode

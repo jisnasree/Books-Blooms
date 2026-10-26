@@ -2,9 +2,11 @@
 import heroImage from "../../assets/hero2.png";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import BookList from "./BookList";
+import BookBestSellers from "./BookBestSellers";
+import { useNavigate } from "react-router-dom";
 
 function Home() {
+const navigate = useNavigate();
   return (
     <section className="min-h-screen flex flex-col bg-[#FBFAF7]">
         <Header />
@@ -27,6 +29,7 @@ function Home() {
 
                 <button
                     type="button"
+                     onClick={() => navigate("/books")}
                     className="rounded-lg bg-green-800 px-7 py-3 font-semibold text-white transition hover:bg-rose-900"
                 >
                     Explore Books →
@@ -43,7 +46,7 @@ function Home() {
                 </div>
 
             </div>
-        <BookList />
+        <BookBestSellers />
         <Footer />
     </section>
   );

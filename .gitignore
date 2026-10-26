@@ -162,3 +162,5 @@ books-blooms-backend/authentication/migrations/0006_emailotpchallenge.py
 books-blooms-backend/authentication/migrations/0007_delete_emailotpchallenge.py
 books-blooms-backend/authentication/migrations/0008_emailotpchallenge.py
 books-blooms-backend/authentication/migrations/[0-9]*.py
+
+.env
