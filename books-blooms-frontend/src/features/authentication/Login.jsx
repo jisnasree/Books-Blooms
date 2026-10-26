@@ -107,15 +107,11 @@ function Login() {
 
                     <section className="flex items-center justify-center p-6 sm:p-10 lg:p-14">
                         <div className="w-full max-w-md">
-                            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-orange-700">
-                                Welcome back
-                            </p>
+                            
                             <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
                                 Sign in to your account
                             </h2>
-                            <p className="mt-2 text-sm text-slate-600">
-                                Enter your details to continue browsing.
-                            </p>
+                            
 
                             <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
                                 <div>
@@ -190,7 +186,7 @@ function Login() {
                             <div className="my-6 flex items-center gap-4">
                                 <span className="h-px flex-1 bg-slate-200" />
                                 <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                                    Or continue with
+                                    Or
                                 </span>
                                 <span className="h-px flex-1 bg-slate-200" />
                             </div>
