@@ -1,53 +1,78 @@
 import { useContext, useEffect, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { CartContext } from "../context/CartContext";
-import { AUTH_LOGOUT_URL, CATALOG_CATEGORIES_URL } from "../constants";
+import { AUTH_LOGOUT_URL, CATALOG_BOOKS_URL } from "../constants";
 
 function Header() {
   const { cartCount } = useContext(CartContext);
   const { user, setUser } = useContext(UserContext);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
-  const [showCategories, setShowCategories] = useState(false);
-  const [categories, setCategories] = useState([]);
-  const [categoryError, setCategoryError] = useState("");
+
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+
+  function handleSearch(event) {
+    event.preventDefault();
+
+    const search = searchTerm.trim();
+
+    if (!search) return;
+
+    setShowSuggestions(false);
+
+    navigate(`/books?search=${encodeURIComponent(search)}`);
+  }
+
 
   useEffect(() => {
-    let isMounted = true;
+    const search = searchTerm.trim();
 
-    async function fetchCategories() {
+    if (search.length < 2) {
+      setSuggestions([]);
+      setSearchLoading(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
       try {
-        const response = await fetch(CATALOG_CATEGORIES_URL);
+        setSearchLoading(true);
+
+        const params = new URLSearchParams({
+          search: search,
+          page: 1,
+        });
+
+        const response = await fetch(
+          `${CATALOG_BOOKS_URL}?${params.toString()}`
+        );
 
         if (!response.ok) {
-          throw new Error(`Failed to load categories (${response.status})`);
+          throw new Error("Failed to fetch book suggestions");
         }
 
         const data = await response.json();
 
-        if (!Array.isArray(data)) {
-          throw new Error("The categories response was not a list.");
-        }
+        const books = Array.isArray(data)
+          ? data
+          : data.results || [];
 
-        if (isMounted) {
-          setCategories(data);
-          setCategoryError("");
-        }
+        setSuggestions(books.slice(0, 5));
       } catch (error) {
-        console.error("Error loading categories:", error);
-
-        if (isMounted) {
-          setCategoryError("Categories could not be loaded.");
-        }
+        console.error("Error fetching suggestions:", error);
+        setSuggestions([]);
+      } finally {
+        setSearchLoading(false);
       }
-    }
+    }, 300);
 
-    fetchCategories();
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   async function handleLogout() {
     const token = sessionStorage.getItem("authToken");
@@ -80,10 +105,9 @@ function Header() {
   }
 
   const navLinkClass = ({ isActive }) =>
-    `whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] transition ${
-      isActive
-        ? "text-orange-700"
-        : "text-slate-600 hover:text-orange-700"
+    `whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] transition ${isActive
+      ? "text-orange-700"
+      : "text-slate-600 hover:text-orange-700"
     }`;
 
   return (
@@ -134,71 +158,92 @@ function Header() {
             Contact
           </NavLink>
 
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowCategories((open) => !open)}
-              aria-expanded={showCategories}
-              aria-haspopup="menu"
-              className="flex items-center gap-1 whitespace-nowrap text-xs font-semibold uppercase tracking-[0.12em] text-slate-600 transition hover:text-orange-700"
-            >
-              Categories
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 20 20"
-                fill="none"
-                className={`h-4 w-4 transition-transform ${
-                  showCategories ? "rotate-180" : ""
-                }`}
-              >
-                <path
-                  d="m5 7.5 5 5 5-5"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
+          <form
+            onSubmit={handleSearch}
+            className="relative w-full min-w-[200px] max-w-sm"
+          >
+            <div className="flex items-center rounded-full border border-slate-300 bg-white px-4 py-2 transition focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-100">
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => {
+                  setSearchTerm(event.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                placeholder="Search books or authors..."
+                aria-label="Search books by title or author"
+                aria-autocomplete="list"
+                className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+              />
 
-            {showCategories && (
-              <div
-                role="menu"
-                className="absolute left-1/2 z-50 mt-3 max-h-72 w-56 -translate-x-1/2 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
+              <button
+                type="submit"
+                aria-label="Search"
+                className="ml-2 text-slate-500 transition hover:text-orange-700"
               >
-                <Link
-                  to="/books"
-                  role="menuitem"
-                  onClick={() => setShowCategories(false)}
-                  className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-orange-50 hover:text-orange-700"
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="h-5 w-5"
                 >
-                  All books
-                </Link>
+                  <circle
+                    cx="10.8"
+                    cy="10.8"
+                    r="6.8"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                  />
+                  <path
+                    d="m16 16 4.5 4.5"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
 
-                {categoryError ? (
-                  <p role="status" className="px-3 py-2 text-sm text-orange-600">
-                    {categoryError}
+            {showSuggestions && searchTerm.trim().length >= 2 && (
+              <div
+                role="listbox"
+                className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg"
+              >
+                {searchLoading ? (
+                  <p className="px-4 py-3 text-sm text-slate-500">
+                    Searching books...
                   </p>
-                ) : categories.length > 0 ? (
-                  categories.map((category) => (
+                ) : suggestions.length > 0 ? (
+                  suggestions.map((book) => (
                     <Link
-                      key={category.id}
-                      to={`/books?category=${encodeURIComponent(category.id)}`}
-                      role="menuitem"
-                      onClick={() => setShowCategories(false)}
-                      className="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-orange-50 hover:text-orange-700"
+                      key={book.id}
+                      to={`/books/${book.id}`}
+                      role="option"
+                      onClick={() => {
+                        setSearchTerm("");
+                        setShowSuggestions(false);
+                      }}
+                      className="block border-b border-slate-100 px-4 py-3 last:border-0 hover:bg-orange-50"
                     >
-                      {category.name}
+                      <p className="text-sm font-medium text-slate-800">
+                        {book.title}
+                      </p>
+
+                      <p className="mt-1 text-xs text-slate-500">
+                        {book.author_name || "Unknown author"}
+                      </p>
                     </Link>
                   ))
                 ) : (
-                  <p className="px-3 py-2 text-sm text-slate-500">
-                    No categories available.
+                  <p className="px-4 py-3 text-sm text-slate-500">
+                    No matching books found.
                   </p>
                 )}
               </div>
             )}
-          </div>
+          </form>
+
         </div>
 
         <div className="order-2 flex shrink-0 items-center gap-4 md:order-3">
