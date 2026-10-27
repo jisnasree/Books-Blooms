@@ -12,7 +12,7 @@ function BookBestSellers() {
     fetch(CATALOG_BOOKS_URL)
       .then((response) => response.json())
       .then((data) => {
-        setBooks(data.filter((book) => book.featured));
+        setBooks(data.results.filter((book) => book.featured));
       });
   }, []);
 
