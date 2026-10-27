@@ -319,17 +319,18 @@ function BooksManagement() {
 
 
       {/* Search books */}
-      <div className="mb-6">
-        <div className="relative max-w-md">
+      <div className="mb-6 flex w-full max-w-3xl items-center gap-4">
+        <div className="relative min-w-0 flex-1">
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search by book title or author..."
             className="w-full rounded-lg border border-gray-300 bg-white py-3 pl-10 pr-4 text-sm outline-none focus:border-green-700 focus:ring-1 focus:ring-green-700"
           />
 
           <svg
+            aria-hidden="true"
             className="absolute left-3 top-3.5 h-5 w-5 text-gray-400"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -345,6 +346,15 @@ function BooksManagement() {
             />
           </svg>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setSearchTerm("")}
+          disabled={!searchTerm}
+          className="shrink-0 rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Clear
+        </button>
       </div>
 
 

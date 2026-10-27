@@ -53,27 +53,17 @@ function BookCatalog() {
 
     // Search books by title or author
     const filteredBooks = books.filter((book) => {
-
-        // Search by book title or author
         const search = searchTerm.trim().toLowerCase();
         const matchesSearch =
-            book.title.toLowerCase().includes(search.toLowerCase()) ||
-            book.author_name.toLowerCase().includes(search.toLowerCase())
+            book.title.toLowerCase().includes(search) ||
+            book.author_name.toLowerCase().includes(search);
 
-        // Filter by category
         const matchesCategory =
             !selectedCategory ||
             (book.categories || []).some(
                 (category) => String(category.id) === String(selectedCategory)
             );
-        // console.log(
-        //     "Book categories:",
-        //     books.map((book) => ({
-        //         title: book.title,
-        //         categories: book.categories,
-        //     }))
-        // );
-        // Filter by price
+
         const price = Number(book.physical_variants?.[0]?.price);
         const matchesPrice =
             !selectedPrice ||
@@ -83,7 +73,6 @@ function BookCatalog() {
                 price <= 3000) ||
             (selectedPrice === "over3000" && price > 3000);
 
-        // Filter by format
         const matchesFormat =
             !selectedFormat ||
             (book.physical_variants || []).some(
@@ -91,22 +80,15 @@ function BookCatalog() {
                     variant.format?.toLowerCase() ===
                     selectedFormat.toLowerCase()
             );
-        return (
-            matchesSearch &&
-            matchesCategory &&
-            matchesPrice &&
-            matchesFormat
-        );
 
+        return matchesSearch && matchesCategory && matchesPrice && matchesFormat;
     });
 
     if (loading) {
         return (
             <>
                 <Header />
-                <p className="py-12 text-center">
-                    Loading books...
-                </p>
+                <p className="py-12 text-center">Loading books...</p>
                 <Footer />
             </>
         );
@@ -131,9 +113,7 @@ function BookCatalog() {
                         type="text"
                         placeholder="Search by book title or author..."
                         value={searchTerm}
-                        onChange={(event) =>
-                            setSearchTerm(event.target.value)
-                        }
+                        onChange={(event) => setSearchTerm(event.target.value)}
                         className="w-full rounded-lg border border-gray-100 bg-white px-4 py-3 text-[#45332F] outline-none sm:max-w-md"
                     />
                 </div>
@@ -346,7 +326,6 @@ function BookCatalog() {
                                 })}
                             </div>
                         )}
-
                     </div>
                 </div>
 
