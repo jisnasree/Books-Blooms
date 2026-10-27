@@ -141,7 +141,7 @@ function Header() {
           </span>
         </Link>
 
-        <div className="order-3 flex w-full items-center justify-center gap-x-5 gap-y-3 border-t border-slate-100 pt-3 sm:gap-x-7 md:order-2 md:w-auto md:flex-wrap md:border-0 md:pt-0">
+        <div className="order-3 flex w-full items-center justify-center gap-x-4 pt-3 md:order-2 md:w-auto md:flex-nowrap md:gap-x-5 md:border-0 md:pt-0">
           <NavLink to="/" end className={navLinkClass}>
             Home
           </NavLink>
@@ -160,7 +160,7 @@ function Header() {
 
           <form
             onSubmit={handleSearch}
-            className="relative w-full min-w-[200px] max-w-sm"
+            className="relative w-60 shrink-0"
           >
             <div className="flex items-center rounded-full border border-slate-300 bg-white px-4 py-2 transition focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-100">
               <input
