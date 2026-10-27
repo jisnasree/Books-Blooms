@@ -288,7 +288,7 @@ function Profile() {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full rounded-lg bg-rose-600 px-5 py-3 font-medium text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-orange-600 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 disabled:shadow-none"
               >
                 {saving ? "Saving Changes..." : "Save Changes"}
               </button>

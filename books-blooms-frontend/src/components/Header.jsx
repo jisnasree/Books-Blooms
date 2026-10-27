@@ -5,7 +5,7 @@ import { CartContext } from "../context/CartContext";
 import { AUTH_LOGOUT_URL, CATALOG_BOOKS_URL } from "../constants";
 
 function Header() {
-  const { cartCount } = useContext(CartContext);
+  const { cartCount, refreshCart } = useContext(CartContext);
   const { user, setUser } = useContext(UserContext);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
 
@@ -100,6 +100,7 @@ function Header() {
         first_name: "",
         profile_image: null,
       });
+      refreshCart({ items: [] });
       setShowAccountMenu(false);
     }
   }

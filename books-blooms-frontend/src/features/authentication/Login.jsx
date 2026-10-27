@@ -10,6 +10,7 @@ import { UserContext } from "../../context/UserContext";
 import { ADMIN_URL } from "../../constants";
 import GoogleLoginButton from "./GoogleLoginButton"
 import loginImage from "../../assets/login.png";
+import { CartContext } from "../../context/CartContext";
 
 function Login() {
 
@@ -61,6 +62,7 @@ function Login() {
             console.log("Login successful:", data);
             //setUser({ isAdmin: data.isAdmin, isAuthenticated: data.isAuthenticated, first_name: data.first_name })
             setUser(data)
+         
             data.isAdmin ? navigate(ADMIN_URL) : navigate(HOME_URL);
             setLoading(false)
 
