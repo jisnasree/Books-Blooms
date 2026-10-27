@@ -8,7 +8,7 @@ function BooksTable({
 
         <div className="overflow-x-auto rounded-lg border bg-white">
             <table className="w-full text-left text-sm">
-                <thead className="bg-gray-100 text-gray-600">
+                <thead className="bg-[#203746] text-white">
                     <tr>
                         <th className="px-4 py-3">Title</th>
                         <th className="px-4 py-3">Author</th>

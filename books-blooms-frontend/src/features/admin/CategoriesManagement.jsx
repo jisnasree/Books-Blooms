@@ -104,9 +104,9 @@ function CategoriesManagement() {
 
           <button
             type="submit"
-            className="rounded bg-blue-600 px-4 py-2 text-white"
+            className="rounded-lg bg-green-700 px-5 py-2 text-white hover:bg-rose-800"
           >
-            Save
+            Save Category
           </button>
         </form>
       )}
@@ -115,8 +115,8 @@ function CategoriesManagement() {
         <p>No categories found.</p>
       ) : (
         <table className="w-full border-collapse border border-gray-200">
-          <thead>
-            <tr className="bg-gray-100">
+          <thead className="bg-[#203746] text-white">
+            <tr>
               <th className="border p-3 text-left">ID</th>
               <th className="border p-3 text-left">Category Name</th>
             </tr>

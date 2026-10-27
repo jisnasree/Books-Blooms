@@ -130,7 +130,7 @@ function CustomersManagement() {
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-gray-300">
-          <thead className="bg-gray-100">
+          <thead className="bg-[#203746] text-white">
             <tr>
               <th className="border p-3 text-left">ID</th>
               <th className="border p-3 text-left">First Name</th>

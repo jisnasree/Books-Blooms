@@ -163,9 +163,9 @@ function AuthorsManagement() {
       <div className="mb-6">
         <button
           onClick={() => setShowForm(!showForm)}
-          className="rounded-lg bg-rose-600 px-4 py-2 text-white hover:bg-rose-700"
+          
         >
-          {showForm ? "Cancel" : "+ Add Author"}
+          {showForm ? <span className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100">Cancel</span> :  <span className="mb-4 rounded bg-green-700 px-4 py-2 text-white">Add Author</span>}
         </button>
 
         {showForm && (
@@ -189,7 +189,7 @@ function AuthorsManagement() {
 
             <button
               type="submit"
-              className="rounded-lg bg-rose-600 px-4 py-2 text-white hover:bg-rose-700"
+              className="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-rose-700"
             >
               Save Author
             </button>
@@ -199,7 +199,7 @@ function AuthorsManagement() {
 
       <div className="overflow-x-auto rounded-lg border border-gray-500 bg-white">
         <table className="w-full text-left text-sm">
-          <thead className="bg-gray-100 text-gray-600">
+          <thead className="bg-[#203746] text-white">
             <tr>
               <th className="px-4 py-3">ID</th>
               <th className="px-4 py-3">Author Name</th>
@@ -260,7 +260,7 @@ function AuthorsManagement() {
                         setEditedAuthorName(author.name);
                         setFormError("");
                       }}
-                      className="font-medium text-rose-600 hover:text-rose-800"
+                      className="font-medium text-green-600 hover:text-rose-800"
                     >
                       Edit
                     </button>

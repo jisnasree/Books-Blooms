@@ -241,7 +241,7 @@ function BookForm({
 
                         <button
                             type="submit"
-                            className="rounded-lg bg-rose-700 px-5 py-2 text-white hover:bg-rose-800"
+                            className="rounded-lg bg-green-700 px-5 py-2 text-white hover:bg-rose-800"
                         >
                             {editingBook ? "Update Book" : "Save Book"}
                         </button>
