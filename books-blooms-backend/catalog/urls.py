@@ -3,11 +3,12 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('books/', views.BookListView.as_view()),
-    path('books/<int:pk>/', views.BookDetailView.as_view()),
-    path('authors/', views.AuthorsListView.as_view()),
-    path('authors/<int:pk>/', views.AuthorDetailView.as_view()),
-    path('categories/', views.CategoryListView.as_view()),
-    path('categories/<int:pk>/', views.CategoryDetailView.as_view()),
-    
+    path("books/", views.BookListView.as_view()),
+    path("books/<int:pk>/", views.BookDetailView.as_view()),
+    path("authors/", views.AuthorsListView.as_view()),
+    path("authors/<int:pk>/", views.AuthorDetailView.as_view()),
+    path("categories/", views.CategoryListView.as_view()),
+    path("categories/<int:pk>/", views.CategoryDetailView.as_view()),
+    path("wishlist/",views.WishlistListCreateView.as_view(),),
+    path("wishlist/<int:pk>/",views.WishlistDeleteView.as_view(),),
 ]

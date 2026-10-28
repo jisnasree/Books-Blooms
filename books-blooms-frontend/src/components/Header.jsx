@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { CartContext } from "../context/CartContext";
 import { AUTH_LOGOUT_URL, CATALOG_BOOKS_URL } from "../constants";
+import { WishlistContext } from "../context/WishListContext";
 
 function Header() {
   const { cartCount, refreshCart } = useContext(CartContext);
@@ -14,6 +15,7 @@ function Header() {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+  const { wishlist } = useContext(WishlistContext);
 
 
   function handleSearch(event) {
@@ -305,6 +307,36 @@ function Header() {
               Sign In
             </Link>
           )}
+
+          {/* Wishlist icon */}
+          <Link
+            to="/wishlist"
+            aria-label="Wishlist"
+            className="relative flex h-9 w-9 items-center justify-center text-rose-600 transition hover:text-rose-700"
+          >
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              className="h-6 w-6"
+            >
+              <path
+                d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+
+            {wishlist.length > 0 && (
+              <span className="absolute right-0 top-0 flex h-[18px] min-w-[18px] -translate-y-1/4 translate-x-1/4 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold leading-none text-white">
+                {wishlist.length > 99 ? "99+" : wishlist.length}
+              </span>
+            )}
+          </Link>
+
+
 
           <Link
             to="/cart"

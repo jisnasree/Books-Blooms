@@ -6,6 +6,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { UserProvider } from './context/UserContext.jsx'
 import { CartProvider } from './context/CartContext.jsx'
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { WishlistProvider } from './context/WishListContext'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -13,7 +14,9 @@ createRoot(document.getElementById('root')).render(
       <BrowserRouter>
         <UserProvider>
           <CartProvider>
-            <App />
+            <WishlistProvider>
+              <App />
+            </WishlistProvider>
           </CartProvider>
         </UserProvider>
       </BrowserRouter>

@@ -22,10 +22,11 @@ import BookDetails from "./features/catalog/BookDetails"
 import BookCatalog from "./features/catalog/BookCatalog"
 import ContactUs from "./features/ContactUs"
 import Cart from "./features/cart/Cart"
+import Wishlist from "./features/wishlist/WishList"
 
 function App() {
   return (
-    <UserProvider>
+
       <main className="min-h-screen bg-gray-50 bg-[#FBFAF7]">
         <Routes>
           {/* Home */}
@@ -34,6 +35,8 @@ function App() {
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/books/:id" element={<BookDetails />} />
 
+          {/* Wishlist */}
+           <Route path="/wishlist" element={<Wishlist />} />  
            {/* Cart */}
            <Route path="/cart" element={<Cart />} />
 
@@ -70,7 +73,7 @@ function App() {
 
         </Routes>
       </main>
-    </UserProvider>
+
   )
 }
 export default App

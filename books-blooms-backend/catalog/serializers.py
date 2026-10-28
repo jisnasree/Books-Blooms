@@ -39,10 +39,16 @@ class BookSerializer(serializers.ModelSerializer):
         queryset=Category.objects.all(), many=True, required=False
     )
 
-    format = serializers.CharField(write_only=True,required=False)
-    price = serializers.DecimalField(max_digits=12, decimal_places=2, write_only=True,required=False)
-    currency = serializers.CharField(max_length=3, default="INR", write_only=True,required=False)
-    stock_quantity = serializers.IntegerField(min_value=0, write_only=True,required=False)
+    format = serializers.CharField(write_only=True, required=False)
+    price = serializers.DecimalField(
+        max_digits=12, decimal_places=2, write_only=True, required=False
+    )
+    currency = serializers.CharField(
+        max_length=3, default="INR", write_only=True, required=False
+    )
+    stock_quantity = serializers.IntegerField(
+        min_value=0, write_only=True, required=False
+    )
 
     class Meta:
         model = Book
@@ -100,8 +106,6 @@ class BookSerializer(serializers.ModelSerializer):
 
         return book
 
-
-
     @transaction.atomic
     def update(self, instance, validated_data):
         category_ids = validated_data.pop("category_ids", None)
@@ -137,3 +141,15 @@ class BookSerializer(serializers.ModelSerializer):
                 )
 
         return instance
+
+
+from .models import WishlistItem
+
+
+class WishlistItemSerializer(serializers.ModelSerializer):
+    book_details = BookSerializer(source="book", read_only=True)
+
+    class Meta:
+        model = WishlistItem
+        fields = ["id", "book", "book_details", "created_at"]
+        read_only_fields = ["id", "created_at"]

@@ -10,15 +10,18 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { CartContext } from "../../context/CartContext";
 import { Link } from "react-router-dom";
+import { WishlistContext } from "../../context/WishListContext";
 
 function BookDetails() {
   const { id } = useParams();
   const { refreshCart } = useContext(CartContext);
-
+  const { wishlist, addToWishlist, removeFromWishlist } = useContext(WishlistContext);
   const [book, setBook] = useState(null);
   const [addingToCart, setAddingToCart] = useState(false);
   const [cartMessage, setCartMessage] = useState("");
   const [cartMessageType, setCartMessageType] = useState("");
+  const [wishlistMessage, setWishlistMessage] = useState("");
+  const [wishlistMessageType, setWishlistMessageType] = useState("");
 
   // Fetch book details from the backend
   useEffect(() => {
@@ -58,6 +61,11 @@ function BookDetails() {
   // Get the first physical variant of the book
   const variant = book.physical_variants?.[0];
 
+  // Check whether this book is already in the wishlist
+  const isWishlisted = wishlist.some(
+    (item) => item.book === book.id
+  );
+
   // Add book to cart
   const handleAddToCart = async () => {
     const token = sessionStorage.getItem("authToken");
@@ -95,8 +103,8 @@ function BookDetails() {
       if (!response.ok) {
         throw new Error(
           data.error ||
-            data.detail ||
-            "Failed to add the book to your cart."
+          data.detail ||
+          "Failed to add the book to your cart."
         );
       }
 
@@ -108,6 +116,35 @@ function BookDetails() {
       setCartMessageType("error");
     } finally {
       setAddingToCart(false);
+    }
+  };
+
+
+  // Add book to wishlist
+
+  const handleAddToWishlist = async () => {
+    setWishlistMessage("");
+
+    try {
+      if (isWishlisted) {
+        const wishlistItem = wishlist.find(
+          (item) => item.book === book.id
+        );
+
+        if (wishlistItem) {
+          await removeFromWishlist(wishlistItem.id);
+        }
+
+        setWishlistMessage("Book removed from your wishlist!");
+      } else {
+        await addToWishlist(book.id);
+        setWishlistMessage("Book added to your wishlist!");
+      }
+
+      setWishlistMessageType("success");
+    } catch (error) {
+      setWishlistMessage(error.message);
+      setWishlistMessageType("error");
     }
   };
 
@@ -147,11 +184,10 @@ function BookDetails() {
 
                   {variant && (
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold tracking-wide ring-1 ring-inset ${
-                        variant.is_available
-                          ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                          : "bg-slate-100 text-slate-600 ring-slate-200"
-                      }`}
+                      className={`rounded-full px-3 py-1 text-xs font-semibold tracking-wide ring-1 ring-inset ${variant.is_available
+                        ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                        : "bg-slate-100 text-slate-600 ring-slate-200"
+                        }`}
                     >
                       {variant.is_available ? "In stock" : "Unavailable"}
                     </span>
@@ -216,20 +252,45 @@ function BookDetails() {
                   {addingToCart ? "Adding..." : "Add to Cart"}
                 </button>
 
+
+                {/* Add to Wishlist button */}
+                <button
+                  type="button"
+                  onClick={handleAddToWishlist}
+                  className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-6 py-3 text-sm font-bold text-rose-700 shadow-sm transition hover:bg-rose-50"
+                >
+                  <span className="text-xl" aria-hidden="true">
+                    {isWishlisted ? "♥" : "♡"}
+                  </span>
+
+                  {isWishlisted ? "Added to Wishlist" : "Add to Wishlist"}
+                </button>
+
                 {/* Success or error message */}
                 {cartMessage && (
                   <p
                     role="status"
-                    className={`mt-3 rounded-lg px-4 py-3 text-sm ${
-                      cartMessageType === "error"
-                        ? "bg-red-50 text-red-700 ring-1 ring-inset ring-red-200"
-                        : "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200"
-                    }`}
+                    className={`mt-3 rounded-lg px-4 py-3 text-sm ${cartMessageType === "error"
+                      ? "bg-red-50 text-red-700 ring-1 ring-inset ring-red-200"
+                      : "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200"
+                      }`}
                   >
                     {cartMessage}
                   </p>
                 )}
 
+                {/* Wishlist success or error message */}
+                {wishlistMessage && (
+                  <p
+                    role="status"
+                    className={`mt-3 rounded-lg px-4 py-3 text-sm ${wishlistMessageType === "error"
+                      ? "bg-red-50 text-red-700 ring-1 ring-inset ring-red-200"
+                      : "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200"
+                      }`}
+                  >
+                    {wishlistMessage}
+                  </p>
+                )}
                 <Link
                   to="/cart"
                   className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100"

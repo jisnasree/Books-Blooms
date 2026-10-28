@@ -4,11 +4,16 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticatedOrReadOnly
-from .models import Book, Author, Category
-from .serializers import BookSerializer, AuthorSerializer, CategorySerializer
+from .models import Book, Author, Category, WishlistItem
+from .serializers import BookSerializer, AuthorSerializer, CategorySerializer, WishlistItemSerializer
 from django.db.models import Q
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
+
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
 
 
 class BookPagination(PageNumberPagination):
@@ -125,3 +130,38 @@ class CategoryDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsAdminUser]
+
+
+class WishlistListCreateView(generics.ListCreateAPIView):
+    serializer_class = WishlistItemSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return (
+            WishlistItem.objects.filter(user=self.request.user)
+            .select_related("book", "book__author")
+            .prefetch_related("book__categories", "book__physicalvariant_set")
+        )
+
+    def create(self, request, *args, **kwargs):
+        book_id = request.data.get("book")
+
+        wishlist_item, created = WishlistItem.objects.get_or_create(
+            user=request.user,
+            book_id=book_id,
+        )
+
+        serializer = self.get_serializer(wishlist_item)
+
+        if created:
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class WishlistDeleteView(generics.DestroyAPIView):
+    serializer_class = WishlistItemSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return WishlistItem.objects.filter(user=self.request.user)

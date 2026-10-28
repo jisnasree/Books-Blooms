@@ -36,6 +36,7 @@ export const CATALOG_BASE_URL = BASE_URL + 'catalog/'
 export const CATALOG_BOOKS_URL = CATALOG_BASE_URL + 'books/'
 export const CATALOG_AUTHORS_URL = CATALOG_BASE_URL + 'authors/'
 export const CATALOG_CATEGORIES_URL = CATALOG_BASE_URL + 'categories/'
+export const WISHLIST_URL = CATALOG_BASE_URL + 'wishlist/'
 
 
 
