@@ -11,7 +11,7 @@ function Home() {
     <section className="flex min-h-screen flex-col bg-slate-100">
       <Header />
 
-      <main className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 md:py-12">
+      <main className="mx-auto w-full max-w-7xl px-5 py-2 sm:px-8">
         <div className="grid items-center gap-10 overflow-hidden rounded-3xl bg-white p-7 shadow-sm ring-1 ring-slate-200 sm:p-10 md:grid-cols-2 md:gap-12 md:p-14">
           <div className="space-y-6">
             <p className="inline-flex rounded-full bg-orange-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-orange-700">
@@ -49,7 +49,7 @@ function Home() {
               alt="A collection of books"
               className="relative h-auto w-full rounded-2xl object-contain shadow-md"
             />
-           
+
           </div>
         </div>
       </main>
