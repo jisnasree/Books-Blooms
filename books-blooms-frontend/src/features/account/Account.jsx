@@ -20,7 +20,7 @@ function Account() {
       title: "Saved Addresses",
       description: "Manage your delivery addresses.",
       icon: "📍",
-      path: "/saved-addresses",
+      path: "/addresses",
     },
   ];
 

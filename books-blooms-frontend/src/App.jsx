@@ -16,8 +16,9 @@ import CustomersManagement from "./features/admin/CustomersManagement"
 import BooksManagement from "./features/admin/BooksManagement"
 import { UserProvider } from "./context/UserContext"
 import ProtectedRoute from "./components/ProtectedRoute";
-import Profile from "./features/authentication/Profile"
-import Account from "./features/authentication/Account"
+import Profile from "./features/account/Profile"
+import Account from "./features/account/Account"
+import Addresses from "./features/account/Addresses"
 import BookDetails from "./features/catalog/BookDetails"
 import BookCatalog from "./features/catalog/BookCatalog"
 import ContactUs from "./features/ContactUs"
@@ -29,6 +30,7 @@ function App() {
 
       <main className="min-h-screen bg-gray-50 bg-[#FBFAF7]">
         <Routes>
+
           {/* Home */}
           <Route path="/" element={<Home />}></Route>
           <Route path="/books" element={<BookCatalog />} />
@@ -40,11 +42,12 @@ function App() {
            {/* Cart */}
            <Route path="/cart" element={<Cart />} />
 
-           {/* Profile */}
-          <Route path="/profile" element={<Profile />}></Route>
-
            {/* Account */}
           <Route path="/account" element={<Account />}></Route>
+           {/* Profile */}
+          <Route path="/profile" element={<Profile />}></Route>
+          {/* Address */}
+          <Route path="/addresses" element={<Addresses />} />
 
           {/* Authentication */}
           <Route path="/login" element={<Login />}> </Route>
