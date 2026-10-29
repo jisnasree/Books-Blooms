@@ -2,9 +2,12 @@
 from django.urls import path
 from . import views
 
+# GET /api/cart/ — retrieve the current user's cart
+# GET /api/cart/items/ — list items in the cart
+# POST /api/cart/items/ — add an item to the cart
+# GET/PATCH/DELETE /api/cart/items/<pk>/ — retrieve, update, or remove one item
 urlpatterns = [
-    path("", views.CartDetailView.as_view()),
-    path("add-to-cart/", views.AddToCartView.as_view()),
-    path("items/<int:item_id>/", views.UpdateCartItemView.as_view()),
-    path("items/<int:item_id>/delete/", views.DeleteCartItemView.as_view()),
+    path("", views.CartListView.as_view()),
+    path("items/", views.CartItemListCreateView.as_view()),
+    path("items/<int:pk>/", views.CartItemDetailView.as_view()),
 ]

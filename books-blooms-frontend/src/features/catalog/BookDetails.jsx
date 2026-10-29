@@ -3,8 +3,7 @@ import { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import {
   CATALOG_BOOKS_URL,
-  CART_LIST_URL,
-  ADD_TO_CART_URL,
+  CART_ITEMS_URL,
 } from "../../constants";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
@@ -86,7 +85,7 @@ function BookDetails() {
     setCartMessage("");
 
     try {
-      const response = await fetch(ADD_TO_CART_URL, {
+      const response = await fetch(CART_ITEMS_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

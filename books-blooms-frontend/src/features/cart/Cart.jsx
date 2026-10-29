@@ -2,7 +2,7 @@
 import { useEffect, useState, useContext } from "react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import { BASE_URL, CART_LIST_URL } from "../../constants";
+import { CART_ITEMS_URL, CART_LIST_URL } from "../../constants";
 import { CartContext } from "../../context/CartContext";
 import { useNavigate } from "react-router-dom";
 
@@ -63,7 +63,7 @@ function Cart() {
         try {
             // Send a PATCH request to update the item's quantity
             const response = await fetch(
-                `${BASE_URL}cart/items/${item.id}/`,
+                `${CART_ITEMS_URL}${item.id}/`,
                 {
                     method: "PATCH",
                     headers: {
@@ -110,7 +110,7 @@ function Cart() {
         try {
             // Send a DELETE request to Django to remove this item
             const response = await fetch(
-                `${BASE_URL}cart/items/${itemId}/delete/`,
+                `${CART_ITEMS_URL}${itemId}/`,
                 {
                     method: "DELETE",
                     headers: {

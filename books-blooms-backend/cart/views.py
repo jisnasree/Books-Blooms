@@ -1,10 +1,11 @@
-
-from rest_framework.generics import RetrieveAPIView
+from rest_framework.generics import (
+    ListCreateAPIView,
+    RetrieveAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from django.shortcuts import get_object_or_404
 
 from .models import Cart, CartItem
 from .serializers import (
@@ -14,46 +15,47 @@ from .serializers import (
 )
 
 
-class CartDetailView(RetrieveAPIView):
+class CartListView(RetrieveAPIView):
     """
-    Purpose:
     Retrieve the logged-in user's cart.
-
-    GET /api/cart/
-
     If the user does not have a cart yet, create one.
     A user can access only their own cart.
     """
+
     serializer_class = CartSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
         # Get the current user's cart.
         # Create a cart if the user does not have one.
-        cart, created = Cart.objects.get_or_create(
-            user=self.request.user
-        )
+        cart, created = Cart.objects.get_or_create(user=self.request.user)
 
         # Return the cart so DRF can serialize it.
         return cart
 
 
-class AddToCartView(APIView):
+class CartItemListCreateView(ListCreateAPIView):
     """
-    Purpose:
-    Add a book format to the logged-in user's cart.
-
-    POST /api/cart/items/
+    GET /api/cart/items/ lists the items in the user's cart.
+    POST /api/cart/items/ adds a book format to the user's cart.
 
     Validates availability and stock.
     If the same variant is already in the cart,
     increase its quantity instead of creating a duplicate item.
+    Returns the full cart so the client can refresh totals.
     """
+
+    serializer_class = CartItemSerializer
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
+    def get_queryset(self):
+        return CartItem.objects.filter(
+            cart__user=self.request.user
+        ).select_related("variant", "variant__book", "variant__book__author")
+
+    def create(self, request, *args, **kwargs):
         # Validate the submitted variant ID and quantity.
-        serializer = CartItemSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         # Get the PhysicalVariant object and requested quantity.
@@ -75,9 +77,7 @@ class AddToCartView(APIView):
             )
 
         # Get or create the logged-in user's cart.
-        cart, created = Cart.objects.get_or_create(
-            user=request.user
-        )
+        cart, created = Cart.objects.get_or_create(user=request.user)
 
         # Find the existing cart item or create a new one.
         # defaults applies only when a new item is created.
@@ -105,50 +105,61 @@ class AddToCartView(APIView):
         # Return the updated cart to the client.
         return Response(
             CartSerializer(cart).data,
-            status=status.HTTP_200_OK,
+            status=(
+                status.HTTP_201_CREATED
+                if item_created
+                else status.HTTP_200_OK
+            ),
         )
 
 
-class UpdateCartItemView(APIView):
+class CartItemDetailView(RetrieveUpdateDestroyAPIView):
     """
-    Purpose:
-    Change the quantity of an existing cart item.
+    GET /api/cart/items/<pk>/ retrieves one cart item.
+    PATCH /api/cart/items/<pk>/ changes its quantity.
+    DELETE /api/cart/items/<pk>/ removes it from the cart.
 
-    PATCH /api/cart/items/<item_id>/
-
-    Only the owner of the cart can update its items.
-    The new quantity must not exceed available stock.
+    Scoped to the owner's cart: items belonging to other users
+    return 404. Mutations return the full updated cart with 200
+    (instead of DRF's default 204 on delete) because the frontend
+    refreshes totals from the response body.
     """
+
     permission_classes = [IsAuthenticated]
 
-    def patch(self, request, item_id):
-        # Find the cart item only if it belongs to this user.
-        # Return 404 if the item does not exist or belongs to another user.
-        cart_item = get_object_or_404(
-            CartItem,
-            id=item_id,
-            cart__user=request.user,
-        )
+    def get_queryset(self):
+        return CartItem.objects.filter(
+            cart__user=self.request.user
+        ).select_related("variant", "variant__book", "variant__book__author")
+
+    def get_serializer_class(self):
+        if self.request.method in ("PUT", "PATCH"):
+            return UpdateCartItemSerializer
+        return CartItemSerializer
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        cart_item = self.get_object()
 
         # Validate the new quantity.
-        serializer = UpdateCartItemSerializer(
+        serializer = self.get_serializer(
             cart_item,
             data=request.data,
-            partial=True,
+            partial=partial,
         )
         serializer.is_valid(raise_exception=True)
 
         # Reject quantities greater than the available stock.
+        quantity = serializer.validated_data.get("quantity")
         if (
-            serializer.validated_data["quantity"]
-            > cart_item.variant.stock_quantity
+            quantity is not None
+            and quantity > cart_item.variant.stock_quantity
         ):
             return Response(
                 {"error": "Not enough stock available."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Save the new quantity to the database.
         serializer.save()
 
         # Return the updated cart.
@@ -157,31 +168,13 @@ class UpdateCartItemView(APIView):
             status=status.HTTP_200_OK,
         )
 
-
-class DeleteCartItemView(APIView):
-    """
-    Purpose:
-    Remove an item from the logged-in user's cart.
-
-    DELETE /api/cart/items/<item_id>/delete/
-
-    Deletes only the cart item, not the book or its stock.
-    """
-    permission_classes = [IsAuthenticated]
-
-    def delete(self, request, item_id):
-        # Find the item only if it belongs to this user.
-        cart_item = get_object_or_404(
-            CartItem,
-            id=item_id,
-            cart__user=request.user,
-        )
+    def destroy(self, request, *args, **kwargs):
+        cart_item = self.get_object()
 
         # Keep a reference to the cart before deleting the item.
         cart = cart_item.cart
 
-        # Remove the CartItem record from the database.
-        cart_item.delete()
+        self.perform_destroy(cart_item)
 
         # Return the cart after the item has been removed.
         return Response(

@@ -24,7 +24,7 @@ export const ADDRESS_BASE_URL = BASE_URL + 'addresses/'
 
 
 export const CART_LIST_URL = BASE_URL + 'cart/'
-export const ADD_TO_CART_URL = CART_LIST_URL + 'add-to-cart/'
+export const CART_ITEMS_URL = CART_LIST_URL + 'items/'
 
 
 export const ADMIN_BASE_URL = BASE_URL + 'admin/'
