@@ -4,6 +4,7 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { BASE_URL, CART_LIST_URL } from "../../constants";
 import { CartContext } from "../../context/CartContext";
+import { useNavigate } from "react-router-dom";
 
 function Cart() {
     const [cart, setCart] = useState(null);
@@ -11,6 +12,7 @@ function Cart() {
     const [error, setError] = useState("");
     const [updatingItemId, setUpdatingItemId] = useState(null);
     const { refreshCart } = useContext(CartContext);
+    const navigate = useNavigate()
 
 
     // Fetch the customer's cart when the Cart page first loads
@@ -296,8 +298,9 @@ function Cart() {
                                         </div>
                                         <button
                                             type="button"
-                                            onClick={() => {
+                                            onClick={() => {navigate('/checkout')
                                             }}
+                                            
                                             className="mt-6 w-full rounded-lg bg-rose-600 px-5 py-3 font-medium text-white hover:bg-rose-700"
                                         >
                                             Proceed to Checkout

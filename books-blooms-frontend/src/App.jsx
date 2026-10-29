@@ -24,58 +24,65 @@ import BookCatalog from "./features/catalog/BookCatalog"
 import ContactUs from "./features/ContactUs"
 import Cart from "./features/cart/Cart"
 import Wishlist from "./features/wishlist/WishList"
+import Checkout from "./features/Checkout"
 
 function App() {
   return (
 
-      <main className="min-h-screen bg-gray-50 bg-[#FBFAF7]">
-        <Routes>
+    <main className="min-h-screen bg-gray-50 bg-[#FBFAF7]">
+      <Routes>
 
-          {/* Home */}
-          <Route path="/" element={<Home />}></Route>
-          <Route path="/books" element={<BookCatalog />} />
-          <Route path="/contact" element={<ContactUs />} />
-          <Route path="/books/:id" element={<BookDetails />} />
+        {/* Home */}
+        <Route path="/" element={<Home />}></Route>
+        <Route path="/books" element={<BookCatalog />} />
+        <Route path="/contact" element={<ContactUs />} />
+        <Route path="/books/:id" element={<BookDetails />} />
 
-          {/* Wishlist */}
-           <Route path="/wishlist" element={<Wishlist />} />  
-           {/* Cart */}
-           <Route path="/cart" element={<Cart />} />
+        {/* Wishlist */}
+        <Route path="/wishlist" element={<Wishlist />} />
 
-           {/* Account */}
-          <Route path="/account" element={<Account />}></Route>
-           {/* Profile */}
-          <Route path="/profile" element={<Profile />}></Route>
-          {/* Address */}
-          <Route path="/addresses" element={<Addresses />} />
+        {/* Cart */}
+        <Route path="/cart" element={<Cart />} />
 
-          {/* Authentication */}
-          <Route path="/login" element={<Login />}> </Route>
-          <Route path="/register" element={<Register />}></Route>
-          <Route path="/verify-email" element={<EmailVerificationCode />}> </Route>
-          <Route path="/set-new-password" element={<SetNewPassword />}></Route>
-          <Route path="/forgot-password" element={<ForgotPassword />}> </Route>
-          <Route path="/verify-reset-code" element={<ForgotPasswordVerifyCode />}> </Route>
-          <Route path="/password-update-success" element={<PasswordUpdateSuccess />}></Route>
+        {/* Checkout */}
+        <Route path="/checkout" element={<Checkout />} />
 
-          {/* Admin section */}
-          {/* <Route element={<ProtectedRoute />}> */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="books" element={<BooksManagement />} />
-              <Route path="orders" element={<OrdersManagement />} />
-              <Route path="authors" element={<AuthorsManagement />} />
-              <Route path="categories" element={<CategoriesManagement />} />
-              <Route path="customers" element={<CustomersManagement />} />
-            </Route>
-          {/* </Route> */}
+        {/* Account */}
+        <Route path="/account" element={<Account />}></Route>
 
-          {/* Catalogs */}
+        {/* Profile */}
+        <Route path="/profile" element={<Profile />}></Route>
+
+        {/* Address */}
+        <Route path="/addresses" element={<Addresses />} />
+
+        {/* Authentication */}
+        <Route path="/login" element={<Login />}> </Route>
+        <Route path="/register" element={<Register />}></Route>
+        <Route path="/verify-email" element={<EmailVerificationCode />}> </Route>
+        <Route path="/set-new-password" element={<SetNewPassword />}></Route>
+        <Route path="/forgot-password" element={<ForgotPassword />}> </Route>
+        <Route path="/verify-reset-code" element={<ForgotPasswordVerifyCode />}> </Route>
+        <Route path="/password-update-success" element={<PasswordUpdateSuccess />}></Route>
+
+        {/* Admin section */}
+        {/* <Route element={<ProtectedRoute />}> */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="books" element={<BooksManagement />} />
+          <Route path="orders" element={<OrdersManagement />} />
+          <Route path="authors" element={<AuthorsManagement />} />
+          <Route path="categories" element={<CategoriesManagement />} />
+          <Route path="customers" element={<CustomersManagement />} />
+        </Route>
+        {/* </Route> */}
+
+        {/* Catalogs */}
 
 
-        </Routes>
-      </main>
+      </Routes>
+    </main>
 
   )
 }
