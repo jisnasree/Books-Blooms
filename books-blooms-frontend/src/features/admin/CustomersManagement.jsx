@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
-import { AUTH_CUSTOMERS_LIST_URL } from "../../constants";
-import { AUTH_CUSTOMER_BLOCK_URL } from "../../constants";
+import { ADMIN_CUSTOMERS_LIST_URL } from "../../constants";
+import { ADMIN_CUSTOMER_BLOCK_URL } from "../../constants";
 
 function CustomersManagement() {
   const [customers, setCustomers] = useState([]);
@@ -16,7 +16,7 @@ function CustomersManagement() {
         const token = sessionStorage.getItem("authToken");
 
         const response = await fetch(
-          AUTH_CUSTOMERS_LIST_URL,
+          ADMIN_CUSTOMERS_LIST_URL,
           {
             headers: {
               Authorization: `Token ${token}`,
@@ -67,7 +67,7 @@ function CustomersManagement() {
       const token = sessionStorage.getItem("authToken");
 
       const response = await fetch(
-        `${AUTH_CUSTOMER_BLOCK_URL}${customer.id}/block/`,
+        `${ADMIN_CUSTOMER_BLOCK_URL}${customer.id}/block/`,
         {
           method: "PATCH",
           headers: {

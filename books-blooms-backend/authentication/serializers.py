@@ -95,18 +95,6 @@ class SetNewPasswordSerializer(serializers.Serializer):
     # confirm_password = serializers.CharField(write_only=True)
 
 
-class CustomerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = [
-            "id",
-            "first_name",
-            "last_name",
-            "email",
-            "date_joined",
-            "is_active",
-            "is_blocked",
-        ]
 
 
 class UserProfileSerializer(serializers.ModelSerializer):

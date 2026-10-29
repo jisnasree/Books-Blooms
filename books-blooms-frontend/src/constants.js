@@ -16,8 +16,6 @@ export const AUTH_VERIFY_EMAIL_URL = AUTH_BASE_URL + 'register/verify-email/'
 export const AUTH_EMAIL_RESEND_CODE_URL = AUTH_BASE_URL + 'register/resend-resetcode-email/'
 
 export const AUTH_LOGOUT_URL = AUTH_BASE_URL + 'logout/'
-export const AUTH_CUSTOMER_BLOCK_URL = AUTH_BASE_URL + 'customer/'
-export const AUTH_CUSTOMERS_LIST_URL = AUTH_BASE_URL + 'customers/'
 
 export const AUTH_PROFILE_URL = AUTH_BASE_URL + 'profile/'
 
@@ -31,6 +29,9 @@ export const ADD_TO_CART_URL = CART_LIST_URL + 'add-to-cart/'
 
 export const ADMIN_BASE_URL = BASE_URL + 'admin/'
 export const ADMIN_DASHBOARD_URL = ADMIN_BASE_URL + 'dashboard/summary/'
+
+export const ADMIN_CUSTOMER_BLOCK_URL = ADMIN_BASE_URL + 'customers/'
+export const ADMIN_CUSTOMERS_LIST_URL = ADMIN_BASE_URL + 'customers/'
 
 
 export const CATALOG_BASE_URL = BASE_URL + 'catalog/'

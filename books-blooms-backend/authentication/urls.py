@@ -27,8 +27,7 @@ urlpatterns = [
         views.GoogleLoginView.as_view(),
         name="google-login",
     ),
-    # Customer management
-    path("customers/", views.CustomerListView.as_view()),
-    path("customer/<int:user_id>/block/", views.CustomerBlockView.as_view()),
+    # Profile management
+   
     path("profile/", views.UserProfileView.as_view()),
 ]
