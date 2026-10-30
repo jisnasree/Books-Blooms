@@ -26,6 +26,7 @@ urlpatterns = [
     path('api/admin/', include('admin_books_blooms.urls')),
     path('api/cart/', include('cart.urls')),
     path('api/addresses/', include('addresses.urls')),
+    path('api/orders/', include('orders.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(

@@ -1,9 +1,10 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import { CART_LIST_URL, ADDRESS_BASE_URL } from "../constants";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+import { CART_LIST_URL, ADDRESS_BASE_URL } from "../../constants";
+import { useNavigate } from "react-router-dom";
 
 function Checkout() {
     const [cart, setCart] = useState(null);
@@ -11,6 +12,7 @@ function Checkout() {
     const [selectedAddressId, setSelectedAddressId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const navigate = useNavigate()
 
     useEffect(() => {
         async function fetchCheckoutData() {
@@ -259,9 +261,7 @@ function Checkout() {
                                         !selectedAddressId
                                     }
                                     onClick={() => {
-                                        alert(
-                                            "Address selected! Order placement will be connected in the next step."
-                                        );
+                                        navigate('/orders')
                                     }}
                                     className="mt-6 w-full rounded-lg bg-rose-700 px-4 py-3 font-medium text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:bg-gray-300"
                                 >

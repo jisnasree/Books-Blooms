@@ -24,7 +24,9 @@ import BookCatalog from "./features/catalog/BookCatalog"
 import ContactUs from "./features/ContactUs"
 import Cart from "./features/cart/Cart"
 import Wishlist from "./features/wishlist/WishList"
-import Checkout from "./features/Checkout"
+import Checkout from "./features/orders/Checkout"
+import OrderDetails from "./features/orders/OrderDetails"
+import Orders from "./features/orders/Orders"
 
 function App() {
   return (
@@ -46,6 +48,11 @@ function App() {
 
         {/* Checkout */}
         <Route path="/checkout" element={<Checkout />} />
+
+        {/* Orders */}
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/orders/:<id>" element={<OrderDetails />} />
+
 
         {/* Account */}
         <Route path="/account" element={<Account />}></Route>

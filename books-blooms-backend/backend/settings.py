@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'admin_books_blooms',
     'cart',
     'addresses',
+    'orders',
 ]
 
 MIDDLEWARE = [

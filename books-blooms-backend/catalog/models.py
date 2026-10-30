@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -54,10 +55,6 @@ class PhysicalVariant(models.Model):
 
     def __str__(self):
         return f"{self.book.title} - {self.format}"
-
-
-from django.conf import settings
-from django.db import models
 
 
 class WishlistItem(models.Model):
