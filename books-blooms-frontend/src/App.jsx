@@ -27,6 +27,7 @@ import Wishlist from "./features/wishlist/WishList"
 import Checkout from "./features/orders/Checkout"
 import OrderDetails from "./features/orders/OrderDetails"
 import Orders from "./features/orders/Orders"
+import OrderSuccess from "./features/orders/OrderSuccess"
 
 function App() {
   return (
@@ -50,8 +51,11 @@ function App() {
         <Route path="/checkout" element={<Checkout />} />
 
         {/* Orders */}
-        <Route path="/orders" element={<Orders />} />
-        <Route path="/orders/:<id>" element={<OrderDetails />} />
+        <Route path="/orders" element={<Orders />}></Route>
+        <Route path="/orders/:id" element={<OrderDetails />}></Route>
+        <Route path="/order-success" element={<OrderSuccess />}></Route>
+
+
 
 
         {/* Account */}

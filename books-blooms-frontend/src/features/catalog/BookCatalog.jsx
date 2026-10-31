@@ -65,7 +65,7 @@ function BookCatalog() {
                 }
 
                 if (selectedFormat) {
-                    params.set("format", selectedFormat);
+                    params.set("bookformat", selectedFormat);
                 }
 
                 const response = await fetch(
@@ -286,17 +286,17 @@ function BookCatalog() {
                                         label: "Hardcover",
                                         value: "Hardcover",
                                     },
-                                ].map((format) => (
+                                ].map((bookformat) => (
                                     <label
-                                        key={format.value || "all-formats"}
+                                        key={bookformat.value || "all-formats"}
                                         className="mb-3 flex cursor-pointer items-center gap-2.5 text-sm text-slate-600 last:mb-0"
                                     >
                                         <input
                                             type="radio"
-                                            name="format"
-                                            value={format.value}
+                                            name="bookformat"
+                                            value={bookformat.value}
                                             checked={
-                                                selectedFormat === format.value
+                                                selectedFormat === bookformat.value
                                             }
                                             onChange={(event) => {
                                                 setSelectedFormat(
@@ -306,7 +306,7 @@ function BookCatalog() {
                                             }}
                                             className="h-4 w-4 accent-orange-600"
                                         />
-                                        {format.label}
+                                        {bookformat.label}
                                     </label>
                                 ))}
                             </div>
@@ -376,9 +376,9 @@ function BookCatalog() {
                                                 </div>
 
                                                 <div className="px-1 pb-2 pt-4">
-                                                    {variant?.format && (
+                                                    {variant?.bookformat && (
                                                         <p className="text-xs font-semibold uppercase tracking-wide text-orange-700">
-                                                            {variant.format}
+                                                            {variant.bookformat}
                                                         </p>
                                                     )}
 

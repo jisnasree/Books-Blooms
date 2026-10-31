@@ -10,6 +10,7 @@ class Order(models.Model):
         CONFIRMED = "CONFIRMED", "Confirmed"
         PROCESSING = "PROCESSING", "Processing"
         SHIPPED = "SHIPPED", "Shipped"
+        OUT_FOR_DELIVERY = "OUT_FOR_DELIVERY", "Out for Delivery"
         DELIVERED = "DELIVERED", "Delivered"
         CANCELLED = "CANCELLED", "Cancelled"
 
@@ -90,6 +91,15 @@ class Order(models.Model):
         blank=True,
     )
 
+    cancellation_reason = models.TextField(
+         blank=True,
+         null=True
+    ) 
+
+    cancelled_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

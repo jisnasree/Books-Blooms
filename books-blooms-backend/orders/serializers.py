@@ -59,3 +59,9 @@ class OrderCreateSerializer(serializers.Serializer):
                 "Only Cash on Delivery is currently supported."
             )
         return value
+
+class OrderCancellationSerializer(serializers.Serializer):
+    reason = serializers.CharField(
+        required=False,
+        allow_blank=True
+    )

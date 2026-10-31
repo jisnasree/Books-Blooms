@@ -236,21 +236,21 @@ function AuthorsManagement() {
       )}
 
       <div className="overflow-x-auto rounded-lg border border-gray-300 bg-white">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-[#203746] text-white">
+       <table className="w-full border-collapse border border-gray-200 bg-white text-sm">
+          <thead className="bg-[#203746] text-white border">
             <tr>
-              <th scope="col" className="px-4 py-3">ID</th>
-              <th scope="col" className="px-4 py-3">Author Name</th>
-              <th scope="col" className="px-4 py-3">Actions</th>
+              <th scope="col" className="px-4 py-3 border">ID</th>
+              <th scope="col" className="px-4 py-3 border">Author Name</th>
+              <th scope="col" className="px-4 py-3 border">Actions</th>
             </tr>
           </thead>
 
           <tbody>
             {authors.map((author) => (
               <tr key={author.id} className="border-t">
-                <td className="px-4 py-3">{author.id}</td>
+                <td className="px-4 py-3 border">{author.id}</td>
 
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 border">
                   {editingAuthorId === author.id ? (
                     <form
                       onSubmit={handleEditAuthor}
@@ -297,7 +297,7 @@ function AuthorsManagement() {
                   )}
                 </td>
 
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 border">
                   {editingAuthorId !== author.id && (
                     <div className="flex items-center gap-4">
                       <button
@@ -329,7 +329,7 @@ function AuthorsManagement() {
 
             {authors.length === 0 && (
               <tr>
-                <td colSpan="3" className="px-4 py-6 text-center text-gray-500">
+                <td colSpan="3" className="px-4 py-6 text-center text-gray-500" border>
                   No authors found.
                 </td>
               </tr>

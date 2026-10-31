@@ -10,11 +10,11 @@ function BooksTable({
             <table className="w-full text-left text-sm">
                 <thead className="bg-[#203746] text-white">
                     <tr>
-                        <th className="px-4 py-3">Title</th>
-                        <th className="px-4 py-3">Author</th>
-                        <th className="px-4 py-3">Format</th>
-                        <th className="px-4 py-3">Price</th>
-                        <th className="px-4 py-3">Actions</th>
+                        <th className="px-4 py-3 border">Title</th>
+                        <th className="px-4 py-3 border">Author</th>
+                        <th className="px-4 py-3 border">Format</th>
+                        <th className="px-4 py-3 border">Price</th>
+                        <th className="px-4 py-3 border">Actions</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -27,21 +27,21 @@ function BooksTable({
                     ) : (
                         books.map((book) => (
                             <tr key={book.id} className="hover:bg-gray-50">
-                                <td className="px-4 py-4 font-medium text-gray-800">
+                                <td className="px-4 py-4 font-medium text-gray-800 border">
                                     {book.title}
                                 </td>
 
-                                <td className="px-4 py-4 text-gray-600">
+                                <td className="px-4 py-4 text-gray-600 border">
                                     {book.author_name || "—"}
                                 </td>
 
-                                <td className="px-4 py-4 text-gray-600">
+                                <td className="px-4 py-4 text-gray-600 border">
                                     {book.physical_variants
                                         ?.map((variant) => variant.format)
                                         .join(", ") || "—"}
                                 </td>
 
-                                <td className="px-4 py-4 text-gray-600">
+                                <td className="px-4 py-4 text-gray-600 border">
                                     {book.physical_variants
                                         ?.map(
                                             (variant) =>
@@ -50,7 +50,7 @@ function BooksTable({
                                         .join(", ") || "—"}
                                 </td>
 
-                                <td className="px-4 py-4">
+                                <td className="px-4 py-4 border">
                                     <button
                                         type="button"
                                         onClick={() => onEdit(book)}

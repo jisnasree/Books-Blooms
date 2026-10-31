@@ -81,9 +81,10 @@ class BookListView(ListCreateAPIView):
                 )
             queryset = queryset.filter(**price_filters[price])
 
-        book_format = params.get("format", "").strip()
+        book_format = params.get("bookformat", "").strip()
+        print("bookformat",book_format)
         if book_format:
-            queryset = queryset.filter(physicalvariant__format__iexact=book_format)
+            queryset = queryset.filter(physicalvariant__format__icontains=book_format)
 
         return queryset.distinct()
 

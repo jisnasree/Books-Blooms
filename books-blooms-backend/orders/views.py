@@ -10,11 +10,13 @@ from rest_framework.views import APIView
 from addresses.models import Address
 from cart.models import Cart
 from .models import Order, OrderItem
-from .serializers import OrderCreateSerializer, OrderSerializer
-
-
+from .serializers import OrderCreateSerializer, OrderSerializer, OrderCancellationSerializer
 from rest_framework.generics import ListCreateAPIView
-
+from django.utils import timezone
+from django.shortcuts import get_object_or_404
+from django.db import transaction
+from django.db.models import F
+from catalog.models import PhysicalVariant
 
 class OrderListCreateView(ListCreateAPIView):
     """
@@ -73,7 +75,21 @@ class OrderListCreateView(ListCreateAPIView):
                 )
 
         with transaction.atomic():
+            from decimal import Decimal
+
             subtotal = sum(item.variant.price * item.quantity for item in cart_items)
+
+            # Free delivery when subtotal is above ₹2,000.
+            # Otherwise, charge ₹100.
+            delivery_charge = (
+                Decimal("0.00") if subtotal > Decimal("2000.00") else Decimal("100.00")
+            )
+            # Calculate tax at 8.25%
+            tax_rate = Decimal("0.0825")
+            tax_amount = subtotal * tax_rate
+
+            # Calculate final order amount
+            total_amount = subtotal + delivery_charge + tax_amount
 
             order = Order.objects.create(
                 user=request.user,
@@ -86,7 +102,9 @@ class OrderListCreateView(ListCreateAPIView):
                 shipping_postal_code=address.postal_code,
                 shipping_country=address.country,
                 subtotal=subtotal,
-                total_amount=subtotal,
+                shipping_charge=delivery_charge,
+                tax_amount=tax_amount,
+                total_amount=total_amount,
                 payment_method=serializer.validated_data["payment_method"],
                 order_status=Order.OrderStatus.CONFIRMED,
                 payment_status=Order.PaymentStatus.PENDING,
@@ -124,3 +142,58 @@ class OrderDetailView(RetrieveAPIView):
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user).prefetch_related("items")
+
+class OrderCancellationView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, order_id):
+
+        with transaction.atomic():
+
+            # Lock the order to prevent duplicate cancellation
+            order = get_object_or_404(
+                Order.objects.select_for_update(),
+                id=order_id,
+                user=request.user
+            )
+
+            # Check whether cancellation is allowed
+            cancellable_statuses = [
+                Order.OrderStatus.PENDING,
+                Order.OrderStatus.CONFIRMED,
+                Order.OrderStatus.PROCESSING,
+            ]
+
+            if order.order_status not in cancellable_statuses:
+                return Response(
+                    {"detail": "This order cannot be cancelled."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Validate cancellation reason
+            serializer = OrderCancellationSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            # Restore stock for each ordered item
+            for item in order.items.all():
+
+                PhysicalVariant.objects.filter(
+                    id=item.variant_id
+                ).update(
+                    stock_quantity=F("stock_quantity") + item.quantity
+                )
+
+            # Update order status and cancellation details
+            order.order_status = Order.OrderStatus.CANCELLED
+            order.cancellation_reason = serializer.validated_data.get(
+                "reason", ""
+            )
+            order.cancelled_at = timezone.now()
+
+            order.save()
+
+        return Response(
+            {"detail": "Order cancelled successfully."},
+            status=status.HTTP_200_OK
+        )
