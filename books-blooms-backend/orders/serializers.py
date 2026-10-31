@@ -49,17 +49,11 @@ class OrderSerializer(serializers.ModelSerializer):
 
 class OrderCreateSerializer(serializers.Serializer):
     address_id = serializers.IntegerField()
-    payment_method = serializers.ChoiceField(choices=Order.PaymentMethod.choices)
+    payment_method = serializers.ChoiceField(
+        choices=Order.PaymentMethod.choices
+    )
 
-    def validate_payment_method(self, value):
-        # Razorpay is not integrated yet; only COD can be
-        # confirmed without a payment gateway callback.
-        if value != Order.PaymentMethod.COD:
-            raise serializers.ValidationError(
-                "Only Cash on Delivery is currently supported."
-            )
-        return value
-
+    
 class OrderCancellationSerializer(serializers.Serializer):
     reason = serializers.CharField(
         required=False,

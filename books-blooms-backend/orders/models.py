@@ -91,6 +91,11 @@ class Order(models.Model):
         blank=True,
     )
 
+    razorpay_payment_id = models.CharField(
+    max_length=100,
+    blank=True,
+    )
+
     cancellation_reason = models.TextField(
          blank=True,
          null=True

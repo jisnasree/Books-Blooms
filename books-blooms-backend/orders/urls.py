@@ -7,5 +7,7 @@ from . import views
 urlpatterns = [
     path("", views.OrderListCreateView.as_view()),
     path("<int:pk>/", views.OrderDetailView.as_view()),
-    path("<int:order_id>/cancel/",views.OrderCancellationView.as_view()),
+    path("<int:order_id>/cancel/", views.OrderCancellationView.as_view()),
+    path("<int:order_id>/create-payment/", views.RazorpayCreateOrderView.as_view()),
+    path("<int:order_id>/verify-payment/", views.RazorpayVerifyPaymentView.as_view()),
 ]
