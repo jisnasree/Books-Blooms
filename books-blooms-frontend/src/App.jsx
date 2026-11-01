@@ -28,6 +28,8 @@ import Checkout from "./features/orders/Checkout"
 import OrderDetails from "./features/orders/OrderDetails"
 import Orders from "./features/orders/Orders"
 import OrderSuccess from "./features/orders/OrderSuccess"
+import AboutUs from "./features/AboutUs"
+
 
 function App() {
   return (
@@ -39,6 +41,8 @@ function App() {
         <Route path="/" element={<Home />}></Route>
         <Route path="/books" element={<BookCatalog />} />
         <Route path="/contact" element={<ContactUs />} />
+        <Route path="/about" element={<AboutUs />} />
+
         <Route path="/books/:id" element={<BookDetails />} />
 
         {/* Wishlist */}
