@@ -10,4 +10,11 @@ urlpatterns = [
     path("<int:order_id>/cancel/", views.OrderCancellationView.as_view()),
     path("<int:order_id>/create-payment/", views.RazorpayCreateOrderView.as_view()),
     path("<int:order_id>/verify-payment/", views.RazorpayVerifyPaymentView.as_view()),
+    # Admin order APIs
+    path("admin/", views.AdminOrderListView.as_view()),
+    path("admin/<int:pk>/", views.AdminOrderDetailView.as_view()),
+    path(
+        "admin/<int:pk>/status/",
+        views.AdminOrderStatusUpdateView.as_view(),
+    ),
 ]

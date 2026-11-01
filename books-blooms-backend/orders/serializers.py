@@ -16,13 +16,22 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+
     # Include the books belonging to this order.
     items = OrderItemSerializer(many=True, read_only=True)
+
+    # Include the customer's name for admin order management.
+    customer_name = serializers.SerializerMethodField()
+
+    def get_customer_name(self, obj):
+        full_name = obj.user.get_full_name()
+        return full_name or obj.user.email
 
     class Meta:
         model = Order
         fields = [
             "id",
+            "customer_name",
             "items",
             "shipping_full_name",
             "shipping_phone_number",
@@ -43,19 +52,59 @@ class OrderSerializer(serializers.ModelSerializer):
             "created_at",
         ]
 
-        # These values are calculated or controlled by the backend.
         read_only_fields = fields
 
 
 class OrderCreateSerializer(serializers.Serializer):
-    address_id = serializers.IntegerField()
-    payment_method = serializers.ChoiceField(
-        choices=Order.PaymentMethod.choices
-    )
 
-    
+    address_id = serializers.IntegerField()
+    payment_method = serializers.ChoiceField(choices=Order.PaymentMethod.choices)
+
+
 class OrderCancellationSerializer(serializers.Serializer):
-    reason = serializers.CharField(
-        required=False,
-        allow_blank=True
-    )
+
+    reason = serializers.CharField(required=False, allow_blank=True)
+
+
+# New serializer for admin order status updates.
+class AdminOrderStatusSerializer(serializers.Serializer):
+
+    order_status = serializers.ChoiceField(choices=Order.OrderStatus.choices)
+
+    def validate_order_status(self, value):
+
+        # Cancellation needs separate inventory restoration logic.
+        if value == Order.OrderStatus.CANCELLED:
+            raise serializers.ValidationError(
+                "Use the cancellation process to cancel an order."
+            )
+
+        return value
+
+
+class OrderCreateSerializer(serializers.Serializer):
+    address_id = serializers.IntegerField()
+    payment_method = serializers.ChoiceField(choices=Order.PaymentMethod.choices)
+
+
+class OrderCancellationSerializer(serializers.Serializer):
+    reason = serializers.CharField(required=False, allow_blank=True)
+
+
+class AdminOrderStatusSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Order
+        fields = ["order_status"]
+
+    def validate_order_status(self, value):
+
+        # Admin cannot use this endpoint to cancel an order.
+        # Cancellation must use the cancellation logic.
+        if value == Order.OrderStatus.CANCELLED:
+            raise serializers.ValidationError(
+                "Please use the cancellation process to cancel an order."
+            )
+
+        return value
+

@@ -151,7 +151,7 @@ function AdminLayout() {
           type="button"
           aria-label="Close navigation"
           onClick={() => setSidebarOpen(false)}
-          className="fixed inset-x-0 bottom-0 top-16 z-30 bg-slate-950/40 md:hidden"
+          className="fixed inset-x-0 bottom-0 top-16 z-30 bg-slate-950/40 md:hidden cursor-pointer"
         />
       )}
 

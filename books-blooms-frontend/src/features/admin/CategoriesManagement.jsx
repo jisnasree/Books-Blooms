@@ -193,7 +193,7 @@ function CategoriesManagement() {
             setShowForm(true);
             setActionError("");
           }}
-          className="mb-4 rounded-lg bg-green-700 px-4 py-2 text-white hover:bg-green-800"
+          className="mb-4 rounded-lg bg-green-700 px-4 py-2 text-white hover:bg-green-800 cursor-pointer"
         >
           Add Category
         </button>
@@ -294,7 +294,7 @@ function CategoriesManagement() {
                             setEditedCategoryName(category.name);
                             setActionError("");
                           }}
-                          className="font-medium text-green-700 hover:text-green-900"
+                          className="font-medium text-green-700 hover:text-green-900 cursor-pointer"
                         >
                           Edit
                         </button>
@@ -302,7 +302,7 @@ function CategoriesManagement() {
                           type="button"
                           onClick={() => handleDeleteCategory(category)}
                           disabled={deletingCategoryId === category.id}
-                          className="font-medium text-red-700 hover:text-rose-900 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="font-medium text-red-700 hover:text-rose-900 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                         >
                           {deletingCategoryId === category.id
                             ? "Deleting..."

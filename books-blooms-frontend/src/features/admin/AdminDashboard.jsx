@@ -6,6 +6,7 @@ function AdminDashboard() {
     totalBooks: null,
     totalAuthors: null,
     totalCategories: null,
+    totalOrders: null,
     totalCustomers: null,
   });
 
@@ -15,22 +16,12 @@ function AdminDashboard() {
   useEffect(() => {
     async function fetchDashboardSummary() {
       try {
-
-        // const token = sessionStorage.getItem("authToken");
-
-        const response = await fetch(
-          ADMIN_DASHBOARD_URL,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Token ${sessionStorage.getItem("authToken")}`,
-            },
-            // headers: {
-            //   Authorization: `Token ${token}`,
-            // },
-          }
-        );
-
+        const response = await fetch(ADMIN_DASHBOARD_URL, {
+          method: "GET",
+          headers: {
+            Authorization: `Token ${sessionStorage.getItem("authToken")}`,
+          },
+        });
 
         if (!response.ok) {
           throw new Error(
@@ -50,7 +41,6 @@ function AdminDashboard() {
     fetchDashboardSummary();
   }, []);
 
-
   const summaryCards = [
     {
       title: "Total Books",
@@ -60,7 +50,7 @@ function AdminDashboard() {
     },
     {
       title: "Total Orders",
-      value: "—",
+      value: summary.totalOrders,
       description: "Orders placed",
       icon: "📦",
     },
@@ -85,13 +75,16 @@ function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
 
       {/* Page heading */}
       <section>
         <h1 className="text-2xl font-bold text-[#3F302D]">
           Dashboard Overview
         </h1>
+        <p className="mt-2 text-sm text-stone-500">
+          Welcome to your Books & Blooms administration dashboard.
+        </p>
       </section>
 
       {/* Loading and error messages */}
@@ -108,62 +101,33 @@ function AdminDashboard() {
       )}
 
       {/* Summary cards */}
-      <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-5">
+      <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
         {summaryCards.map((card) => (
           <div
             key={card.title}
-            className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm"
+            className="rounded-2xl border border-rose-100 bg-white p-8 shadow-sm transition-shadow hover:shadow-md"
           >
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-stone-500">
+              <p className="text-base font-semibold text-stone-500">
                 {card.title}
               </p>
 
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-50 text-xl">
+              <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-rose-50 text-2xl">
                 {card.icon}
               </span>
             </div>
 
-            <p className="mt-5 text-3xl font-bold text-[#3F302D]">
-              {loading && card.value === null ? "…" : card.value}
+            <p className="mt-7 text-4xl font-bold text-[#3F302D]">
+              {loading && card.value === null
+                ? "..."
+                : card.value ?? 0}
             </p>
 
-            <p className="mt-2 text-sm text-stone-500">
+            <p className="mt-3 text-base text-stone-500">
               {card.description}
             </p>
           </div>
         ))}
-      </section>
-
-      {/* Recent orders */}
-      <section className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm">
-        <div className="mb-5">
-          <h2 className="text-lg font-semibold">Recent Orders</h2>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-stone-200 bg-[#FBFAF7] text-stone-500">
-              <tr>
-                <th className="px-4 py-3 font-medium">Order ID</th>
-                <th className="px-4 py-3 font-medium">Customer</th>
-                <th className="px-4 py-3 font-medium">Total</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr>
-                <td
-                  colSpan={4}
-                  className="px-4 py-10 text-center text-stone-500"
-                >
-                  No order data loaded yet.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
       </section>
 
     </div>

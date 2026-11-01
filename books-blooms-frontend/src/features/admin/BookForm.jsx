@@ -234,14 +234,14 @@ function BookForm({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100"
+                            className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer"
                         >
                             Cancel
                         </button>
 
                         <button
                             type="submit"
-                            className="rounded-lg bg-green-700 px-5 py-2 text-white hover:bg-rose-800"
+                            className="rounded-lg bg-green-700 px-5 py-2 text-white hover:bg-rose-800 cursor-pointer"
                         >
                             {editingBook ? "Update Book" : "Save Book"}
                         </button>

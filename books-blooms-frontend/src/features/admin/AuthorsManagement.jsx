@@ -182,7 +182,7 @@ function AuthorsManagement() {
             setAuthorName("");
             setFormError("");
           }}
-          className="mb-4 rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100"
+          className="mb-4 rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer"
         >
           Cancel
         </button>
@@ -193,7 +193,7 @@ function AuthorsManagement() {
             setShowForm(true);
             setFormError("");
           }}
-          className="mb-4 rounded-lg bg-green-700 px-4 py-2 text-white hover:bg-green-800"
+          className="mb-4 rounded-lg bg-green-700 px-4 py-2 text-white hover:bg-green-800 cursor-pointer"
         >
           Add Author
         </button>
@@ -216,7 +216,7 @@ function AuthorsManagement() {
 
           <button
             type="submit"
-            className="rounded-lg bg-green-700 px-5 py-2 text-white hover:bg-green-800"
+            className="rounded-lg bg-green-700 px-5 py-2 text-white hover:bg-green-800 cursor-pointer"
           >
             Save Author
           </button>
@@ -308,7 +308,7 @@ function AuthorsManagement() {
                           setFormError("");
                           setActionError("");
                         }}
-                        className="font-medium text-green-700 hover:text-green-900"
+                        className="font-medium text-green-700 hover:text-green-900 cursor-pointer"
                       >
                         Edit
                       </button>
@@ -317,7 +317,7 @@ function AuthorsManagement() {
                         type="button"
                         onClick={() => handleDeleteAuthor(author)}
                         disabled={deletingAuthorId === author.id}
-                        className="font-medium text-red-700 hover:text-rose-900 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="font-medium text-red-700 hover:text-rose-900 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                       >
                         {deletingAuthorId === author.id ? "Deleting..." : "Delete"}
                       </button>

@@ -54,9 +54,160 @@ function Checkout() {
 
     const [placingOrder, setPlacingOrder] = useState(false);
 
+
+    // New address form state
+    const [addressForm, setAddressForm] = useState({
+        label: "HOME",
+        full_name: "",
+        phone_number: "",
+        address_line_1: "",
+        address_line_2: "",
+        city: "",
+        state: "",
+        postal_code: "",
+        country: "USA",
+        is_default: false,
+    });
+
+    const [savingAddress, setSavingAddress] = useState(false);
+
+    const [addressError, setAddressError] = useState("");
+
+    const [addressSuccess, setAddressSuccess] = useState("");
+
+
     const navigate = useNavigate();
 
     const { refreshCart } = useContext(CartContext);
+
+
+    // Handle changes in address form inputs
+    function handleAddressChange(e) {
+
+        const { name, value, type, checked } = e.target;
+
+        setAddressForm((previousForm) => ({
+            ...previousForm,
+            [name]: type === "checkbox" ? checked : value,
+        }));
+    }
+
+
+    // Save new address
+    async function handleSaveAddress() {
+
+        try {
+
+            setAddressError("");
+            setAddressSuccess("");
+
+            setSavingAddress(true);
+
+            const token = sessionStorage.getItem("authToken");
+
+            if (!token) {
+                throw new Error("Please log in to save an address.");
+            }
+
+
+            // Send new address to Django
+            const response = await fetch(ADDRESS_BASE_URL, {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Token ${token}`,
+                },
+
+                body: JSON.stringify(addressForm),
+
+            });
+
+
+            const data = await response.json();
+
+
+            if (!response.ok) {
+
+                const message = Object.entries(data)
+                    .map(([field, messages]) => {
+
+                        const fieldMessages = Array.isArray(messages)
+                            ? messages.join(", ")
+                            : String(messages);
+
+                        return `${field}: ${fieldMessages}`;
+
+                    })
+                    .join(" | ");
+
+                throw new Error(
+                    message || "Unable to save address."
+                );
+
+            }
+
+
+            // Fetch updated address list
+            const addressResponse = await fetch(ADDRESS_BASE_URL, {
+
+                headers: {
+                    Authorization: `Token ${token}`,
+                },
+
+            });
+
+
+            if (!addressResponse.ok) {
+                throw new Error(
+                    "Address saved, but unable to refresh the address list."
+                );
+            }
+
+
+            const addressData = await addressResponse.json();
+
+            const savedAddresses = Array.isArray(addressData)
+                ? addressData
+                : addressData.results || [];
+
+
+            setAddresses(savedAddresses);
+
+
+            // Select the newly saved address
+            setSelectedAddressId(data.id);
+
+
+            // Reset address form
+            setAddressForm({
+                label: "HOME",
+                full_name: "",
+                phone_number: "",
+                address_line_1: "",
+                address_line_2: "",
+                city: "",
+                state: "",
+                postal_code: "",
+                country: "USA",
+                is_default: false,
+            });
+
+
+            setAddressSuccess("Address saved successfully!");
+
+        } catch (error) {
+
+            setAddressError(error.message);
+
+        } finally {
+
+            setSavingAddress(false);
+
+        }
+
+    }
 
 
     // Fetch cart and saved addresses
@@ -585,19 +736,16 @@ function Checkout() {
                                                     Address Type
                                                 </label>
 
-                                                <select className={inputClass}>
+                                                <select
+                                                    name="label"
+                                                    value={addressForm.label}
+                                                    onChange={handleAddressChange}
+                                                    className={inputClass}
+                                                >
 
-                                                    <option value="HOME">
-                                                        Home
-                                                    </option>
-
-                                                    <option value="WORK">
-                                                        Work
-                                                    </option>
-
-                                                    <option value="OTHER">
-                                                        Other
-                                                    </option>
+                                                    <option value="HOME">Home</option>
+                                                    <option value="WORK">Work</option>
+                                                    <option value="OTHER">Other</option>
 
                                                 </select>
 
@@ -614,8 +762,12 @@ function Checkout() {
 
                                                 <input
                                                     type="text"
+                                                    name="full_name"
                                                     placeholder="Enter full name"
                                                     className={inputClass}
+                                                    value={addressForm.full_name}
+                                                    onChange={handleAddressChange}
+                                                    required
                                                 />
 
                                             </div>
@@ -631,8 +783,12 @@ function Checkout() {
 
                                                 <input
                                                     type="tel"
+                                                    name="phone_number"
                                                     placeholder="Enter phone number"
                                                     className={inputClass}
+                                                    value={addressForm.phone_number}
+                                                    onChange={handleAddressChange}
+                                                    required
                                                 />
 
                                             </div>
@@ -648,8 +804,12 @@ function Checkout() {
 
                                                 <input
                                                     type="text"
+                                                    name="address_line_1"
                                                     placeholder="House number, street name"
                                                     className={inputClass}
+                                                    value={addressForm.address_line_1}
+                                                    onChange={handleAddressChange}
+                                                    required
                                                 />
 
                                             </div>
@@ -665,8 +825,11 @@ function Checkout() {
 
                                                 <input
                                                     type="text"
+                                                    name="address_line_2"
                                                     placeholder="Apartment, suite, landmark"
                                                     className={inputClass}
+                                                    value={addressForm.address_line_2}
+                                                    onChange={handleAddressChange}
                                                 />
 
                                             </div>
@@ -684,8 +847,12 @@ function Checkout() {
 
                                                     <input
                                                         type="text"
+                                                        name="city"
                                                         placeholder="City"
                                                         className={inputClass}
+                                                        value={addressForm.city}
+                                                        onChange={handleAddressChange}
+                                                        required
                                                     />
 
                                                 </div>
@@ -699,8 +866,12 @@ function Checkout() {
 
                                                     <input
                                                         type="text"
+                                                        name="state"
                                                         placeholder="State"
                                                         className={inputClass}
+                                                        value={addressForm.state}
+                                                        onChange={handleAddressChange}
+                                                        required
                                                     />
 
                                                 </div>
@@ -720,8 +891,12 @@ function Checkout() {
 
                                                     <input
                                                         type="text"
+                                                        name="postal_code"
                                                         placeholder="Postal code"
                                                         className={inputClass}
+                                                        value={addressForm.postal_code}
+                                                        onChange={handleAddressChange}
+                                                        required
                                                     />
 
                                                 </div>
@@ -735,8 +910,11 @@ function Checkout() {
 
                                                     <input
                                                         type="text"
-                                                        defaultValue="USA"
+                                                        name="country"
+                                                        value={addressForm.country}
+                                                        onChange={handleAddressChange}
                                                         className={inputClass}
+                                                        required
                                                     />
 
                                                 </div>
@@ -751,6 +929,9 @@ function Checkout() {
                                                 <input
                                                     type="checkbox"
                                                     id="defaultAddress"
+                                                    name="is_default"
+                                                    checked={addressForm.is_default}
+                                                    onChange={handleAddressChange}
                                                     className="h-4 w-4 accent-rose-700"
                                                 />
 
@@ -765,11 +946,38 @@ function Checkout() {
 
 
 
+                                            {/* Address error */}
+                                            {addressError && (
+
+                                                <p className="text-sm text-red-600">
+                                                    {addressError}
+                                                </p>
+
+                                            )}
+
+
+                                            {/* Address success */}
+                                            {addressSuccess && (
+
+                                                <p className="text-sm text-green-700">
+                                                    {addressSuccess}
+                                                </p>
+
+                                            )}
+
+
+
                                             <button
                                                 type="button"
-                                                className="rounded-lg bg-rose-700 px-5 py-3 font-medium text-white transition hover:bg-rose-800"
+                                                onClick={handleSaveAddress}
+                                                disabled={savingAddress}
+                                                className="rounded-lg bg-rose-700 px-5 py-3 font-medium text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-50"
                                             >
-                                                Save Address
+
+                                                {savingAddress
+                                                    ? "Saving..."
+                                                    : "Save Address"}
+
                                             </button>
 
 

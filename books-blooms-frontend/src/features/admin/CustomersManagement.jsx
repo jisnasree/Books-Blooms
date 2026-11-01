@@ -117,7 +117,7 @@ function CustomersManagement() {
         <button
           type="button"
           onClick={() => setSearchTerm("")}
-          className="rounded-lg border border-gray-300 px-4 py-2 hover:bg-gray-100"
+          className="rounded-lg border border-gray-300 px-4 py-2 hover:bg-gray-100 cursor-pointer"
         >
           Clear
         </button>
@@ -169,8 +169,8 @@ function CustomersManagement() {
                     type="button"
                     onClick={() => handleBlockToggle(customer)}
                     className={`rounded-lg px-3 py-2 text-white ${customer.is_blocked
-                      ? "bg-green-600 hover:bg-green-700"
-                      : "bg-red-600 hover:bg-red-700"
+                      ? "bg-green-600 hover:bg-green-700 cursor-pointer"
+                      : "bg-red-600 hover:bg-red-700 cursor-pointer"
                       }`}
                   >
                     {customer.is_blocked ? "Unblock" : "Block"}

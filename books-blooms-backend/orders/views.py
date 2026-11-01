@@ -3,7 +3,7 @@ from rest_framework.generics import (
     RetrieveAPIView,
     ListCreateAPIView,
 )
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -23,10 +23,61 @@ from catalog.models import PhysicalVariant
 
 from .models import Order, OrderItem
 from .serializers import (
+    AdminOrderStatusSerializer,
     OrderCreateSerializer,
     OrderSerializer,
     OrderCancellationSerializer,
 )
+
+
+class AdminOrderListView(ListAPIView):
+    """
+    GET /api/admin/orders/
+    Returns all customer orders for admin management.
+    """
+
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get_queryset(self):
+        return (
+            Order.objects.select_related("user")
+            .prefetch_related("items")
+            .order_by("-created_at")
+        )
+
+
+class AdminOrderDetailView(RetrieveAPIView):
+    """
+    GET /api/admin/orders/<pk>/
+    Returns details of a specific customer order.
+    """
+
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get_queryset(self):
+        return Order.objects.select_related("user").prefetch_related("items")
+
+
+class AdminOrderStatusUpdateView(APIView):
+
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def patch(self, request, pk):
+
+        # Find the order using its ID
+        order = get_object_or_404(Order, pk=pk)
+
+        # Validate the new order status
+        serializer = AdminOrderStatusSerializer(order, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(OrderSerializer(order).data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class OrderListCreateView(ListCreateAPIView):

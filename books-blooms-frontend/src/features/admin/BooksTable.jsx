@@ -86,7 +86,7 @@ function BooksTable({
                   <button
                     type="button"
                     onClick={() => onEdit(book)}
-                    className="mr-3 text-blue-700 hover:underline"
+                    className="mr-3 text-blue-700 hover:underline cursor-pointer"
                   >
                     Edit
                   </button>
@@ -94,7 +94,7 @@ function BooksTable({
                   <button
                     type="button"
                     onClick={() => onDelete(book)}
-                    className="text-red-600 hover:underline"
+                    className="text-red-600 hover:underline cursor-pointer"
                   >
                     Delete
                   </button>

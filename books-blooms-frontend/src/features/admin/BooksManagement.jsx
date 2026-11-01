@@ -297,7 +297,7 @@ function BooksManagement() {
         <button
           type="button"
           onClick={() => setShowForm(true)}
-          className="rounded-lg bg-green-800 px-5 py-3 text-sm font-medium text-white hover:bg-green-900"
+          className="rounded-lg bg-green-800 px-5 py-3 text-sm font-medium text-white hover:bg-green-900 cursor-pointer"
         >
           + Add Book
         </button>
