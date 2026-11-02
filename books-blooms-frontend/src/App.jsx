@@ -29,6 +29,7 @@ import OrderDetails from "./features/orders/OrderDetails"
 import Orders from "./features/orders/Orders"
 import OrderSuccess from "./features/orders/OrderSuccess"
 import AboutUs from "./features/AboutUs"
+import AdminOrderDetails from "./features/admin/AdminOrderDetails"
 
 
 function App() {
@@ -87,6 +88,7 @@ function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="books" element={<BooksManagement />} />
           <Route path="orders" element={<OrdersManagement />} />
+          <Route path="orders/:id" element={<AdminOrderDetails />} />
           <Route path="authors" element={<AuthorsManagement />} />
           <Route path="categories" element={<CategoriesManagement />} />
           <Route path="customers" element={<CustomersManagement />} />

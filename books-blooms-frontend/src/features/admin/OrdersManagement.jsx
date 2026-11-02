@@ -1,12 +1,26 @@
 import { useEffect, useState } from "react";
 import OrdersTable from "./OrdersTable";
 import { ORDERS_URL } from "../../constants";
+import { useNavigate } from "react-router-dom";
 
 function OrdersManagement() {
   const [orders, setOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  
+  const navigate = useNavigate();
+
+  // Open order details in View mode
+  const handleView = (order) => {
+    navigate(`/admin/orders/${order.id}`);
+  };
+
+  // Open order details in Edit mode
+  const handleEdit = (order) => {
+    navigate(`/admin/orders/${order.id}?edit=true`);
+  };
+
 
   // Fetch all orders when the component loads.
   useEffect(() => {
@@ -97,8 +111,10 @@ function OrdersManagement() {
         <>
           <OrdersTable
             orders={filteredOrders}
-            onView={(order) => console.log("Selected order:", order)}
+            onView={handleView}
+            onEdit={handleEdit}
           />
+
 
           {/* Result count */}
           <p className="mt-4 text-sm text-gray-500">

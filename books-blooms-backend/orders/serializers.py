@@ -66,10 +66,13 @@ class OrderCancellationSerializer(serializers.Serializer):
     reason = serializers.CharField(required=False, allow_blank=True)
 
 
-# New serializer for admin order status updates.
-class AdminOrderStatusSerializer(serializers.Serializer):
 
-    order_status = serializers.ChoiceField(choices=Order.OrderStatus.choices)
+# Serializer for admin order status updates.
+class AdminOrderStatusSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Order
+        fields = ["order_status"]
 
     def validate_order_status(self, value):
 
@@ -80,5 +83,3 @@ class AdminOrderStatusSerializer(serializers.Serializer):
             )
 
         return value
-
-

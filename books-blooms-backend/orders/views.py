@@ -1,7 +1,8 @@
 from rest_framework.generics import (
     ListAPIView,
-    RetrieveAPIView,
+    RetrieveUpdateAPIView,
     ListCreateAPIView,
+    RetrieveAPIView
 )
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework import status
@@ -47,37 +48,67 @@ class AdminOrderListView(ListAPIView):
         )
 
 
-class AdminOrderDetailView(RetrieveAPIView):
+class AdminOrderDetailView(RetrieveUpdateAPIView):
     """
-    GET /api/admin/orders/<pk>/
-    Returns details of a specific customer order.
+    GET   /api/orders/admin/<pk>/  - Retrieve order details
+    PATCH /api/orders/admin/<pk>/  - Update order status
     """
 
-    serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get_queryset(self):
         return Order.objects.select_related("user").prefetch_related("items")
 
+    def get_serializer_class(self):
+        if self.request.method == "PATCH":
+            return AdminOrderStatusSerializer
 
-class AdminOrderStatusUpdateView(APIView):
+        return OrderSerializer
 
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
 
-    def patch(self, request, pk):
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
 
-        # Find the order using its ID
-        order = get_object_or_404(Order, pk=pk)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-        # Validate the new order status
-        serializer = AdminOrderStatusSerializer(order, data=request.data, partial=True)
+        # Return the complete updated order details
+        return Response(OrderSerializer(instance).data, status=status.HTTP_200_OK)
 
-        if serializer.is_valid():
-            serializer.save()
 
-            return Response(OrderSerializer(order).data, status=status.HTTP_200_OK)
+# class AdminOrderDetailView(RetrieveAPIView):
+#     """
+#     GET /api/admin/orders/<pk>/
+#     Returns details of a specific customer order.
+#     """
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#     serializer_class = OrderSerializer
+#     permission_classes = [IsAuthenticated, IsAdminUser]
+
+#     def get_queryset(self):
+#         return Order.objects.select_related("user").prefetch_related("items")
+
+
+# class AdminOrderStatusUpdateView(APIView):
+
+#     permission_classes = [IsAuthenticated, IsAdminUser]
+
+#     def patch(self, request, pk):
+
+#         # Find the order using its ID
+#         order = get_object_or_404(Order, pk=pk)
+
+#         # Validate the new order status
+#         serializer = AdminOrderStatusSerializer(order, data=request.data, partial=True)
+
+#         if serializer.is_valid():
+#             serializer.save()
+
+#             return Response(OrderSerializer(order).data, status=status.HTTP_200_OK)
+
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class OrderListCreateView(ListCreateAPIView):
