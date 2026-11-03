@@ -50,7 +50,7 @@ function Checkout() {
     const [error, setError] = useState("");
 
     const [paymentMethod, setPaymentMethod] = useState("COD");
-
+    const [pendingOrder, setPendingOrder] = useState(null);
     const [placingOrder, setPlacingOrder] = useState(false);
     const [paymentReference, setPaymentReference] = useState(null);
 
@@ -300,31 +300,44 @@ function Checkout() {
             };
 
 
-            // 1. Create Books & Blooms order
-            const response = await fetch(ORDERS_URL, {
+            // 1. Create Books & Blooms order.
+            // On payment retry, reuse the pending order instead of
+            // creating a duplicate.
+            let orderData =
+                pendingOrder && pendingOrder.payment_method === paymentMethod
+                    ? pendingOrder
+                    : null;
 
-                method: "POST",
+            if (!orderData) {
 
-                headers,
+                const response = await fetch(ORDERS_URL, {
 
-                body: JSON.stringify({
-                    address_id: selectedAddressId,
-                    payment_method: paymentMethod,
-                }),
+                    method: "POST",
 
-            });
+                    headers,
 
-            const orderData = await response.json();
+                    body: JSON.stringify({
+                        address_id: selectedAddressId,
+                        payment_method: paymentMethod,
+                    }),
 
-            if (!response.ok) {
+                });
 
-                throw new Error(
-                    orderData.detail ||
-                    orderData.error ||
-                    "Unable to place your order."
-                );
+                orderData = await response.json();
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        orderData.detail ||
+                        orderData.error ||
+                        "Unable to place your order."
+                    );
+                }
+
+                if (paymentMethod !== "COD") {
+                    setPendingOrder(orderData);
+                }
             }
-
 
             // 2. COD payment
             if (paymentMethod === "COD") {

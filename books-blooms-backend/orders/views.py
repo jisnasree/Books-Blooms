@@ -2,7 +2,7 @@ from rest_framework.generics import (
     ListAPIView,
     RetrieveUpdateAPIView,
     ListCreateAPIView,
-    RetrieveAPIView
+    RetrieveAPIView,
 )
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework import status
@@ -192,6 +192,19 @@ class OrderListCreateView(ListCreateAPIView):
 
             # Calculate final order amount
             total_amount = subtotal + delivery_charge + tax_amount
+
+            # Cancel any earlier unpaid Razorpay orders so only one
+            # pending online-payment order exists per customer.
+            Order.objects.filter(
+                user=request.user,
+                payment_method=Order.PaymentMethod.RAZORPAY,
+                payment_status=Order.PaymentStatus.PENDING,
+                order_status=Order.OrderStatus.PENDING,
+            ).update(
+                order_status=Order.OrderStatus.CANCELLED,
+                cancelled_at=timezone.now(),
+                cancellation_reason="Superseded by a new checkout attempt.",
+            )
 
             # Create Books & Blooms order
             order = Order.objects.create(
