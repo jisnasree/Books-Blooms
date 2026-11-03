@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import Header from "../../components/Header";
@@ -18,7 +18,6 @@ import { CartContext } from "../../context/CartContext";
 function loadRazorpayScript() {
     return new Promise((resolve) => {
 
-        // Avoid loading the script more than once
         if (window.Razorpay) {
             resolve(true);
             return;
@@ -53,6 +52,12 @@ function Checkout() {
     const [paymentMethod, setPaymentMethod] = useState("COD");
 
     const [placingOrder, setPlacingOrder] = useState(false);
+    const [paymentReference, setPaymentReference] = useState(null);
+
+
+    // Stores the actual Razorpay payment failure message.
+    // This allows us to display it even after the popup closes.
+    const paymentFailureRef = useRef("");
 
 
     // New address form state
@@ -109,8 +114,6 @@ function Checkout() {
                 throw new Error("Please log in to save an address.");
             }
 
-
-            // Send new address to Django
             const response = await fetch(ADDRESS_BASE_URL, {
 
                 method: "POST",
@@ -124,9 +127,7 @@ function Checkout() {
 
             });
 
-
             const data = await response.json();
-
 
             if (!response.ok) {
 
@@ -145,7 +146,6 @@ function Checkout() {
                 throw new Error(
                     message || "Unable to save address."
                 );
-
             }
 
 
@@ -158,13 +158,11 @@ function Checkout() {
 
             });
 
-
             if (!addressResponse.ok) {
                 throw new Error(
                     "Address saved, but unable to refresh the address list."
                 );
             }
-
 
             const addressData = await addressResponse.json();
 
@@ -172,9 +170,7 @@ function Checkout() {
                 ? addressData
                 : addressData.results || [];
 
-
             setAddresses(savedAddresses);
-
 
             // Select the newly saved address
             setSelectedAddressId(data.id);
@@ -194,7 +190,6 @@ function Checkout() {
                 is_default: false,
             });
 
-
             setAddressSuccess("Address saved successfully!");
 
         } catch (error) {
@@ -206,7 +201,6 @@ function Checkout() {
             setSavingAddress(false);
 
         }
-
     }
 
 
@@ -293,6 +287,8 @@ function Checkout() {
         try {
 
             setError("");
+            setPaymentReference(null);
+            paymentFailureRef.current = "";
 
             setPlacingOrder(true);
 
@@ -327,7 +323,6 @@ function Checkout() {
                     orderData.error ||
                     "Unable to place your order."
                 );
-
             }
 
 
@@ -354,7 +349,6 @@ function Checkout() {
                 throw new Error(
                     "Unable to load Razorpay. Your order is saved as pending. Please try again."
                 );
-
             }
 
 
@@ -375,7 +369,6 @@ function Checkout() {
                     paymentData.detail ||
                     "Unable to initialize Razorpay payment."
                 );
-
             }
 
 
@@ -407,6 +400,8 @@ function Checkout() {
                         setPlacingOrder(true);
 
                         setError("");
+
+                        paymentFailureRef.current = "";
 
 
                         // Verify payment with Django backend
@@ -440,7 +435,6 @@ function Checkout() {
                                 verifyData.detail ||
                                 "Payment verification failed. Please contact support if money was deducted."
                             );
-
                         }
 
 
@@ -464,15 +458,33 @@ function Checkout() {
                         setPlacingOrder(false);
 
                     }
-
                 },
 
 
-                // Handle Razorpay modal dismissal
+                // 8. Handle Razorpay popup dismissal
                 modal: {
 
                     ondismiss: function () {
+
                         setPlacingOrder(false);
+
+
+                        // Check whether payment actually failed
+                        if (paymentFailureRef.current) {
+
+                            setError(
+                                `Payment failed: ${paymentFailureRef.current}`
+                            );
+
+                        } else {
+
+                            // Customer closed popup without completing payment
+                            setError(
+                                "Payment cancelled. You closed the payment window before completing the payment. Please try again."
+                            );
+
+                        }
+
                     },
 
                 },
@@ -486,9 +498,37 @@ function Checkout() {
             };
 
 
-            // 8. Open Razorpay Checkout
+            // 9. Create Razorpay Checkout instance
             const razorpay = new window.Razorpay(options);
 
+
+            // 10. Handle actual payment failure
+            razorpay.on("payment.failed", function (response) {
+
+                setPlacingOrder(false);
+
+                const failureMessage =
+                    response.error?.description &&
+                        response.error.description !== "Payment failed"
+                        ? response.error.description
+                        : "Your payment could not be completed. Please try again.";
+
+                // Store payment reference details
+                const referenceDetails = {
+                    paymentId: response.error?.metadata?.payment_id,
+                    orderId: response.error?.metadata?.order_id,
+                };
+
+                setPaymentReference(referenceDetails);
+
+                paymentFailureRef.current = failureMessage;
+
+                setError(failureMessage);
+
+            });
+
+
+            // 11. Open Razorpay Checkout
             razorpay.open();
 
 
@@ -580,14 +620,7 @@ function Checkout() {
 
                         <>
 
-                            {/* Payment error */}
-                            {error && (
 
-                                <div className="mb-6 rounded-lg bg-red-50 p-4 text-red-700">
-                                    {error}
-                                </div>
-
-                            )}
 
 
                             <div className="grid gap-8 lg:grid-cols-3">
@@ -614,8 +647,8 @@ function Checkout() {
                                                     <label
                                                         key={address.id}
                                                         className={`block cursor-pointer rounded-xl border bg-white p-5 transition ${selectedAddressId === address.id
-                                                                ? "border-rose-700 ring-1 ring-rose-700"
-                                                                : "border-gray-200 hover:border-rose-300"
+                                                            ? "border-rose-700 ring-1 ring-rose-700"
+                                                            : "border-gray-200 hover:border-rose-300"
                                                             }`}
                                                     >
 
@@ -1132,9 +1165,10 @@ function Checkout() {
                                                     name="paymentMethod"
                                                     value="COD"
                                                     checked={paymentMethod === "COD"}
-                                                    onChange={() =>
-                                                        setPaymentMethod("COD")
-                                                    }
+                                                    onChange={() => {
+                                                        setPaymentMethod("COD");
+                                                        setError("");
+                                                    }}
                                                     className="h-4 w-4 accent-rose-700"
                                                 />
 
@@ -1162,9 +1196,10 @@ function Checkout() {
                                                     name="paymentMethod"
                                                     value="RAZORPAY"
                                                     checked={paymentMethod === "RAZORPAY"}
-                                                    onChange={() =>
-                                                        setPaymentMethod("RAZORPAY")
-                                                    }
+                                                    onChange={() => {
+                                                        setPaymentMethod("RAZORPAY");
+                                                        setError("");
+                                                    }}
                                                     className="h-4 w-4 accent-rose-700"
                                                 />
 
@@ -1218,7 +1253,57 @@ function Checkout() {
                                         Return to Cart
                                     </Link>
 
+                                    {/* Payment Error Message */}
+                                    {error && (
+                                        <div
+                                            role="alert"
+                                            className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700"
+                                        >
+                                            <p className="font-semibold">
+                                                Payment Failed
+                                            </p>
 
+                                            <p className="mt-2 text-sm">
+                                                {error}
+                                            </p>
+
+                                            {paymentReference?.paymentId && (
+                                                <div className="mt-4 border-t border-red-200 pt-3">
+
+                                                    <p className="text-xs font-semibold uppercase">
+                                                        Payment Reference ID
+                                                    </p>
+
+                                                    <p className="mt-1 break-all font-mono text-sm">
+                                                        {paymentReference.paymentId}
+                                                    </p>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            navigator.clipboard.writeText(
+                                                                paymentReference.paymentId
+                                                            )
+                                                        }
+                                                        className="mt-2 text-xs font-medium underline cursor-pointer"
+                                                    >
+                                                        Copy Payment ID
+                                                    </button>
+
+                                                </div>
+                                            )}
+
+                                            {paymentReference?.orderId && (
+                                                <p className="mt-3 text-xs">
+                                                    Razorpay Order ID: {paymentReference.orderId}
+                                                </p>
+                                            )}
+
+                                            <p className="mt-3 text-xs text-red-600">
+                                                If money was deducted, please contact Books & Blooms support with your payment reference ID.
+                                            </p>
+                                        </div>
+                                    )}
                                 </aside>
 
                             </div>
