@@ -54,6 +54,7 @@ function Checkout() {
     const [placingOrder, setPlacingOrder] = useState(false);
     const [paymentReference, setPaymentReference] = useState(null);
 
+    const [couponCode, setCouponCode] = useState("");
 
     // Stores the actual Razorpay payment failure message.
     // This allows us to display it even after the popup closes.
@@ -319,6 +320,7 @@ function Checkout() {
                     body: JSON.stringify({
                         address_id: selectedAddressId,
                         payment_method: paymentMethod,
+                        coupon_code: couponCode,
                     }),
 
                 });
@@ -1113,6 +1115,17 @@ function Checkout() {
                                                         ₹{subtotal.toFixed(2)}
                                                     </span>
 
+                                                </div>
+
+                                                {/* Coupon */}
+                                                <div className="mt-4">
+                                                    <input
+                                                        type="text"
+                                                        value={couponCode}
+                                                        onChange={(e) => setCouponCode(e.target.value)}
+                                                        placeholder="Coupon code (optional)"
+                                                        className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-rose-700"
+                                                    />
                                                 </div>
 
 

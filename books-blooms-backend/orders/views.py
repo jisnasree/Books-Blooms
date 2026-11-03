@@ -22,7 +22,7 @@ from addresses.models import Address
 from cart.models import Cart
 from catalog.models import PhysicalVariant
 
-from .models import Order, OrderItem
+from .models import Order, OrderItem, Coupon
 from .serializers import (
     AdminOrderStatusSerializer,
     OrderCreateSerializer,
@@ -137,7 +137,7 @@ class OrderListCreateView(ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
 
         payment_method = serializer.validated_data["payment_method"]
-
+        coupon_code = serializer.validated_data.get("coupon_code", "").strip()
         is_cod = payment_method == Order.PaymentMethod.COD
 
         # Find the selected address belonging to this user
@@ -180,18 +180,42 @@ class OrderListCreateView(ListCreateAPIView):
             # Calculate subtotal
             subtotal = sum(item.variant.price * item.quantity for item in cart_items)
 
+            # Apply coupon to the subtotal if a valid code was given
+            discount_amount = Decimal("0.00")
+
+            if coupon_code:
+                coupon = Coupon.objects.filter(
+                    code__iexact=coupon_code, is_active=True
+                ).first()
+
+                if coupon and (
+                    coupon.expires_at is None or coupon.expires_at > timezone.now()
+                ):
+                    discount_amount = (
+                        subtotal * Decimal(coupon.discount_percent) / Decimal("100")
+                    )
+                else:
+                    return Response(
+                        {"error": "Invalid or expired coupon code."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            discounted_subtotal = subtotal - discount_amount
+
             # Free delivery when subtotal is above ₹2,000.
             # Otherwise, charge ₹100.
             delivery_charge = (
-                Decimal("0.00") if subtotal > Decimal("2000.00") else Decimal("100.00")
+                Decimal("0.00")
+                if discounted_subtotal > Decimal("2000.00")
+                else Decimal("100.00")
             )
 
-            # Calculate tax at 8.25%
+            # Calculate tax at 8.25% on the discounted subtotal
             tax_rate = Decimal("0.0825")
-            tax_amount = subtotal * tax_rate
+            tax_amount = discounted_subtotal * tax_rate
 
             # Calculate final order amount
-            total_amount = subtotal + delivery_charge + tax_amount
+            total_amount = discounted_subtotal + delivery_charge + tax_amount
 
             # Cancel any earlier unpaid Razorpay orders so only one
             # pending online-payment order exists per customer.
@@ -220,6 +244,7 @@ class OrderListCreateView(ListCreateAPIView):
                 subtotal=subtotal,
                 shipping_charge=delivery_charge,
                 tax_amount=tax_amount,
+                discount_amount=discount_amount,
                 total_amount=total_amount,
                 payment_method=payment_method,
                 # COD orders are confirmed immediately.

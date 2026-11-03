@@ -23,6 +23,7 @@ class OrderSerializer(serializers.ModelSerializer):
     # Include the customer's name for admin order management.
     customer_name = serializers.SerializerMethodField()
 
+
     def get_customer_name(self, obj):
         full_name = obj.user.get_full_name()
         return full_name or obj.user.email
@@ -59,6 +60,7 @@ class OrderCreateSerializer(serializers.Serializer):
 
     address_id = serializers.IntegerField()
     payment_method = serializers.ChoiceField(choices=Order.PaymentMethod.choices)
+    coupon_code = serializers.CharField(required=False, allow_blank=True)
 
 
 class OrderCancellationSerializer(serializers.Serializer):
