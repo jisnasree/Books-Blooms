@@ -30,6 +30,8 @@ import Orders from "./features/orders/Orders"
 import OrderSuccess from "./features/orders/OrderSuccess"
 import AboutUs from "./features/AboutUs"
 import AdminOrderDetails from "./features/admin/AdminOrderDetails"
+import OrderFailure from "./features/orders/Orderfailure"
+
 
 
 function App() {
@@ -59,6 +61,7 @@ function App() {
         <Route path="/orders" element={<Orders />}></Route>
         <Route path="/orders/:id" element={<OrderDetails />}></Route>
         <Route path="/order-success" element={<OrderSuccess />}></Route>
+        <Route path="/order-failure" element={<OrderFailure />}></Route>
 
 
 

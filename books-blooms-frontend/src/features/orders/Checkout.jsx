@@ -475,28 +475,26 @@ function Checkout() {
 
 
                 // 8. Handle Razorpay popup dismissal
+
                 modal: {
 
                     ondismiss: function () {
-
+                        console.log("DISMISS EVENT, ref=", paymentFailureRef.current);
                         setPlacingOrder(false);
 
-
-                        // Check whether payment actually failed
+                        // payment.failed already navigated to the failure page
                         if (paymentFailureRef.current) {
-
-                            setError(
-                                `Payment failed: ${paymentFailureRef.current}`
-                            );
-
-                        } else {
-
-                            // Customer closed popup without completing payment
-                            setError(
-                                "Payment cancelled. You closed the payment window before completing the payment. Please try again."
-                            );
-
+                            return;
                         }
+
+                        // Customer closed popup without completing payment
+                        navigate("/order-failure", {
+                            state: {
+                                order: orderData,
+                                errorMessage:
+                                    "Payment cancelled. You closed the payment window before completing the payment.",
+                            },
+                        });
 
                     },
 
@@ -518,6 +516,8 @@ function Checkout() {
             // 10. Handle actual payment failure
             razorpay.on("payment.failed", function (response) {
 
+                console.log("FAILED EVENT", response);
+
                 setPlacingOrder(false);
 
                 const failureMessage =
@@ -536,7 +536,13 @@ function Checkout() {
 
                 paymentFailureRef.current = failureMessage;
 
-                setError(failureMessage);
+                navigate("/order-failure", {
+                    state: {
+                        order: orderData,
+                        errorMessage: failureMessage,
+                        paymentId: response.error?.metadata?.payment_id,
+                    },
+                });
 
             });
 
