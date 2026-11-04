@@ -3,6 +3,7 @@ from rest_framework.generics import (
     RetrieveUpdateAPIView,
     ListCreateAPIView,
     RetrieveAPIView,
+    RetrieveUpdateDestroyAPIView,
 )
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework import status
@@ -28,6 +29,7 @@ from .serializers import (
     OrderCreateSerializer,
     OrderSerializer,
     OrderCancellationSerializer,
+    CouponSerializer,
 )
 
 
@@ -664,6 +666,56 @@ class RazorpayVerifyPaymentView(APIView):
             {
                 "detail": "Payment verified successfully.",
                 "order": OrderSerializer(order).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class AdminCouponListCreateView(ListCreateAPIView):
+    """
+    GET  /api/orders/admin/coupons/       — list all coupons
+    POST /api/orders/admin/coupons/       — create a coupon
+    """
+
+    serializer_class = CouponSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    queryset = Coupon.objects.all().order_by("code")
+
+
+class AdminCouponDetailView(RetrieveUpdateDestroyAPIView):
+    """
+    GET/PATCH/DELETE /api/orders/admin/coupons/<pk>/
+    """
+
+    serializer_class = CouponSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    queryset = Coupon.objects.all()
+
+
+class CouponValidateView(APIView):
+    """
+    POST /api/orders/coupons/validate/
+    Checks a coupon code and returns its discount percent.
+    Used by checkout to show a live discount preview.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        code = request.data.get("code", "").strip()
+
+        coupon = Coupon.objects.filter(code__iexact=code, is_active=True).first()
+
+        if not coupon or (coupon.expires_at and coupon.expires_at <= timezone.now()):
+            return Response(
+                {"error": "Invalid or expired coupon code."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {
+                "code": coupon.code,
+                "discount_percent": coupon.discount_percent,
             },
             status=status.HTTP_200_OK,
         )

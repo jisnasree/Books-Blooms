@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Order, OrderItem
+from .models import Order, OrderItem, Coupon
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -22,7 +22,6 @@ class OrderSerializer(serializers.ModelSerializer):
 
     # Include the customer's name for admin order management.
     customer_name = serializers.SerializerMethodField()
-
 
     def get_customer_name(self, obj):
         full_name = obj.user.get_full_name()
@@ -68,7 +67,6 @@ class OrderCancellationSerializer(serializers.Serializer):
     reason = serializers.CharField(required=False, allow_blank=True)
 
 
-
 # Serializer for admin order status updates.
 class AdminOrderStatusSerializer(serializers.ModelSerializer):
 
@@ -85,3 +83,9 @@ class AdminOrderStatusSerializer(serializers.ModelSerializer):
             )
 
         return value
+
+
+class CouponSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Coupon
+        fields = ["id", "code", "discount_percent", "is_active", "expires_at"]

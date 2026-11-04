@@ -10,8 +10,11 @@ urlpatterns = [
     path("<int:order_id>/cancel/", views.OrderCancellationView.as_view()),
     path("<int:order_id>/create-payment/", views.RazorpayCreateOrderView.as_view()),
     path("<int:order_id>/verify-payment/", views.RazorpayVerifyPaymentView.as_view()),
+    path("coupons/validate/", views.CouponValidateView.as_view()),
+    # Admin coupon APIs (must be above admin/<int:pk>/)
+    path("admin/coupons/", views.AdminCouponListCreateView.as_view()),
+    path("admin/coupons/<int:pk>/", views.AdminCouponDetailView.as_view()),
     # Admin order APIs
     path("admin/", views.AdminOrderListView.as_view()),
     path("admin/<int:pk>/", views.AdminOrderDetailView.as_view()),
-   
 ]

@@ -11,6 +11,7 @@ const menuItems = [
   { label: "Customers", path: "/admin/customers", icon: "♧" },
   { label: "Authors", path: "/admin/authors", icon: "✎" },
   { label: "Categories", path: "/admin/categories", icon: "▧" },
+  { label: "Coupons", path: "/admin/coupons", icon: "✂" },
 ];
 
 function AdminLayout() {

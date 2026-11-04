@@ -55,6 +55,10 @@ function Checkout() {
     const [paymentReference, setPaymentReference] = useState(null);
 
     const [couponCode, setCouponCode] = useState("");
+    const [appliedCoupon, setAppliedCoupon] = useState(null);
+    const [couponError, setCouponError] = useState("");
+    const [applyingCoupon, setApplyingCoupon] = useState(false);
+    const paymentHandledRef = useRef(false);
 
     // Stores the actual Razorpay payment failure message.
     // This allows us to display it even after the popup closes.
@@ -282,6 +286,55 @@ function Checkout() {
     }, []);
 
 
+    // Apply coupon: validate with the backend and show the discount live
+    async function handleApplyCoupon() {
+
+        const code = couponCode.trim();
+
+        if (!code) {
+            setCouponError("Enter a coupon code.");
+            return;
+        }
+
+        try {
+            setCouponError("");
+            setApplyingCoupon(true);
+
+            const token = sessionStorage.getItem("authToken");
+
+            const response = await fetch(`${ORDERS_URL}coupons/validate/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Token ${token}`,
+                },
+                body: JSON.stringify({ code }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Invalid coupon code.");
+            }
+
+            setAppliedCoupon(data);
+            setPendingOrder(null);   // price changed → create a fresh order
+
+        } catch (error) {
+            setCouponError(error.message);
+            setAppliedCoupon(null);
+        } finally {
+            setApplyingCoupon(false);
+        }
+    }
+
+    // Remove the applied coupon
+    function handleRemoveCoupon() {
+        setAppliedCoupon(null);
+        setCouponCode("");
+        setCouponError("");
+        setPendingOrder(null);   // price changed → create a fresh order
+    }
     // Place order
     async function handlePlaceOrder() {
 
@@ -290,6 +343,7 @@ function Checkout() {
             setError("");
             setPaymentReference(null);
             paymentFailureRef.current = "";
+            paymentHandledRef.current = false;
 
             setPlacingOrder(true);
 
@@ -320,7 +374,7 @@ function Checkout() {
                     body: JSON.stringify({
                         address_id: selectedAddressId,
                         payment_method: paymentMethod,
-                        coupon_code: couponCode,
+                        coupon_code: appliedCoupon ? appliedCoupon.code : "",
                     }),
 
                 });
@@ -481,13 +535,13 @@ function Checkout() {
                 modal: {
 
                     ondismiss: function () {
-                        console.log("DISMISS EVENT, ref=", paymentFailureRef.current);
-                        setPlacingOrder(false);
 
                         // payment.failed already navigated to the failure page
-                        if (paymentFailureRef.current) {
+                        if (paymentHandledRef.current) {
                             return;
                         }
+
+                        setPlacingOrder(false);
 
                         // Customer closed popup without completing payment
                         navigate("/order-failure", {
@@ -518,7 +572,7 @@ function Checkout() {
             // 10. Handle actual payment failure
             razorpay.on("payment.failed", function (response) {
 
-                console.log("FAILED EVENT", response);
+                paymentHandledRef.current = true;   // mark handled FIRST
 
                 setPlacingOrder(false);
 
@@ -528,7 +582,6 @@ function Checkout() {
                         ? response.error.description
                         : "Your payment could not be completed. Please try again.";
 
-                // Store payment reference details
                 const referenceDetails = {
                     paymentId: response.error?.metadata?.payment_id,
                     orderId: response.error?.metadata?.order_id,
@@ -547,7 +600,6 @@ function Checkout() {
                 });
 
             });
-
 
             // 11. Open Razorpay Checkout
             razorpay.open();
@@ -575,20 +627,22 @@ function Checkout() {
 
         }, 0) || 0;
 
+    // Coupon discount on the subtotal
+    const discountAmount = appliedCoupon
+        ? (subtotal * Number(appliedCoupon.discount_percent)) / 100
+        : 0;
 
-    // Fixed delivery charge
-    const deliveryCharge = subtotal > 2000 ? 0 : 100;
+    const discountedSubtotal = subtotal - discountAmount;
 
+    // Free delivery above ₹2,000 (after discount), otherwise ₹100
+    const deliveryCharge = discountedSubtotal > 2000 ? 0 : 100;
 
-    // Tax rate: 8.25%
+    // Tax rate: 8.25% on the discounted subtotal
     const taxRate = 0.0825;
-
-    const taxAmount = subtotal * taxRate;
-
+    const taxAmount = discountedSubtotal * taxRate;
 
     // Final payable amount
-    const totalAmount =
-        subtotal + deliveryCharge + taxAmount;
+    const totalAmount = discountedSubtotal + deliveryCharge + taxAmount;
 
 
     // Styling for address form inputs
@@ -1117,15 +1171,74 @@ function Checkout() {
 
                                                 </div>
 
+                                                {appliedCoupon && (
+                                                    <div className="flex justify-between text-sm">
+
+                                                        <span className="text-green-700">
+                                                            Discount ({appliedCoupon.code})
+                                                        </span>
+
+                                                        <span className="font-medium text-green-700">
+                                                            −₹{discountAmount.toFixed(2)}
+                                                        </span>
+
+                                                    </div>
+                                                )}
                                                 {/* Coupon */}
                                                 <div className="mt-4">
-                                                    <input
-                                                        type="text"
-                                                        value={couponCode}
-                                                        onChange={(e) => setCouponCode(e.target.value)}
-                                                        placeholder="Coupon code (optional)"
-                                                        className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm outline-none focus:border-rose-700"
-                                                    />
+
+                                                    {appliedCoupon ? (
+
+                                                        <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-4 py-2">
+
+                                                            <span className="text-sm font-medium text-green-700">
+                                                                {appliedCoupon.code} applied — {appliedCoupon.discount_percent}% off
+                                                            </span>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleRemoveCoupon}
+                                                                className="text-sm font-medium text-red-600 hover:underline"
+                                                            >
+                                                                Remove
+                                                            </button>
+
+                                                        </div>
+
+                                                    ) : (
+
+                                                        <div className="flex gap-2">
+
+                                                            <input
+                                                                type="text"
+                                                                value={couponCode}
+                                                                onChange={(e) => {
+                                                                    setCouponCode(e.target.value);
+                                                                    setCouponError("");
+                                                                }}
+                                                                placeholder="Coupon code"
+                                                                className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm uppercase outline-none focus:border-rose-700"
+                                                            />
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleApplyCoupon}
+                                                                disabled={applyingCoupon || !couponCode.trim()}
+                                                                className="shrink-0 rounded-lg bg-rose-700 px-4 py-2 text-sm font-medium text-white hover:bg-rose-800 disabled:cursor-not-allowed disabled:bg-gray-300"
+                                                            >
+                                                                {applyingCoupon ? "..." : "Apply"}
+                                                            </button>
+
+                                                        </div>
+
+                                                    )}
+
+                                                    {couponError && (
+                                                        <p className="mt-2 text-sm text-red-600">
+                                                            {couponError}
+                                                        </p>
+                                                    )}
+
                                                 </div>
 
 

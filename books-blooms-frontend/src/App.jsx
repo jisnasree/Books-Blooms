@@ -31,6 +31,7 @@ import OrderSuccess from "./features/orders/OrderSuccess"
 import AboutUs from "./features/AboutUs"
 import AdminOrderDetails from "./features/admin/AdminOrderDetails"
 import OrderFailure from "./features/orders/Orderfailure"
+import CouponsManagement from "./features/admin/CouponsManagement"
 
 
 
@@ -95,6 +96,7 @@ function App() {
           <Route path="authors" element={<AuthorsManagement />} />
           <Route path="categories" element={<CategoriesManagement />} />
           <Route path="customers" element={<CustomersManagement />} />
+          <Route path="coupons" element={<CouponsManagement />} />
         </Route>
         {/* </Route> */}
 
