@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAdminUser
 from django.contrib.auth import get_user_model
 
 from catalog.models import Book, Author, Category
-from orders.models import Order
+from orders.models import Order, Coupon
 from admin_books_blooms.serializers import CustomerSerializer
 
 User = get_user_model()
@@ -25,6 +25,7 @@ class AdminDashboardSummaryView(APIView):
             "totalCategories": Category.objects.count(),
             "totalCustomers": User.objects.count(),
             "totalOrders": Order.objects.count(),
+            "totalCoupons": Coupon.objects.count(),
         })
 
 class CustomerListView(ListAPIView):

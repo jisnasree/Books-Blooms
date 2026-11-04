@@ -8,6 +8,7 @@ function AdminDashboard() {
     totalCategories: null,
     totalOrders: null,
     totalCustomers: null,
+    totalCoupons: null,
   });
 
   const [loading, setLoading] = useState(true);
@@ -71,6 +72,12 @@ function AdminDashboard() {
       value: summary.totalCategories,
       description: "Registered Categories",
       icon: "🗂️",
+    },
+     {
+      title: "Coupons",
+      value: summary.totalCoupons,
+      description: "Available coupons",
+      icon: "✂",
     },
   ];
 
