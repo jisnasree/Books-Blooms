@@ -1,6 +1,8 @@
 
 import { createContext, useState, useEffect } from "react";
 import { CART_LIST_URL } from "../constants";
+import { useContext } from "react";
+import { UserContext } from "./UserContext";
 
 // 1. Create the context
 export const CartContext = createContext(null);
@@ -8,6 +10,7 @@ export const CartContext = createContext(null);
 // 2. Create the provider component
 export function CartProvider({ children }) {
     const [cartCount, setCartCount] = useState(0);
+    const { logoutOnAuthFailure } = useContext(UserContext);
 
     // Update cart count using cart data
     function updateCartCount(cartData) {
@@ -42,6 +45,12 @@ export function CartProvider({ children }) {
                     Authorization: `Token ${token}`,
                 },
             });
+
+            if (response.status === 401 || response.status === 403) {
+                logoutOnAuthFailure();
+                setCartCount(0);
+                return;
+            }
 
             if (!response.ok) {
                 throw new Error("Failed to load cart.");

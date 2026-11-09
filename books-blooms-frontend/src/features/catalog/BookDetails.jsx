@@ -10,10 +10,12 @@ import Footer from "../../components/Footer";
 import { CartContext } from "../../context/CartContext";
 import { Link } from "react-router-dom";
 import { WishlistContext } from "../../context/WishListContext";
+import { UserContext } from "../../context/UserContext";
 
 function BookDetails() {
   const { id } = useParams();
   const { refreshCart } = useContext(CartContext);
+  const { logoutOnAuthFailure } = useContext(UserContext);
   const { wishlist, addToWishlist, removeFromWishlist } = useContext(WishlistContext);
   const [book, setBook] = useState(null);
   const [addingToCart, setAddingToCart] = useState(false);
@@ -98,6 +100,11 @@ function BookDetails() {
       });
 
       const data = await response.json();
+      if (response.status === 401 || response.status === 403) {
+        logoutOnAuthFailure();
+        refreshCart({ items: [] });   // clears the cart badge
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(
@@ -109,7 +116,8 @@ function BookDetails() {
 
       // Update the cart icon in the header
       refreshCart(data);
-      setCartMessage("");
+      setCartMessage("Book added to your cart!");
+      setCartMessageType("success");
     } catch (error) {
       setCartMessage(error.message);
       setCartMessageType("error");

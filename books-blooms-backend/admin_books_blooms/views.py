@@ -6,6 +6,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAdminUser
+from rest_framework.authtoken.models import Token
 from django.contrib.auth import get_user_model
 
 from catalog.models import Book, Author, Category
@@ -59,6 +60,8 @@ class CustomerBlockView(APIView):
 
         customer.is_blocked = is_blocked
         customer.save(update_fields=["is_blocked"])
+        if is_blocked:
+            Token.objects.filter(user=customer).delete()
 
         return Response(
             {

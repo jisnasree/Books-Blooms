@@ -42,6 +42,16 @@ export function UserProvider({ children }) {
             });
 
             if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    sessionStorage.removeItem("authToken");
+                    setUser({
+                        isAdmin: false,
+                        isAuthenticated: false,
+                        first_name: "",
+                        profile_image: null,
+                    });
+                    return;
+                }
                 throw new Error("Failed to load profile.");
             }
 
@@ -54,9 +64,25 @@ export function UserProvider({ children }) {
             }));
         } catch (error) {
             console.error("Error fetching profile:", error);
+            sessionStorage.removeItem("authToken");
+            setUser({
+                isAdmin: false,
+                isAuthenticated: false,
+                first_name: "",
+                profile_image: null,
+            });
         }
     }
 
+    function logoutOnAuthFailure() {
+        sessionStorage.removeItem("authToken");
+        setUser({
+            isAdmin: false,
+            isAuthenticated: false,
+            first_name: "",
+            profile_image: null,
+        });
+}
     //call fetch profile when the app starts
     useEffect(() => {
         async function loadProfile() {
@@ -71,7 +97,7 @@ export function UserProvider({ children }) {
     // 6. Share user data and functions with child components
     return (
         <UserContext.Provider
-            value={{ user, setUser, loading, setLoading,fetchProfile }}
+            value={{ user, setUser, loading, setLoading, fetchProfile, logoutOnAuthFailure}}
         >
             {children}
         </UserContext.Provider>
