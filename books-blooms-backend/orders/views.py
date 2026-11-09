@@ -719,3 +719,15 @@ class CouponValidateView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+class AvailableCouponListView(ListAPIView):
+    """
+    GET /api/orders/coupons/ — list active, unexpired coupons for customers.
+    """
+    serializer_class = CouponSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        now = timezone.now()
+        active = Coupon.objects.filter(is_active=True)
+        return active.exclude(expires_at__lte=now).order_by("code")

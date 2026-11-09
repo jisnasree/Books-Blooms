@@ -30,7 +30,7 @@ import Orders from "./features/orders/Orders"
 import OrderSuccess from "./features/orders/OrderSuccess"
 import AboutUs from "./features/AboutUs"
 import AdminOrderDetails from "./features/admin/AdminOrderDetails"
-import OrderFailure from "./features/orders/Orderfailure"
+import OrderFailure from "./features/orders/OrderFailure"
 import CouponsManagement from "./features/admin/CouponsManagement"
 
 
