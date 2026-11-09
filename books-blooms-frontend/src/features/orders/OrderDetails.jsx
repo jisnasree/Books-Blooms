@@ -263,6 +263,12 @@ function OrderDetails() {
 
                     ondismiss: function () {
                         setPaying(false);
+                        navigate("/order-failure", {
+                            state: {
+                                order: order,
+                                errorMessage: "Payment cancelled. You closed the payment window before completing the payment.",
+                            },
+                        });
                     },
 
                 },
@@ -277,6 +283,25 @@ function OrderDetails() {
 
             // 6. Open Razorpay Checkout
             const razorpay = new window.Razorpay(options);
+
+            // Handle payment failure — send user to the failure page
+            razorpay.on("payment.failed", function (response) {
+                setPaying(false);
+
+                const failureMessage =
+                    response.error?.description &&
+                        response.error.description !== "Payment failed"
+                        ? response.error.description
+                        : "Your payment could not be completed. Please try again.";
+
+                navigate("/order-failure", {
+                    state: {
+                        order: order,
+                        errorMessage: failureMessage,
+                        paymentId: response.error?.metadata?.payment_id,
+                    },
+                });
+            });
 
             razorpay.open();
 
@@ -646,65 +671,65 @@ function OrderDetails() {
                                 order.order_status
                             ) && (
 
-                                <section className="mt-8 rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
+                                    <section className="mt-8 rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
 
-                                    <h2 className="font-semibold text-gray-800">
-                                        Cancel Order
-                                    </h2>
+                                        <h2 className="font-semibold text-gray-800">
+                                            Cancel Order
+                                        </h2>
 
-                                    <p className="mt-2 text-sm text-gray-600">
-                                        If you no longer need this order, you can cancel it.
-                                    </p>
-
-
-                                    <label
-                                        htmlFor="cancellationReason"
-                                        className="mt-4 block text-sm font-medium text-gray-700"
-                                    >
-                                        Reason for cancellation (optional)
-                                    </label>
-
-
-                                    <textarea
-                                        id="cancellationReason"
-                                        value={cancellationReason}
-                                        onChange={(e) =>
-                                            setCancellationReason(e.target.value)
-                                        }
-                                        placeholder="Tell us why you want to cancel..."
-                                        rows={3}
-                                        className="mt-2 w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-rose-500 focus:outline-none"
-                                    />
-
-
-                                    {cancellationError && (
-
-                                        <p
-                                            role="alert"
-                                            className="mt-3 text-sm text-red-600"
-                                        >
-                                            {cancellationError}
+                                        <p className="mt-2 text-sm text-gray-600">
+                                            If you no longer need this order, you can cancel it.
                                         </p>
 
-                                    )}
+
+                                        <label
+                                            htmlFor="cancellationReason"
+                                            className="mt-4 block text-sm font-medium text-gray-700"
+                                        >
+                                            Reason for cancellation (optional)
+                                        </label>
 
 
-                                    <button
-                                        type="button"
-                                        onClick={handleCancelOrder}
-                                        disabled={cancelling}
-                                        className="mt-4 rounded-lg bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
+                                        <textarea
+                                            id="cancellationReason"
+                                            value={cancellationReason}
+                                            onChange={(e) =>
+                                                setCancellationReason(e.target.value)
+                                            }
+                                            placeholder="Tell us why you want to cancel..."
+                                            rows={3}
+                                            className="mt-2 w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-rose-500 focus:outline-none"
+                                        />
 
-                                        {cancelling
-                                            ? "Cancelling..."
-                                            : "Cancel Order"}
 
-                                    </button>
+                                        {cancellationError && (
 
-                                </section>
+                                            <p
+                                                role="alert"
+                                                className="mt-3 text-sm text-red-600"
+                                            >
+                                                {cancellationError}
+                                            </p>
 
-                            )}
+                                        )}
+
+
+                                        <button
+                                            type="button"
+                                            onClick={handleCancelOrder}
+                                            disabled={cancelling}
+                                            className="mt-4 rounded-lg bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+
+                                            {cancelling
+                                                ? "Cancelling..."
+                                                : "Cancel Order"}
+
+                                        </button>
+
+                                    </section>
+
+                                )}
 
 
 

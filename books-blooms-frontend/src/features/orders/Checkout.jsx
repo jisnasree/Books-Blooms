@@ -58,6 +58,7 @@ function Checkout() {
     const [appliedCoupon, setAppliedCoupon] = useState(null);
     const [couponError, setCouponError] = useState("");
     const [applyingCoupon, setApplyingCoupon] = useState(false);
+    const [availableCoupons, setAvailableCoupons] = useState([]);
     const paymentHandledRef = useRef(false);
 
     // Stores the actual Razorpay payment failure message.
@@ -268,6 +269,18 @@ function Checkout() {
 
                 if (defaultAddress) {
                     setSelectedAddressId(defaultAddress.id);
+                }
+                // Fetch available coupons (optional — don't break checkout on failure)
+                try {
+                    const couponsResponse = await fetch(`${ORDERS_URL}coupons/`, { headers });
+                    if (couponsResponse.ok) {
+                        const couponsData = await couponsResponse.json();
+                        setAvailableCoupons(
+                            Array.isArray(couponsData) ? couponsData : couponsData.results || []
+                        );
+                    }
+                } catch {
+                    // Coupons are optional — ignore failures
                 }
 
             } catch (error) {
@@ -814,7 +827,7 @@ function Checkout() {
                                         {addresses.length > 0 && (
 
                                             <Link
-                                                to="/account/addresses"
+                                                to="/addresses"
                                                 className="mt-3 inline-block text-sm font-medium text-rose-700 hover:underline"
                                             >
                                                 Manage saved addresses
@@ -1186,6 +1199,32 @@ function Checkout() {
                                                 )}
                                                 {/* Coupon */}
                                                 <div className="mt-4">
+                                                    {/* Available coupons list */}
+                                                    {availableCoupons.length > 0 && !appliedCoupon && (
+                                                        <div className="mb-3">
+                                                            <p className="mb-2 text-sm font-medium text-gray-700">
+                                                                Available coupons
+                                                            </p>
+                                                            <div className="max-h-40 space-y-2 overflow-y-auto pr-1">
+                                                            {availableCoupons.map((coupon) => (
+                                                                <button
+                                                                    key={coupon.id}
+                                                                    type="button"
+                                                                    onClick={() => setCouponCode(coupon.code)}
+                                                                    className="flex w-full items-center justify-between rounded-lg border border-dashed border-rose-300 bg-rose-50 px-4 py-2 text-sm cursor-pointer"
+                                                                >
+                                                                    <span className="font-semibold text-rose-700">
+                                                                        {coupon.code}
+                                                                    </span>
+                                                                    <span className="text-gray-600">
+                                                                        {coupon.discount_percent}% off
+                                                                    </span>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                        </div>
+                                                    )}
+
 
                                                     {appliedCoupon ? (
 
@@ -1284,172 +1323,172 @@ function Checkout() {
 
                                             </div>
 
-                                        </div>
+                                            </div>
 
                                     )}
 
 
 
-                                    {/* PAYMENT METHOD */}
-                                    <div className="mt-6 border-t border-gray-200 pt-5">
+                                            {/* PAYMENT METHOD */}
+                                            <div className="mt-6 border-t border-gray-200 pt-5">
 
 
-                                        <h3 className="mb-4 font-semibold text-gray-800">
-                                            3. Payment Method
-                                        </h3>
+                                                <h3 className="mb-4 font-semibold text-gray-800">
+                                                    3. Payment Method
+                                                </h3>
 
 
-                                        <div className="space-y-3">
+                                                <div className="space-y-3">
 
 
-                                            {/* COD */}
-                                            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-4 hover:border-rose-400">
+                                                    {/* COD */}
+                                                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-4 hover:border-rose-400">
 
-                                                <input
-                                                    type="radio"
-                                                    name="paymentMethod"
-                                                    value="COD"
-                                                    checked={paymentMethod === "COD"}
-                                                    onChange={() => {
-                                                        setPaymentMethod("COD");
-                                                        setError("");
-                                                    }}
-                                                    className="h-4 w-4 accent-rose-700"
-                                                />
+                                                        <input
+                                                            type="radio"
+                                                            name="paymentMethod"
+                                                            value="COD"
+                                                            checked={paymentMethod === "COD"}
+                                                            onChange={() => {
+                                                                setPaymentMethod("COD");
+                                                                setError("");
+                                                            }}
+                                                            className="h-4 w-4 accent-rose-700"
+                                                        />
 
-                                                <div>
+                                                        <div>
 
-                                                    <p className="font-medium text-gray-800">
-                                                        Cash on Delivery
-                                                    </p>
+                                                            <p className="font-medium text-gray-800">
+                                                                Cash on Delivery
+                                                            </p>
 
-                                                    <p className="text-xs text-gray-500">
-                                                        Pay when your order arrives
-                                                    </p>
+                                                            <p className="text-xs text-gray-500">
+                                                                Pay when your order arrives
+                                                            </p>
+
+                                                        </div>
+
+                                                    </label>
+
+
+
+                                                    {/* Razorpay */}
+                                                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-4 hover:border-rose-400">
+
+                                                        <input
+                                                            type="radio"
+                                                            name="paymentMethod"
+                                                            value="RAZORPAY"
+                                                            checked={paymentMethod === "RAZORPAY"}
+                                                            onChange={() => {
+                                                                setPaymentMethod("RAZORPAY");
+                                                                setError("");
+                                                            }}
+                                                            className="h-4 w-4 accent-rose-700"
+                                                        />
+
+                                                        <div>
+
+                                                            <p className="font-medium text-gray-800">
+                                                                Pay online
+                                                            </p>
+
+                                                            <p className="text-xs text-gray-500">
+                                                                (Razorpay)
+                                                            </p>
+
+                                                        </div>
+
+                                                    </label>
+
 
                                                 </div>
 
-                                            </label>
+                                            </div>
 
 
 
-                                            {/* Razorpay */}
-                                            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-4 hover:border-rose-400">
+                                            {/* PLACE ORDER */}
+                                            <button
+                                                type="button"
+                                                disabled={
+                                                    !cart?.items?.length ||
+                                                    !selectedAddressId ||
+                                                    placingOrder
+                                                }
+                                                onClick={handlePlaceOrder}
+                                                className="mt-6 w-full rounded-lg bg-rose-700 px-4 py-3 font-medium text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:bg-gray-300"
+                                            >
 
-                                                <input
-                                                    type="radio"
-                                                    name="paymentMethod"
-                                                    value="RAZORPAY"
-                                                    checked={paymentMethod === "RAZORPAY"}
-                                                    onChange={() => {
-                                                        setPaymentMethod("RAZORPAY");
-                                                        setError("");
-                                                    }}
-                                                    className="h-4 w-4 accent-rose-700"
-                                                />
+                                                {placingOrder
+                                                    ? "Processing..."
+                                                    : paymentMethod === "RAZORPAY"
+                                                        ? "Pay Now"
+                                                        : "Place Order"}
 
-                                                <div>
+                                            </button>
 
-                                                    <p className="font-medium text-gray-800">
-                                                        Pay online
+
+
+                                            <Link
+                                                to="/cart"
+                                                className="mt-4 block text-center text-sm text-gray-600 hover:text-rose-700"
+                                            >
+                                                Return to Cart
+                                            </Link>
+
+                                            {/* Payment Error Message */}
+                                            {error && (
+                                                <div
+                                                    role="alert"
+                                                    className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700"
+                                                >
+                                                    <p className="font-semibold">
+                                                        Payment Failed
                                                     </p>
 
-                                                    <p className="text-xs text-gray-500">
-                                                        (Razorpay)
+                                                    <p className="mt-2 text-sm">
+                                                        {error}
                                                     </p>
 
-                                                </div>
+                                                    {paymentReference?.paymentId && (
+                                                        <div className="mt-4 border-t border-red-200 pt-3">
 
-                                            </label>
+                                                            <p className="text-xs font-semibold uppercase">
+                                                                Payment Reference ID
+                                                            </p>
 
+                                                            <p className="mt-1 break-all font-mono text-sm">
+                                                                {paymentReference.paymentId}
+                                                            </p>
 
-                                        </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    navigator.clipboard.writeText(
+                                                                        paymentReference.paymentId
+                                                                    )
+                                                                }
+                                                                className="mt-2 text-xs font-medium underline cursor-pointer"
+                                                            >
+                                                                Copy Payment ID
+                                                            </button>
 
-                                    </div>
+                                                        </div>
+                                                    )}
 
+                                                    {paymentReference?.orderId && (
+                                                        <p className="mt-3 text-xs">
+                                                            Razorpay Order ID: {paymentReference.orderId}
+                                                        </p>
+                                                    )}
 
-
-                                    {/* PLACE ORDER */}
-                                    <button
-                                        type="button"
-                                        disabled={
-                                            !cart?.items?.length ||
-                                            !selectedAddressId ||
-                                            placingOrder
-                                        }
-                                        onClick={handlePlaceOrder}
-                                        className="mt-6 w-full rounded-lg bg-rose-700 px-4 py-3 font-medium text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:bg-gray-300"
-                                    >
-
-                                        {placingOrder
-                                            ? "Processing..."
-                                            : paymentMethod === "RAZORPAY"
-                                                ? "Pay Now"
-                                                : "Place Order"}
-
-                                    </button>
-
-
-
-                                    <Link
-                                        to="/cart"
-                                        className="mt-4 block text-center text-sm text-gray-600 hover:text-rose-700"
-                                    >
-                                        Return to Cart
-                                    </Link>
-
-                                    {/* Payment Error Message */}
-                                    {error && (
-                                        <div
-                                            role="alert"
-                                            className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700"
-                                        >
-                                            <p className="font-semibold">
-                                                Payment Failed
-                                            </p>
-
-                                            <p className="mt-2 text-sm">
-                                                {error}
-                                            </p>
-
-                                            {paymentReference?.paymentId && (
-                                                <div className="mt-4 border-t border-red-200 pt-3">
-
-                                                    <p className="text-xs font-semibold uppercase">
-                                                        Payment Reference ID
+                                                    <p className="mt-3 text-xs text-red-600">
+                                                        If money was deducted, please contact Books & Blooms support with your payment reference ID.
                                                     </p>
-
-                                                    <p className="mt-1 break-all font-mono text-sm">
-                                                        {paymentReference.paymentId}
-                                                    </p>
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            navigator.clipboard.writeText(
-                                                                paymentReference.paymentId
-                                                            )
-                                                        }
-                                                        className="mt-2 text-xs font-medium underline cursor-pointer"
-                                                    >
-                                                        Copy Payment ID
-                                                    </button>
-
                                                 </div>
                                             )}
-
-                                            {paymentReference?.orderId && (
-                                                <p className="mt-3 text-xs">
-                                                    Razorpay Order ID: {paymentReference.orderId}
-                                                </p>
-                                            )}
-
-                                            <p className="mt-3 text-xs text-red-600">
-                                                If money was deducted, please contact Books & Blooms support with your payment reference ID.
-                                            </p>
-                                        </div>
-                                    )}
-                                </aside>
+                                        </aside>
 
                             </div>
 
