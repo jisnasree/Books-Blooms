@@ -41,7 +41,7 @@ function OrderDetails() {
                 const token = sessionStorage.getItem("authToken");
 
                 const response = await fetch(
-                    `${ORDERS_URL}admin/${id}/`,
+                   `${ADMIN_BASE_URL}orders/${id}/`,
                     {
                         headers: {
                             Authorization: `Token ${token}`,
@@ -78,7 +78,7 @@ function OrderDetails() {
             const token = sessionStorage.getItem("authToken");
 
             const response = await fetch(
-                `${ORDERS_URL}admin/${id}/`,
+               `${ADMIN_BASE_URL}orders/${id}/`,
                 {
                     method: "PATCH",
                     headers: {

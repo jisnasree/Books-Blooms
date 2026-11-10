@@ -22,19 +22,19 @@ export const AUTH_PROFILE_URL = AUTH_BASE_URL + 'profile/'
 export const ADDRESS_BASE_URL = BASE_URL + 'addresses/'
 
 
-
-export const CART_LIST_URL = BASE_URL + 'cart/'
-export const CART_ITEMS_URL = CART_LIST_URL + 'items/'
-
-export const ORDERS_URL = BASE_URL + 'orders/'
-
-export const ADMIN_COUPONS_URL = ORDERS_URL + 'admin/coupons/'
-
 export const ADMIN_BASE_URL = BASE_URL + 'admin/'
 export const ADMIN_DASHBOARD_URL = ADMIN_BASE_URL + 'dashboard/summary/'
 
 export const ADMIN_CUSTOMER_BLOCK_URL = ADMIN_BASE_URL + 'customers/'
 export const ADMIN_CUSTOMERS_LIST_URL = ADMIN_BASE_URL + 'customers/'
+
+export const CART_LIST_URL = BASE_URL + 'cart/'
+export const CART_ITEMS_URL = CART_LIST_URL + 'items/'
+
+export const ORDERS_URL = BASE_URL + 'orders/'
+export const ADMIN_COUPONS_URL = ADMIN_BASE_URL + 'coupons/'
+
+
 
 
 export const CATALOG_BASE_URL = BASE_URL + 'catalog/'

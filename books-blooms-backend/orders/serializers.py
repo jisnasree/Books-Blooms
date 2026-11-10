@@ -67,23 +67,6 @@ class OrderCancellationSerializer(serializers.Serializer):
     reason = serializers.CharField(required=False, allow_blank=True)
 
 
-# Serializer for admin order status updates.
-class AdminOrderStatusSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Order
-        fields = ["order_status"]
-
-    def validate_order_status(self, value):
-
-        # Cancellation needs separate inventory restoration logic.
-        if value == Order.OrderStatus.CANCELLED:
-            raise serializers.ValidationError(
-                "Use the cancellation process to cancel an order."
-            )
-
-        return value
-
 
 class CouponSerializer(serializers.ModelSerializer):
     class Meta:

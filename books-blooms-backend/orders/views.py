@@ -25,92 +25,15 @@ from catalog.models import PhysicalVariant
 
 from .models import Order, OrderItem, Coupon
 from .serializers import (
-    AdminOrderStatusSerializer,
+
     OrderCreateSerializer,
     OrderSerializer,
     OrderCancellationSerializer,
     CouponSerializer,
 )
-
-
-class AdminOrderListView(ListAPIView):
-    """
-    GET /api/admin/orders/
-    Returns all customer orders for admin management.
-    """
-
-    serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
-
-    def get_queryset(self):
-        return (
-            Order.objects.select_related("user")
-            .prefetch_related("items")
-            .order_by("-created_at")
-        )
-
-
-class AdminOrderDetailView(RetrieveUpdateAPIView):
-    """
-    GET   /api/orders/admin/<pk>/  - Retrieve order details
-    PATCH /api/orders/admin/<pk>/  - Update order status
-    """
-
-    permission_classes = [IsAuthenticated, IsAdminUser]
-
-    def get_queryset(self):
-        return Order.objects.select_related("user").prefetch_related("items")
-
-    def get_serializer_class(self):
-        if self.request.method == "PATCH":
-            return AdminOrderStatusSerializer
-
-        return OrderSerializer
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop("partial", False)
-        instance = self.get_object()
-
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        # Return the complete updated order details
-        return Response(OrderSerializer(instance).data, status=status.HTTP_200_OK)
-
-
-# class AdminOrderDetailView(RetrieveAPIView):
-#     """
-#     GET /api/admin/orders/<pk>/
-#     Returns details of a specific customer order.
-#     """
-
-#     serializer_class = OrderSerializer
-#     permission_classes = [IsAuthenticated, IsAdminUser]
-
-#     def get_queryset(self):
-#         return Order.objects.select_related("user").prefetch_related("items")
-
-
-# class AdminOrderStatusUpdateView(APIView):
-
-#     permission_classes = [IsAuthenticated, IsAdminUser]
-
-#     def patch(self, request, pk):
-
-#         # Find the order using its ID
-#         order = get_object_or_404(Order, pk=pk)
-
-#         # Validate the new order status
-#         serializer = AdminOrderStatusSerializer(order, data=request.data, partial=True)
-
-#         if serializer.is_valid():
-#             serializer.save()
-
-#             return Response(OrderSerializer(order).data, status=status.HTTP_200_OK)
-
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 class OrderListCreateView(ListCreateAPIView):
@@ -671,27 +594,6 @@ class RazorpayVerifyPaymentView(APIView):
         )
 
 
-class AdminCouponListCreateView(ListCreateAPIView):
-    """
-    GET  /api/orders/admin/coupons/       — list all coupons
-    POST /api/orders/admin/coupons/       — create a coupon
-    """
-
-    serializer_class = CouponSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
-    queryset = Coupon.objects.all().order_by("code")
-
-
-class AdminCouponDetailView(RetrieveUpdateDestroyAPIView):
-    """
-    GET/PATCH/DELETE /api/orders/admin/coupons/<pk>/
-    """
-
-    serializer_class = CouponSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
-    queryset = Coupon.objects.all()
-
-
 class CouponValidateView(APIView):
     """
     POST /api/orders/coupons/validate/
@@ -720,10 +622,12 @@ class CouponValidateView(APIView):
             status=status.HTTP_200_OK,
         )
 
+
 class AvailableCouponListView(ListAPIView):
     """
     GET /api/orders/coupons/ — list active, unexpired coupons for customers.
     """
+
     serializer_class = CouponSerializer
     permission_classes = [IsAuthenticated]
 

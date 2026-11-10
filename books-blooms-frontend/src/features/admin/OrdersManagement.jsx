@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import OrdersTable from "./OrdersTable";
-import { ORDERS_URL } from "../../constants";
+import { ADMIN_BASE_URL } from "../../constants";
 import { useNavigate } from "react-router-dom";
 
 function OrdersManagement() {
@@ -28,7 +28,7 @@ function OrdersManagement() {
       try {
         const token = sessionStorage.getItem("authToken");
 
-        const response = await fetch(`${ORDERS_URL}admin/`, {
+        const response = await fetch(`${ADMIN_BASE_URL}orders/`, {
           headers: {
             Authorization: `Token ${token}`,
           },

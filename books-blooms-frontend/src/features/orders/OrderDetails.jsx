@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useRef } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 
 import Header from "../../components/Header";
@@ -51,6 +51,8 @@ function OrderDetails() {
     const [paying, setPaying] = useState(false);
 
     const [paymentError, setPaymentError] = useState("");
+
+    const paymentHandledRef = useRef(false);
 
 
     // Cancellation states
@@ -118,7 +120,7 @@ function OrderDetails() {
     async function handlePayNow() {
 
         try {
-
+            paymentHandledRef.current = false;
             setPaymentError("");
 
             setPaying(true);
@@ -191,7 +193,7 @@ function OrderDetails() {
 
                 // 4. Handle successful payment
                 handler: async function (razorpayResponse) {
-
+                    paymentHandledRef.current = true;
                     try {
 
                         setPaying(true);
@@ -262,6 +264,9 @@ function OrderDetails() {
                 modal: {
 
                     ondismiss: function () {
+                        if (paymentHandledRef.current) {
+                            return;
+                        }
                         setPaying(false);
                         navigate("/order-failure", {
                             state: {
@@ -286,8 +291,9 @@ function OrderDetails() {
 
             // Handle payment failure — send user to the failure page
             razorpay.on("payment.failed", function (response) {
+                paymentHandledRef.current = true;
                 setPaying(false);
-
+                razorpay.close(); 
                 const failureMessage =
                     response.error?.description &&
                         response.error.description !== "Payment failed"

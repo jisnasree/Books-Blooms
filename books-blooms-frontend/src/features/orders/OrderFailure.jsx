@@ -3,6 +3,7 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 
 function OrderFailure() {
+    console.log("ORDER FAILURE PAGE RENDERED");
     const { state } = useLocation();
 
     const order = state?.order;

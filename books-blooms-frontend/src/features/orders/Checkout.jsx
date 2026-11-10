@@ -584,11 +584,12 @@ function Checkout() {
 
             // 10. Handle actual payment failure
             razorpay.on("payment.failed", function (response) {
+                console.log("FAILED HANDLER FIRED");
 
                 paymentHandledRef.current = true;   // mark handled FIRST
 
                 setPlacingOrder(false);
-
+                razorpay.close(); 
                 const failureMessage =
                     response.error?.description &&
                         response.error.description !== "Payment failed"
