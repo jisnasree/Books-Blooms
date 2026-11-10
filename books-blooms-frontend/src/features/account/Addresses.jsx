@@ -69,8 +69,8 @@ function Addresses() {
             const isEditing = editingAddress !== null;
 
             const url = isEditing
-                ? `http://127.0.0.1:8000/api/addresses/${editingAddress.id}/`
-                : "http://127.0.0.1:8000/api/addresses/";
+                ? `ADDRESS_BASE_URL${editingAddress.id}/`
+                : ADDRESS_BASE_URL;
 
             const response = await fetch(url, {
                 method: isEditing ? "PATCH" : "POST",
@@ -142,7 +142,7 @@ function Addresses() {
             const token = sessionStorage.getItem("authToken");
 
             const response = await fetch(
-                `http://127.0.0.1:8000/api/addresses/${addressId}/`,
+                `ADDRESS_BASE_URL${addressId}/`,
                 {
                     method: "DELETE",
                     headers: {
@@ -176,7 +176,7 @@ function Addresses() {
                 const token = sessionStorage.getItem("authToken");
 
                 const response = await fetch(
-                    "http://127.0.0.1:8000/api/addresses/",
+                    ADDRESS_BASE_URL,
                     {
                         headers: {
                             Authorization: `Token ${token}`,

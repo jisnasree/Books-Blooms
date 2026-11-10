@@ -1,7 +1,9 @@
 
 // URLS
 
-export const BASE_URL = 'http://127.0.0.1:8000/api/'
+export const BASE_URL = import.meta.env.DEV
+  ? 'http://127.0.0.1:8000/api/'
+  : '/api/'
 
 export const AUTH_BASE_URL = BASE_URL + 'auth/'
 export const AUTH_REGISTER_URL = AUTH_BASE_URL + 'register/'
@@ -27,6 +29,7 @@ export const ADMIN_DASHBOARD_URL = ADMIN_BASE_URL + 'dashboard/summary/'
 
 export const ADMIN_CUSTOMER_BLOCK_URL = ADMIN_BASE_URL + 'customers/'
 export const ADMIN_CUSTOMERS_LIST_URL = ADMIN_BASE_URL + 'customers/'
+export const ADMIN_ORDERS_URL = ADMIN_BASE_URL + 'orders/'
 
 export const CART_LIST_URL = BASE_URL + 'cart/'
 export const CART_ITEMS_URL = CART_LIST_URL + 'items/'
