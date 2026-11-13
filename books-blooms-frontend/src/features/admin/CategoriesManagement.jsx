@@ -61,7 +61,15 @@ function CategoriesManagement() {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to add category (HTTP ${response.status}).`);
+        if (!response.ok) {
+          const data = await response.json();
+
+          throw new Error(
+            data.name?.[0] ||
+            data.detail ||
+            "Failed to add category."
+          );
+        }
       }
 
       const newCategory = await response.json();

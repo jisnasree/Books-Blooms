@@ -36,6 +36,7 @@ export const CART_ITEMS_URL = CART_LIST_URL + 'items/'
 
 export const ORDERS_URL = BASE_URL + 'orders/'
 export const ADMIN_COUPONS_URL = ADMIN_BASE_URL + 'coupons/'
+export const ADMIN_OFFERS_URL = ADMIN_BASE_URL + 'offers/'
 
 
 

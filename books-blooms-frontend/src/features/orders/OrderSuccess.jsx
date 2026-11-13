@@ -317,7 +317,7 @@ function OrderSuccess() {
                     <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
 
                         <Link
-                            to="/shop"
+                            to="/books"
                             className="w-full rounded-lg bg-rose-700 px-8 py-3 text-center font-medium text-white transition hover:bg-rose-800 sm:w-auto"
                         >
                             Continue Shopping

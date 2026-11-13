@@ -12,6 +12,7 @@ const menuItems = [
   { label: "Authors", path: "/admin/authors", icon: "✍️" },
   { label: "Categories", path: "/admin/categories", icon: "🗂️" },
   { label: "Coupons", path: "/admin/coupons", icon: "✂" },
+  { label: "Offers", path: "/admin/offers", icon: "🎉" },
 ];
 
 function AdminLayout() {
@@ -114,7 +115,7 @@ function AdminLayout() {
             <>
               <div className="hidden text-right sm:block">
                 <p className="text-sm font-semibold text-slate-800">
-                  {user.first_name || "Admin"}
+                  {user.first_name}
                 </p>
                 <p className="text-xs text-slate-500">Administrator</p>
               </div>

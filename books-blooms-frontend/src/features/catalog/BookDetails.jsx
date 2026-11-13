@@ -183,11 +183,7 @@ function BookDetails() {
               {/* Book information */}
               <div className="flex flex-col justify-center p-6 sm:p-10 lg:p-12">
                 <div className="mb-5 flex flex-wrap items-center gap-2">
-                  {variant?.format && (
-                    <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold tracking-wide text-orange-800 ring-1 ring-inset ring-orange-200">
-                      {variant.format}
-                    </span>
-                  )}
+                  
 
                   {variant && (
                     <span
@@ -225,17 +221,66 @@ function BookDetails() {
                   </span>
                 </div>
 
-                {/* Price */}
+
+                {/* Price and Offer */}
                 <div className="mt-7 border-y border-slate-100 py-6">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Price
                   </p>
-                  <p className="mt-2 text-3xl font-bold tracking-tight text-orange-700">
-                    {variant
-                      ? `${variant.currency} ${variant.price}`
-                      : "Price unavailable"}
-                  </p>
+
+                  {variant ? (
+                    <div className="mt-3">
+                      {/* Book Format */}
+                      <p className="mb-3 text-sm font-semibold text-slate-700">
+                        Format: {variant.format}
+                      </p>
+
+                      {/* Discounted Price */}
+                      {Number(variant.discount_amount) > 0 ? (
+                        <>
+                          <div className="flex flex-wrap items-center gap-3">
+                            {/* Original Price */}
+                            <p className="text-lg font-medium text-slate-400 line-through">
+                              {variant.currency} {variant.original_price}
+                            </p>
+
+                            {/* Discount Percentage */}
+                            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
+                              {variant.discount_percentage}% OFF
+                            </span>
+                          </div>
+
+                          {/* Final Price */}
+                          <p className="mt-1 text-3xl font-bold tracking-tight text-orange-700">
+                            {variant.currency} {variant.final_price}
+                          </p>
+
+                          {/* Applied Offer */}
+                          {variant.applied_offer && (
+                            <p className="mt-2 text-sm font-medium text-emerald-700">
+                              {variant.applied_offer.name}
+                            </p>
+                          )}
+
+                          {/* Savings */}
+                          <p className="mt-1 text-sm text-slate-600">
+                            You save {variant.currency} {variant.discount_amount}
+                          </p>
+                        </>
+                      ) : (
+                        /* Regular Price When No Offer Exists */
+                        <p className="text-3xl font-bold tracking-tight text-orange-700">
+                          {variant.currency} {variant.price}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-lg text-slate-500">
+                      Price unavailable
+                    </p>
+                  )}
                 </div>
+
 
                 {/* Book description */}
                 <div className="mt-7">

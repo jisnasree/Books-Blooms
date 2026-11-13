@@ -18,7 +18,7 @@ function BookBestSellers() {
   const visibleBooks = books.slice(startIndex, startIndex + 4);
 
   return (
-    <section className="mx-auto w-full max-w-7xl border-b border-slate-200 px-4 py-2 sm:px-6 lg:px-8">
+    <section className="mx-auto w-full max-w-7xl border-b border-slate-200 px-4 py-2 sm:px-6 lg:px-8">    
       <div className="rounded-3xl bg-gradient-to-br from-orange-50 via-white to-rose-50 p-5 sm:p-8 lg:p-10">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -72,11 +72,6 @@ function BookBestSellers() {
               <div className="relative flex h-64 items-center justify-center overflow-hidden rounded-xl bg-slate-50 p-4">
                 {book.physical_variants?.[0] && (
                   <div className="absolute left-3 top-3 flex z-10 flex-wrap gap-2">
-                    {/* {book.physical_variants[0].format && (
-      <span className="rounded-full bg-white/95 px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm">
-        {book.physical_variants[0].format}
-      </span>
-    )} */}
 
                     <span
                       className={`rounded-full px-3 py-1 text-[11px] font-semibold shadow-sm ${book.physical_variants[0].is_available
@@ -108,15 +103,44 @@ function BookBestSellers() {
                 <h3 className="line-clamp-2 min-h-14 text-base font-bold leading-7 text-slate-900 transition group-hover:text-orange-800">
                   {book.title}
                 </h3>
-
                 <p className="mt-1 truncate text-sm text-slate-500">
                   {book.author_name}
                 </p>
 
-                <p className="mt-4 text-lg font-bold text-orange-700">
-                  {book.physical_variants?.[0]?.currency}{" "}
-                  {book.physical_variants?.[0]?.price}
-                </p>
+               {/* Price and Offer */}
+{book.physical_variants?.[0] && (
+  <div className="mt-4">
+    {Number(book.physical_variants[0].discount_amount) > 0 && (
+      <>
+        <p className="text-sm text-slate-400 line-through">
+          {book.physical_variants[0].currency}{" "}
+          {book.physical_variants[0].original_price}
+        </p>
+
+        <span className="inline-block mt-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
+          {book.physical_variants[0].discount_percentage}% OFF
+        </span>
+
+        <p className="mt-1 text-xl font-bold text-orange-700">
+          {book.physical_variants[0].currency}{" "}
+          {book.physical_variants[0].final_price}
+        </p>
+
+        <p className="mt-1 text-xs font-medium text-emerald-700">
+          {book.physical_variants[0].applied_offer?.name}
+        </p>
+      </>
+    )}
+
+    {Number(book.physical_variants[0].discount_amount) === 0 && (
+      <p className="text-lg font-bold text-orange-700">
+        {book.physical_variants[0].currency}{" "}
+        {book.physical_variants[0].price}
+      </p>
+    )}
+  </div>
+)}
+
 
                 <div className="mt-2 flex items-center justify-center gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (

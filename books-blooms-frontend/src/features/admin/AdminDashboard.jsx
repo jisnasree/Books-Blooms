@@ -9,6 +9,8 @@ function AdminDashboard() {
     totalOrders: null,
     totalCustomers: null,
     totalCoupons: null,
+    totalOffers: null,
+
   });
 
   const [loading, setLoading] = useState(true);
@@ -78,6 +80,12 @@ function AdminDashboard() {
       value: summary.totalCoupons,
       description: "Available coupons",
       icon: "✂",
+    },
+     {
+      title: "Offers",
+      value: summary.totalOffers,
+      description: "Available offers",
+      icon: "🎉",
     },
   ];
 

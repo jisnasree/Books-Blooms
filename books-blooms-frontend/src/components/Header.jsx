@@ -7,7 +7,7 @@ import { WishlistContext } from "../context/WishListContext";
 
 function Header() {
   const { cartCount, refreshCart } = useContext(CartContext);
-  const { user, setUser } = useContext(UserContext);
+  const { user, setUser, loading } = useContext(UserContext);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
 
   const navigate = useNavigate();
@@ -250,7 +250,9 @@ function Header() {
         </div>
 
         <div className="order-2 flex shrink-0 items-center gap-4 md:order-3">
-          {user.isAuthenticated ? (
+          {loading ? (
+            <span className="text-sm text-slate-500">Loading...</span>
+          ) : user.isAuthenticated ? (
             <div className="relative">
               <button
                 type="button"

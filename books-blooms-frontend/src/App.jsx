@@ -32,6 +32,7 @@ import AboutUs from "./features/AboutUs"
 import AdminOrderDetails from "./features/admin/AdminOrderDetails"
 import OrderFailure from "./features/orders/OrderFailure"
 import CouponsManagement from "./features/admin/CouponsManagement"
+import OffersManagement from "./features/admin/OffersManagement"
 
 
 
@@ -66,7 +67,6 @@ function App() {
 
 
 
-
         {/* Account */}
         <Route path="/account" element={<Account />}></Route>
 
@@ -97,6 +97,7 @@ function App() {
           <Route path="categories" element={<CategoriesManagement />} />
           <Route path="customers" element={<CustomersManagement />} />
           <Route path="coupons" element={<CouponsManagement />} />
+          <Route path="offers" element={<OffersManagement />} />
         </Route>
         {/* </Route> */}
 
