@@ -1,5 +1,8 @@
 from django.conf import settings
 from django.db import models
+from django.db.models.functions import Lower
+from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 
 # Create your models here.
@@ -9,7 +12,13 @@ class Author(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
-
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                Lower("name"),
+                name="unique_category_name_case_insensitive"
+            )
+        ]
     def __str__(self):
         return self.name
 
@@ -76,3 +85,91 @@ class WishlistItem(models.Model):
                 fields=["user", "book"], name="unique_user_wishlist_book"
             )
         ]
+
+
+
+class Offer(models.Model):
+
+    OFFER_TYPES = [
+        ("CATEGORY", "Category Offer"),
+        ("PRODUCT", "Product Offer"),
+    ]
+
+    DISCOUNT_TYPES = [
+        ("PERCENTAGE", "Percentage"),
+        ("FIXED", "Fixed Amount"),
+    ]
+
+    name = models.CharField(max_length=100)
+
+    offer_type = models.CharField(
+        max_length=20,
+        choices=OFFER_TYPES
+    )
+
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="offers"
+    )
+
+    book = models.ForeignKey(
+        Book,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="offers"
+    )
+
+    discount_type = models.CharField(
+        max_length=20,
+        choices=DISCOUNT_TYPES
+    )
+
+    discount_value = models.DecimalField(
+        max_digits=8,
+        decimal_places=2
+    )
+
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def clean(self):
+        if self.offer_type == "CATEGORY":
+            if not self.category or self.book:
+                raise ValidationError(
+                    "A category offer must have a category only."
+                )
+
+        elif self.offer_type == "PRODUCT":
+            if not self.book or self.category:
+                raise ValidationError(
+                    "A product offer must have a book only."
+                )
+
+        if self.discount_value <= 0:
+            raise ValidationError(
+                "Discount value must be greater than zero."
+            )
+
+        if self.discount_type == "PERCENTAGE":
+            if self.discount_value > 100:
+                raise ValidationError(
+                    "Percentage discount cannot exceed 100."
+                )
+
+        if self.start_date and self.end_date:
+            if self.end_date <= self.start_date:
+                raise ValidationError(
+                    "End date must be later than start date."
+                )
+
+    def __str__(self):
+        return self.name
+

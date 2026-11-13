@@ -17,10 +17,15 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import get_user_model
 
-from catalog.models import Book, Author, Category
+from catalog.models import Book, Author, Category, Offer
+from catalog.serializers import OfferSerializer
 from orders.models import Order, Coupon
 from orders.serializers import CouponSerializer, OrderSerializer
-from admin_books_blooms.serializers import AdminOrderStatusSerializer, CustomerSerializer
+from admin_books_blooms.serializers import (
+    AdminOrderStatusSerializer,
+    CustomerSerializer,
+    
+)
 
 User = get_user_model()
 
@@ -196,3 +201,36 @@ class AdminCouponDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = CouponSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
     queryset = Coupon.objects.all()
+
+
+
+class AdminOfferListCreateView(ListCreateAPIView):
+    """
+    GET  /api/admin/offers/       - List all offers
+    POST /api/admin/offers/       - Create an offer
+    """
+
+    serializer_class = OfferSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    queryset = Offer.objects.select_related(
+        "category",
+        "book"
+    ).order_by("-created_at")
+
+
+class AdminOfferDetailView(RetrieveUpdateDestroyAPIView):
+    """
+    GET    /api/admin/offers/<pk>/  - Retrieve an offer
+    PUT    /api/admin/offers/<pk>/  - Update an offer
+    PATCH  /api/admin/offers/<pk>/  - Partially update an offer
+    DELETE /api/admin/offers/<pk>/  - Delete an offer
+    """
+
+    serializer_class = OfferSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    queryset = Offer.objects.select_related(
+        "category",
+        "book"
+    )

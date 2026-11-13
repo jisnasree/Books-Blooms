@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -32,7 +33,7 @@ function BookCatalog() {
 
     const totalPages = Math.ceil(totalBooks / PAGE_SIZE);
 
-    // Update the category when the URL changes
+    // Update category when URL changes
     useEffect(() => {
         const params = new URLSearchParams(location.search);
 
@@ -125,6 +126,8 @@ function BookCatalog() {
 
             <main className="min-h-screen bg-slate-50">
                 <section className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:py-14">
+
+                    {/* Page Heading */}
                     <div className="mb-9 rounded-3xl bg-gradient-to-br from-orange-50 via-white to-amber-50 px-6 py-8 shadow-sm ring-1 ring-orange-100 sm:px-10 sm:py-10">
                         <p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-700 sm:text-sm">
                             Find your next read
@@ -135,16 +138,14 @@ function BookCatalog() {
                                 <h3 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
                                     Shop all books
                                 </h3>
+
                                 <p className="mt-3 max-w-xl text-base leading-7 text-slate-600 sm:text-lg">
                                     Discover a story you will want to return to.
                                 </p>
                             </div>
-
-                            {/* <p className="rounded-full border border-orange-100 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-600">
-                                {totalBooks} {totalBooks === 1 ? "book" : "books"}
-                            </p> */}
                         </div>
 
+                        {/* Search */}
                         <div className="relative mt-7 max-w-2xl">
                             <svg
                                 aria-hidden="true"
@@ -181,18 +182,20 @@ function BookCatalog() {
                     </div>
 
                     <div className="grid grid-cols-1 items-start gap-7 md:grid-cols-4">
+
                         {/* Filters */}
                         <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:col-span-1">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-lg font-bold text-slate-900">
                                     Filters
                                 </h2>
+
                                 <span className="rounded-full bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-700">
                                     Refine
                                 </span>
                             </div>
 
-                            {/* Category filter */}
+                            {/* Category Filter */}
                             <div className="mt-6">
                                 <h3 className="mb-3 text-sm font-semibold text-slate-800">
                                     Category
@@ -225,7 +228,7 @@ function BookCatalog() {
                                 )}
                             </div>
 
-                            {/* Price filter */}
+                            {/* Price Filter */}
                             <div className="mt-6 border-t border-slate-100 pt-5">
                                 <h3 className="mb-3 text-sm font-semibold text-slate-800">
                                     Price
@@ -258,19 +261,18 @@ function BookCatalog() {
                                                 selectedPrice === price.value
                                             }
                                             onChange={(event) => {
-                                                setSelectedPrice(
-                                                    event.target.value
-                                                );
+                                                setSelectedPrice(event.target.value);
                                                 setPage(1);
                                             }}
                                             className="h-4 w-4 accent-orange-600"
                                         />
+
                                         {price.label}
                                     </label>
                                 ))}
                             </div>
 
-                            {/* Format filter */}
+                            {/* Format Filter */}
                             <div className="mt-6 border-t border-slate-100 pt-5">
                                 <h3 className="mb-3 text-sm font-semibold text-slate-800">
                                     Format
@@ -299,13 +301,12 @@ function BookCatalog() {
                                                 selectedFormat === bookformat.value
                                             }
                                             onChange={(event) => {
-                                                setSelectedFormat(
-                                                    event.target.value
-                                                );
+                                                setSelectedFormat(event.target.value);
                                                 setPage(1);
                                             }}
                                             className="h-4 w-4 accent-orange-600"
                                         />
+
                                         {bookformat.label}
                                     </label>
                                 ))}
@@ -333,6 +334,7 @@ function BookCatalog() {
                                     <p className="font-semibold text-slate-800">
                                         No books found
                                     </p>
+
                                     <p className="mt-1 text-sm text-slate-500">
                                         Try another title or adjust your filters.
                                     </p>
@@ -344,9 +346,7 @@ function BookCatalog() {
                                             0,
                                             Math.min(
                                                 5,
-                                                Math.round(
-                                                    Number(book.rating) || 0
-                                                )
+                                                Math.round(Number(book.rating) || 0)
                                             )
                                         );
 
@@ -361,6 +361,7 @@ function BookCatalog() {
                                                 }
                                                 className="group cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-orange-200 hover:shadow-lg"
                                             >
+                                                {/* Book Cover */}
                                                 <div className="flex aspect-[3/4] items-center justify-center overflow-hidden rounded-xl bg-slate-50 p-4">
                                                     {book.cover_url ? (
                                                         <img
@@ -376,35 +377,70 @@ function BookCatalog() {
                                                 </div>
 
                                                 <div className="px-1 pb-2 pt-4">
-                                                    {variant?.bookformat && (
+
+                                                    {/* Book Format */}
+                                                    {variant?.format && (
                                                         <p className="text-xs font-semibold uppercase tracking-wide text-orange-700">
-                                                            {variant.bookformat}
+                                                            {variant.format}
                                                         </p>
                                                     )}
 
+                                                    {/* Book Title */}
                                                     <h2 className="mt-1 line-clamp-2 min-h-12 text-left text-base font-semibold leading-6 text-slate-900">
                                                         {book.title}
                                                     </h2>
 
+                                                    {/* Author */}
                                                     <p className="mt-1 truncate text-left text-sm text-slate-500">
                                                         {book.author_name}
                                                     </p>
 
-                                                    <div className="mt-3 flex items-center justify-between gap-2">
-                                                        <p className="font-bold text-slate-900">
-                                                            {variant
-                                                                ? `${variant.currency} ${variant.price}`
-                                                                : "Price unavailable"}
-                                                        </p>
+                                                    {/* Price and Offer */}
+                                                    <div className="mt-3">
+                                                        {variant ? (
+                                                            Number(variant.discount_amount) > 0 ? (
+                                                                <>
+                                                                    <div className="flex flex-wrap items-center gap-2">
+                                                                        <p className="text-sm text-slate-400 line-through">
+                                                                            {variant.currency} {variant.original_price}
+                                                                        </p>
 
-                                                        <div className="flex shrink-0 items-center text-sm">
-                                                            <span className="text-amber-400">
-                                                                {"★".repeat(rating)}
-                                                            </span>
-                                                            <span className="text-slate-200">
-                                                                {"★".repeat(5 - rating)}
-                                                            </span>
-                                                        </div>
+                                                                        <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700">
+                                                                            {variant.discount_percentage}% OFF
+                                                                        </span>
+                                                                    </div>
+
+                                                                    <p className="mt-1 text-xl font-bold text-orange-700">
+                                                                        {variant.currency} {variant.final_price}
+                                                                    </p>
+
+                                                                    {variant.applied_offer && (
+                                                                        <p className="mt-1 text-xs font-medium text-emerald-700">
+                                                                            {variant.applied_offer.name}
+                                                                        </p>
+                                                                    )}
+                                                                </>
+                                                            ) : (
+                                                                <p className="text-lg font-bold text-slate-900">
+                                                                    {variant.currency} {variant.price}
+                                                                </p>
+                                                            )
+                                                        ) : (
+                                                            <p className="text-sm text-slate-500">
+                                                                Price unavailable
+                                                            </p>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Rating */}
+                                                    <div className="mt-2 flex items-center text-sm">
+                                                        <span className="text-amber-400">
+                                                            {"★".repeat(rating)}
+                                                        </span>
+
+                                                        <span className="text-slate-200">
+                                                            {"★".repeat(5 - rating)}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </article>
@@ -430,9 +466,7 @@ function BookCatalog() {
                                         <div className="flex items-center gap-3">
                                             <button
                                                 type="button"
-                                                onClick={() =>
-                                                    setPage(page - 1)
-                                                }
+                                                onClick={() => setPage(page - 1)}
                                                 disabled={page === 1}
                                                 className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-orange-300 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
                                             >
@@ -445,9 +479,7 @@ function BookCatalog() {
 
                                             <button
                                                 type="button"
-                                                onClick={() =>
-                                                    setPage(page + 1)
-                                                }
+                                                onClick={() => setPage(page + 1)}
                                                 disabled={page === totalPages}
                                                 className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-orange-300 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
                                             >

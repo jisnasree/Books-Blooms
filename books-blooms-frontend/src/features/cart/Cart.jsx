@@ -10,6 +10,7 @@ function Cart() {
     const [cart, setCart] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [quantityError, setQuantityError] = useState("");
     const [updatingItemId, setUpdatingItemId] = useState(null);
     const { refreshCart } = useContext(CartContext);
     const navigate = useNavigate()
@@ -58,7 +59,7 @@ function Cart() {
 
         const token = sessionStorage.getItem("authToken");
         setUpdatingItemId(item.id);
-        setError("");
+        setQuantityError("");
 
         try {
             // Send a PATCH request to update the item's quantity
@@ -94,7 +95,7 @@ function Cart() {
             refreshCart(data);
 
         } catch (err) {
-            setError(err.message);
+            setQuantityError(err.message);
         } finally {
             setUpdatingItemId(null);
         }
@@ -264,6 +265,11 @@ function Cart() {
                                                             >
                                                                 +
                                                             </button>
+                                                            {quantityError && (
+    <p className="text-sm text-red-600" role="alert">
+        {quantityError}
+    </p>
+)}
                                                             <button
                                                                 type="button"
                                                                 disabled={updatingItemId === item.id}

@@ -14,4 +14,7 @@ urlpatterns = [
     # Admin order APIs
     path("orders/", views.AdminOrderListView.as_view()),
     path("orders/<int:pk>/", views.AdminOrderDetailView.as_view()),
+    # Admin offer APIs
+    path("offers/", views.AdminOfferListCreateView.as_view()),
+    path("offers/<int:pk>/", views.AdminOfferDetailView.as_view()),
 ]
