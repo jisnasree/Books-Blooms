@@ -1,8 +1,10 @@
+from datetime import timedelta
 from decimal import Decimal
 from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
 from django.test import override_settings
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
@@ -13,8 +15,9 @@ from catalog.models import Author, Book, PhysicalVariant
 from razorpay.errors import GatewayError
 from razorpay.errors import SignatureVerificationError
 
-from .models import Order, OrderItem
+from .models import Coupon, Order, OrderItem
 from .payments import amount_in_paise, get_razorpay_client
+from .services import calculate_order_totals
 
 
 User = get_user_model()
@@ -132,6 +135,18 @@ class OrderWorkflowTests(APITestCase):
 
     def test_amount_conversion_uses_shared_paise_helper(self):
         self.assertEqual(amount_in_paise(Decimal("12.34")), 1234)
+
+    def test_order_totals_apply_discount_before_shipping_and_tax(self):
+        discounted = calculate_order_totals(Decimal("2200.00"), 10)
+        self.assertEqual(discounted.discount_amount, Decimal("220.00"))
+        self.assertEqual(discounted.shipping_charge, Decimal("100.00"))
+        self.assertEqual(discounted.tax_amount, Decimal("163.3500"))
+        self.assertEqual(discounted.total, Decimal("2243.3500"))
+
+        free_shipping = calculate_order_totals(Decimal("2100.00"))
+        self.assertEqual(free_shipping.shipping_charge, Decimal("0.00"))
+        self.assertEqual(free_shipping.tax_amount, Decimal("173.2500"))
+        self.assertEqual(free_shipping.total, Decimal("2273.2500"))
 
     def test_gateway_factory_uses_configured_credentials(self):
         with patch("orders.payments.razorpay.Client") as razorpay_client:
@@ -435,7 +450,7 @@ class OrderWorkflowTests(APITestCase):
         self.order.save(update_fields=["razorpay_order_id"])
         client = Mock()
         client.order.create.return_value = {"id": "rzp_order_new"}
-        with patch("orders.views.get_razorpay_client", return_value=client):
+        with patch("orders.services.get_razorpay_client", return_value=client):
             response = self.client.post(
                 f"/api/orders/{self.order.id}/create-payment/",
                 {},
@@ -461,7 +476,7 @@ class OrderWorkflowTests(APITestCase):
         self.order.save(update_fields=["razorpay_order_id"])
         client = Mock()
         client.order.create.side_effect = GatewayError("provider unavailable")
-        with patch("orders.views.get_razorpay_client", return_value=client):
+        with patch("orders.services.get_razorpay_client", return_value=client):
             response = self.client.post(
                 f"/api/orders/{self.order.id}/create-payment/",
                 {},
@@ -472,6 +487,58 @@ class OrderWorkflowTests(APITestCase):
         self.assertEqual(
             response.data["detail"],
             "Unable to create Razorpay payment order.",
+        )
+
+    def test_create_payment_reuses_saved_provider_order_without_gateway_call(self):
+        with patch("orders.services.get_razorpay_client") as get_client:
+            response = self.client.post(
+                f"/api/orders/{self.order.id}/create-payment/",
+                {},
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data["razorpay_order_id"],
+            self.order.razorpay_order_id,
+        )
+        get_client.assert_not_called()
+
+    def test_create_payment_rejects_unowned_wrong_method_and_closed_orders(self):
+        other_order = self.create_order(self.other_user)
+        response = self.client.post(
+            f"/api/orders/{other_order.id}/create-payment/",
+            {},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        cod_order = self.create_order(
+            self.user,
+            payment_method=Order.PaymentMethod.COD,
+        )
+        response = self.client.post(
+            f"/api/orders/{cod_order.id}/create-payment/",
+            {},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["detail"],
+            "This order is not an online payment order.",
+        )
+
+        self.order.order_status = Order.OrderStatus.CANCELLED
+        self.order.save(update_fields=["order_status"])
+        response = self.client.post(
+            f"/api/orders/{self.order.id}/create-payment/",
+            {},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["detail"],
+            "This order is not awaiting payment.",
         )
 
     def test_cod_order_bulk_creates_items_deducts_stock_and_clears_cart(self):
@@ -573,6 +640,59 @@ class OrderWorkflowTests(APITestCase):
             "Invalid or expired coupon code.",
         )
 
+    def test_coupon_validation_and_checkout_share_coupon_rules(self):
+        Coupon.objects.create(code="SAVE10", discount_percent=10)
+
+        validation = self.client.post(
+            "/api/orders/coupons/validate/",
+            {"code": " save10 "},
+            format="json",
+        )
+        self.assertEqual(validation.status_code, status.HTTP_200_OK)
+        self.assertEqual(validation.data["code"], "SAVE10")
+
+        checkout = self.client.post(
+            "/api/orders/",
+            {
+                "address_id": self.address.id,
+                "payment_method": Order.PaymentMethod.RAZORPAY,
+                "coupon_code": " save10 ",
+            },
+            format="json",
+        )
+        self.assertEqual(checkout.status_code, status.HTTP_201_CREATED)
+        created_order = Order.objects.get(pk=checkout.data["id"])
+        self.assertEqual(created_order.discount_amount, Decimal("1.23"))
+
+    def test_expired_coupon_is_rejected_by_validation_and_checkout(self):
+        Coupon.objects.create(
+            code="EXPIRED",
+            discount_percent=10,
+            expires_at=timezone.now() - timedelta(days=1),
+        )
+
+        validation = self.client.post(
+            "/api/orders/coupons/validate/",
+            {"code": "EXPIRED"},
+            format="json",
+        )
+        self.assertEqual(validation.status_code, status.HTTP_400_BAD_REQUEST)
+
+        checkout = self.client.post(
+            "/api/orders/",
+            {
+                "address_id": self.address.id,
+                "payment_method": Order.PaymentMethod.COD,
+                "coupon_code": "EXPIRED",
+            },
+            format="json",
+        )
+        self.assertEqual(checkout.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            checkout.data["error"],
+            "Invalid or expired coupon code.",
+        )
+
     def test_cancelling_order_restores_stock_in_one_variant_aggregated_update(self):
         self.order.payment_method = Order.PaymentMethod.COD
         self.order.order_status = Order.OrderStatus.CONFIRMED
@@ -627,3 +747,11 @@ class OrderWorkflowTests(APITestCase):
             response.data["detail"],
             "This order cannot be cancelled.",
         )
+
+    def test_cancelling_unknown_order_returns_not_found(self):
+        response = self.client.post(
+            "/api/orders/999999/cancel/",
+            {"reason": "Not found"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

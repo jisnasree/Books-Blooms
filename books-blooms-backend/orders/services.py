@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import NamedTuple
 
 from django.db import transaction
 from django.db.models import Case, F, PositiveIntegerField, When
@@ -10,6 +11,11 @@ from cart.models import Cart
 from catalog.models import PhysicalVariant
 
 from .models import Coupon, Order, OrderItem
+from .payments import (
+    amount_in_paise,
+    create_razorpay_order,
+    get_razorpay_client,
+)
 
 
 class OrderAddressNotFound(Exception):
@@ -38,6 +44,10 @@ class OrderNotCancellable(Exception):
     pass
 
 
+class OrderNotRazorpayOrder(Exception):
+    pass
+
+
 class OrderAlreadyPaidError(Exception):
     pass
 
@@ -48,6 +58,79 @@ class OrderNotAwaitingPaymentError(Exception):
 
 class InsufficientStockError(Exception):
     pass
+
+
+class OrderTotals(NamedTuple):
+    subtotal: Decimal
+    discount_amount: Decimal
+    shipping_charge: Decimal
+    tax_amount: Decimal
+    total: Decimal
+
+
+def get_valid_coupon(code):
+    coupon = Coupon.objects.filter(
+        code__iexact=code.strip(),
+        is_active=True,
+    ).first()
+    if not coupon or (
+        coupon.expires_at is not None and coupon.expires_at <= timezone.now()
+    ):
+        raise OrderCouponInvalid
+    return coupon
+
+
+def calculate_order_totals(subtotal, discount_percent=0):
+    discount_amount = (
+        subtotal * Decimal(discount_percent) / Decimal("100")
+    )
+    discounted_subtotal = subtotal - discount_amount
+    shipping_charge = (
+        Decimal("0.00")
+        if discounted_subtotal > Decimal("2000.00")
+        else Decimal("100.00")
+    )
+    tax_amount = discounted_subtotal * Decimal("0.0825")
+    total = discounted_subtotal + shipping_charge + tax_amount
+    return OrderTotals(
+        subtotal,
+        discount_amount,
+        shipping_charge,
+        tax_amount,
+        total,
+    )
+
+
+def create_razorpay_order_for_order(order_id, user_id):
+    order = Order.objects.filter(id=order_id, user_id=user_id).first()
+    if order is None:
+        raise OrderNotFound
+    if order.payment_method != Order.PaymentMethod.RAZORPAY:
+        raise OrderNotRazorpayOrder
+    if (
+        order.payment_status != Order.PaymentStatus.PENDING
+        or order.order_status != Order.OrderStatus.PENDING
+    ):
+        raise OrderNotAwaitingPaymentError
+
+    amount = amount_in_paise(order.total_amount)
+    razorpay_order_id = order.razorpay_order_id
+    if not razorpay_order_id:
+        client = get_razorpay_client()
+        razorpay_order = create_razorpay_order(
+            client,
+            {
+                "amount": amount,
+                "currency": "INR",
+                "receipt": f"books-blooms-{order.id}",
+                "notes": {"books_blooms_order_id": str(order.id)},
+            },
+        )
+        razorpay_order_id = razorpay_order["id"]
+        order.razorpay_order_id = razorpay_order_id
+        order.save(update_fields=["razorpay_order_id"])
+
+    return order, razorpay_order_id, amount
 
 
 @transaction.atomic
@@ -75,30 +158,12 @@ def create_order_from_cart(user, address_id, payment_method, coupon_code=""):
         (item.variant.price * item.quantity for item in cart_items),
         Decimal("0.00"),
     )
-    discount_amount = Decimal("0.00")
+    discount_percent = 0
 
     if coupon_code:
-        coupon = Coupon.objects.filter(
-            code__iexact=coupon_code,
-            is_active=True,
-        ).first()
-        if not coupon or (
-            coupon.expires_at is not None and coupon.expires_at <= timezone.now()
-        ):
-            raise OrderCouponInvalid
+        discount_percent = get_valid_coupon(coupon_code).discount_percent
 
-        discount_amount = (
-            subtotal * Decimal(coupon.discount_percent) / Decimal("100")
-        )
-
-    discounted_subtotal = subtotal - discount_amount
-    delivery_charge = (
-        Decimal("0.00")
-        if discounted_subtotal > Decimal("2000.00")
-        else Decimal("100.00")
-    )
-    tax_amount = discounted_subtotal * Decimal("0.0825")
-    total_amount = discounted_subtotal + delivery_charge + tax_amount
+    totals = calculate_order_totals(subtotal, discount_percent)
     is_cod = payment_method == Order.PaymentMethod.COD
 
     Order.objects.filter(
@@ -122,11 +187,11 @@ def create_order_from_cart(user, address_id, payment_method, coupon_code=""):
         shipping_state=address.state,
         shipping_postal_code=address.postal_code,
         shipping_country=address.country,
-        subtotal=subtotal,
-        shipping_charge=delivery_charge,
-        tax_amount=tax_amount,
-        discount_amount=discount_amount,
-        total_amount=total_amount,
+        subtotal=totals.subtotal,
+        shipping_charge=totals.shipping_charge,
+        tax_amount=totals.tax_amount,
+        discount_amount=totals.discount_amount,
+        total_amount=totals.total,
         payment_method=payment_method,
         order_status=(
             Order.OrderStatus.CONFIRMED if is_cod else Order.OrderStatus.PENDING

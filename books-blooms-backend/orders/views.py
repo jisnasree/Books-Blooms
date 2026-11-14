@@ -14,12 +14,11 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
-from .models import Order, Coupon
+from .models import Coupon, Order
 from .payments import (
     PaymentGatewayError,
     PaymentVerificationError,
     amount_in_paise,
-    create_razorpay_order,
     get_razorpay_client,
     request_razorpay_refund,
     verify_razorpay_payment,
@@ -30,13 +29,16 @@ from .services import (
     OrderAlreadyPaidError,
     OrderCartEmpty,
     OrderCouponInvalid,
+    OrderNotAwaitingPaymentError,
     OrderNotCancellable,
     OrderNotFound,
-    OrderNotAwaitingPaymentError,
+    OrderNotRazorpayOrder,
     OrderStockUnavailable,
     cancel_order,
     create_order_from_cart,
+    create_razorpay_order_for_order,
     finalize_razorpay_order,
+    get_valid_coupon,
 )
 from .serializers import (
 
@@ -129,8 +131,6 @@ class OrderCancellationView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, order_id):
-        get_object_or_404(Order, id=order_id, user=request.user)
-
         serializer = OrderCancellationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -161,58 +161,34 @@ class RazorpayCreateOrderView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, order_id):
-
-        # Find the order belonging to the logged-in customer
-        order = get_object_or_404(Order, id=order_id, user=request.user)
-
-        # Only Razorpay orders can use online payment
-        if order.payment_method != Order.PaymentMethod.RAZORPAY:
+        try:
+            order, razorpay_order_id, amount = create_razorpay_order_for_order(
+                order_id=order_id,
+                user_id=request.user.id,
+            )
+        except OrderNotFound:
+            return Response(
+                {"detail": "Not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except OrderNotRazorpayOrder:
             return Response(
                 {"detail": "This order is not an online payment order."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # Payment must still be pending
-        if (
-            order.payment_status != Order.PaymentStatus.PENDING
-            or order.order_status != Order.OrderStatus.PENDING
-        ):
+        except OrderNotAwaitingPaymentError:
             return Response(
                 {"detail": "This order is not awaiting payment."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        amount = amount_in_paise(order.total_amount)
-        client = get_razorpay_client()
-
-        # Reuse an existing Razorpay order if called again
-        if order.razorpay_order_id:
-            razorpay_order_id = order.razorpay_order_id
-
-        else:
-
-            payment_data = {
-                "amount": amount,
-                "currency": "INR",
-                "receipt": f"books-blooms-{order.id}",
-                "notes": {"books_blooms_order_id": str(order.id)},
-            }
-
-            try:
-                razorpay_order = create_razorpay_order(client, payment_data)
-
-                # Save Razorpay order ID in our database
-                razorpay_order_id = razorpay_order["id"]
-
-                order.razorpay_order_id = razorpay_order_id
-                order.save(update_fields=["razorpay_order_id"])
-
-            except PaymentGatewayError:
-                logger.exception("Razorpay order creation failed for order %s.", order.id)
-                return Response(
-                    {"detail": ("Unable to create Razorpay payment order.")},
-                    status=status.HTTP_502_BAD_GATEWAY,
-                )
+        except PaymentGatewayError:
+            logger.exception(
+                "Razorpay order creation failed for order %s.", order_id
+            )
+            return Response(
+                {"detail": "Unable to create Razorpay payment order."},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
 
         # Send payment details to React
         return Response(
@@ -367,9 +343,9 @@ class CouponValidateView(APIView):
     def post(self, request):
         code = request.data.get("code", "").strip()
 
-        coupon = Coupon.objects.filter(code__iexact=code, is_active=True).first()
-
-        if not coupon or (coupon.expires_at and coupon.expires_at <= timezone.now()):
+        try:
+            coupon = get_valid_coupon(code)
+        except OrderCouponInvalid:
             return Response(
                 {"error": "Invalid or expired coupon code."},
                 status=status.HTTP_400_BAD_REQUEST,

@@ -19,11 +19,20 @@ to the existing response bodies and status codes.
   back together.
 - `cancel_order()` locks and rechecks the order, restores inventory when it was
   previously deducted, and records the cancellation within one transaction.
+- `create_razorpay_order_for_order()` owns payment-order eligibility, amount
+  conversion, provider-order creation/reuse, and saving the provider order ID.
+  The provider call is intentionally outside a database transaction.
 - `finalize_razorpay_order()` handles paid-order idempotency, conditional stock
   reservation, status changes, and matching-cart clearing transactionally.
+- `get_valid_coupon()` is shared by checkout and coupon validation, while
+  `calculate_order_totals()` keeps discount, shipping, and tax calculations
+  independent from persistence.
 - `RazorpayVerifyPaymentView` retains ownership/provider-order prechecks, calls
   `orders/payments.py` to verify and capture the payment, then delegates order
   finalization to the service.
+- Cancellation uses the service's locked ownership lookup as the authoritative
+  existence check; the view translates its not-found and non-cancellable
+  outcomes to HTTP responses.
 - The view requests refunds after the finalization transaction rolls back,
   keeping that external side effect outside the database transaction.
 
@@ -76,6 +85,10 @@ Tests exercise the order service boundaries through the API and mocked provider:
   returns the conflict response; refund failure follows the support fallback.
 - Create-payment and verify-payment use the same client factory and amount
   conversion.
+- Provider order creation validates ownership/state and reuses an existing
+  provider order; checkout and coupon validation share coupon expiration rules.
+- Pricing calculation covers discount, shipping threshold, and tax without
+  requiring database writes.
 - COD checkout atomically creates the order/items, deducts inventory, and clears
   the cart; Razorpay checkout leaves inventory and cart unchanged.
 - Cancellation restores aggregated inventory and commits the cancelled status.
