@@ -49,8 +49,6 @@ function Login() {
             if (!response.ok) {
                 setError(
                     data.message ||
-                    data.detail ||
-                    data.non_field_errors?.[0] ||
                     "Login failed. Please check your details."
                 );
                 return;
