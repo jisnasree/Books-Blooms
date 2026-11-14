@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
+from addresses.models import Address
 from cart.models import Cart, CartItem
 from catalog.models import Author, Book, PhysicalVariant
 from razorpay.errors import GatewayError
@@ -20,7 +21,7 @@ User = get_user_model()
 
 
 @override_settings(RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret")
-class RazorpayPaymentTests(APITestCase):
+class OrderWorkflowTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             username="reader",
@@ -62,6 +63,18 @@ class RazorpayPaymentTests(APITestCase):
             cart=self.cart,
             variant=self.variant,
             quantity=2,
+        )
+        self.address = Address.objects.create(
+            user=self.user,
+            label="HOME",
+            full_name="Reader",
+            phone_number="1234567890",
+            address_line_1="1 Book Street",
+            address_line_2="",
+            city="Booktown",
+            state="CA",
+            postal_code="12345",
+            country="US",
         )
 
     def create_order(self, user, payment_method=Order.PaymentMethod.RAZORPAY):
@@ -459,4 +472,158 @@ class RazorpayPaymentTests(APITestCase):
         self.assertEqual(
             response.data["detail"],
             "Unable to create Razorpay payment order.",
+        )
+
+    def test_cod_order_bulk_creates_items_deducts_stock_and_clears_cart(self):
+        response = self.client.post(
+            "/api/orders/",
+            {
+                "address_id": self.address.id,
+                "payment_method": Order.PaymentMethod.COD,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        order = Order.objects.get(pk=response.data["id"])
+        self.assertEqual(order.order_status, Order.OrderStatus.CONFIRMED)
+        self.assertEqual(order.payment_status, Order.PaymentStatus.PENDING)
+        self.assertEqual(order.items.count(), 1)
+        self.variant.refresh_from_db()
+        self.assertEqual(self.variant.stock_quantity, 6)
+        self.assertFalse(CartItem.objects.filter(cart=self.cart).exists())
+
+    def test_razorpay_order_keeps_stock_and_cart_unchanged(self):
+        response = self.client.post(
+            "/api/orders/",
+            {
+                "address_id": self.address.id,
+                "payment_method": Order.PaymentMethod.RAZORPAY,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        order = Order.objects.get(pk=response.data["id"])
+        self.assertEqual(order.order_status, Order.OrderStatus.PENDING)
+        self.variant.refresh_from_db()
+        self.assertEqual(self.variant.stock_quantity, 8)
+        self.assertTrue(CartItem.objects.filter(cart=self.cart).exists())
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.order_status, Order.OrderStatus.CANCELLED)
+
+    def test_cod_checkout_rejects_insufficient_stock_without_partial_order(self):
+        self.variant.stock_quantity = 1
+        self.variant.save(update_fields=["stock_quantity"])
+        existing_order_count = Order.objects.count()
+
+        response = self.client.post(
+            "/api/orders/",
+            {
+                "address_id": self.address.id,
+                "payment_method": Order.PaymentMethod.COD,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["error"], "Not enough stock for Atomic Habits.")
+        self.assertEqual(Order.objects.count(), existing_order_count)
+        self.variant.refresh_from_db()
+        self.assertEqual(self.variant.stock_quantity, 1)
+        self.assertTrue(CartItem.objects.filter(cart=self.cart).exists())
+
+    def test_checkout_reports_invalid_address_empty_cart_and_coupon(self):
+        invalid_address = self.client.post(
+            "/api/orders/",
+            {
+                "address_id": self.address.id + 100,
+                "payment_method": Order.PaymentMethod.COD,
+            },
+            format="json",
+        )
+        self.assertEqual(invalid_address.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(invalid_address.data["error"], "Address not found.")
+
+        self.cart.items.all().delete()
+        empty_cart = self.client.post(
+            "/api/orders/",
+            {
+                "address_id": self.address.id,
+                "payment_method": Order.PaymentMethod.COD,
+            },
+            format="json",
+        )
+        self.assertEqual(empty_cart.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(empty_cart.data["error"], "Your cart is empty.")
+
+        CartItem.objects.create(cart=self.cart, variant=self.variant, quantity=2)
+        invalid_coupon = self.client.post(
+            "/api/orders/",
+            {
+                "address_id": self.address.id,
+                "payment_method": Order.PaymentMethod.COD,
+                "coupon_code": "INVALID",
+            },
+            format="json",
+        )
+        self.assertEqual(invalid_coupon.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            invalid_coupon.data["error"],
+            "Invalid or expired coupon code.",
+        )
+
+    def test_cancelling_order_restores_stock_in_one_variant_aggregated_update(self):
+        self.order.payment_method = Order.PaymentMethod.COD
+        self.order.order_status = Order.OrderStatus.CONFIRMED
+        self.order.save(update_fields=["payment_method", "order_status"])
+        OrderItem.objects.create(
+            order=self.order,
+            variant=self.variant,
+            book_title=self.book.title,
+            book_format=self.variant.format,
+            unit_price=self.variant.price,
+            quantity=1,
+            item_total=self.variant.price,
+        )
+
+        response = self.client.post(
+            f"/api/orders/{self.order.id}/cancel/",
+            {"reason": "Changed my mind"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.order_status, Order.OrderStatus.CANCELLED)
+        self.variant.refresh_from_db()
+        self.assertEqual(self.variant.stock_quantity, 11)
+
+    def test_cancelling_unpaid_razorpay_order_does_not_restore_stock(self):
+        response = self.client.post(
+            f"/api/orders/{self.order.id}/cancel/",
+            {"reason": "Changed my mind"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.order_status, Order.OrderStatus.CANCELLED)
+        self.variant.refresh_from_db()
+        self.assertEqual(self.variant.stock_quantity, 8)
+
+    def test_non_cancellable_order_is_rejected(self):
+        self.order.order_status = Order.OrderStatus.DELIVERED
+        self.order.save(update_fields=["order_status"])
+
+        response = self.client.post(
+            f"/api/orders/{self.order.id}/cancel/",
+            {"reason": "Changed my mind"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["detail"],
+            "This order cannot be cancelled.",
         )

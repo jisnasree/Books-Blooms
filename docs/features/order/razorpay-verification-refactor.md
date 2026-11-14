@@ -7,18 +7,25 @@ changing the existing payment-verification endpoint or its observable behavior.
 The implementation keeps the public endpoint unchanged:
 `POST /api/orders/<order_id>/verify-payment/`.
 
-## Refactored boundaries
+## Order service boundaries
 
-`RazorpayVerifyPaymentView` orchestrates:
+Order-specific state changes live in `orders/services.py`. The HTTP views are
+responsible for validating request serializers and translating service outcomes
+to the existing response bodies and status codes.
 
-1. Validates the checkout callback fields and checks order ownership, payment
-   method, and Razorpay order ID.
-2. Calls `orders/payments.py` to verify provider data and capture authorized
-   payments.
-3. Calls `orders/services.py` to finalize payment and reserve inventory in one
-   database transaction.
-4. Requests a refund outside that transaction if inventory cannot be reserved,
-   then maps known results to the existing HTTP responses.
+- `create_order_from_cart()` validates the address, cart, coupon, and inventory;
+  calculates totals; creates the order and items; and handles COD stock/cart
+  updates. It owns the transaction so order writes and stock reservations roll
+  back together.
+- `cancel_order()` locks and rechecks the order, restores inventory when it was
+  previously deducted, and records the cancellation within one transaction.
+- `finalize_razorpay_order()` handles paid-order idempotency, conditional stock
+  reservation, status changes, and matching-cart clearing transactionally.
+- `RazorpayVerifyPaymentView` retains ownership/provider-order prechecks, calls
+  `orders/payments.py` to verify and capture the payment, then delegates order
+  finalization to the service.
+- The view requests refunds after the finalization transaction rolls back,
+  keeping that external side effect outside the database transaction.
 
 ### Payment gateway helpers (`orders/payments.py`)
 
@@ -31,24 +38,6 @@ The implementation keeps the public endpoint unchanged:
 - Provider API errors and payment validation failures use distinct exceptions,
   allowing the view to map expected errors without broad catches.
 - Payment creation and refunds use the same provider exception boundary.
-
-### Order payment finalization (`orders/services.py`)
-
-`finalize_razorpay_order()` owns one atomic transaction that:
-
-- Locks the customer-owned order and rechecks its state.
-- Returns the existing idempotent result when the same payment was already
-  applied, and rejects a different payment or an order no longer awaiting
-  payment.
-- Deducts inventory conditionally and raises a specific insufficient-stock
-  exception if any item cannot be reserved.
-- Saves the payment ID and paid/confirmed statuses.
-- Clears the cart only when its aggregated variant quantities still match the
-  order quantities.
-
-The view retains the initial ownership and provider-order checks before calling
-Razorpay. The locked database recheck remains after provider verification as a
-concurrency safeguard.
 
 ### Refund boundary
 
@@ -72,7 +61,7 @@ message.
 
 ## Focused test coverage (`orders/tests.py`)
 
-Tests exercise the extracted boundaries and endpoint behavior:
+Tests exercise the order service boundaries through the API and mocked provider:
 
 - Missing callback fields, wrong owner/order/payment method, and mismatched
   stored Razorpay order ID.
@@ -87,6 +76,9 @@ Tests exercise the extracted boundaries and endpoint behavior:
   returns the conflict response; refund failure follows the support fallback.
 - Create-payment and verify-payment use the same client factory and amount
   conversion.
+- COD checkout atomically creates the order/items, deducts inventory, and clears
+  the cart; Razorpay checkout leaves inventory and cart unchanged.
+- Cancellation restores aggregated inventory and commits the cancelled status.
 
 Use mocked Razorpay client methods for unit/API tests; no test should require a
 live provider request.
