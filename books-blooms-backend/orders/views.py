@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from decimal import Decimal
-import razorpay
+import logging
 
 from django.conf import settings
 from django.db import transaction
@@ -24,6 +24,21 @@ from cart.models import Cart
 from catalog.models import PhysicalVariant
 
 from .models import Order, OrderItem, Coupon
+from .payments import (
+    PaymentGatewayError,
+    PaymentVerificationError,
+    amount_in_paise,
+    create_razorpay_order,
+    get_razorpay_client,
+    request_razorpay_refund,
+    verify_razorpay_payment,
+)
+from .services import (
+    InsufficientStockError,
+    OrderAlreadyPaidError,
+    OrderNotAwaitingPaymentError,
+    finalize_razorpay_order,
+)
 from .serializers import (
 
     OrderCreateSerializer,
@@ -34,6 +49,8 @@ from .serializers import (
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
+
+logger = logging.getLogger(__name__)
 
 
 class OrderListCreateView(ListCreateAPIView):
@@ -316,13 +333,8 @@ class RazorpayCreateOrderView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Convert the order amount from rupees to paise
-        amount = int(order.total_amount * 100)
-
-        # Create Razorpay client using backend secret keys
-        client = razorpay.Client(
-            auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
-        )
+        amount = amount_in_paise(order.total_amount)
+        client = get_razorpay_client()
 
         # Reuse an existing Razorpay order if called again
         if order.razorpay_order_id:
@@ -338,8 +350,7 @@ class RazorpayCreateOrderView(APIView):
             }
 
             try:
-                # Create an order in Razorpay
-                razorpay_order = client.order.create(data=payment_data)
+                razorpay_order = create_razorpay_order(client, payment_data)
 
                 # Save Razorpay order ID in our database
                 razorpay_order_id = razorpay_order["id"]
@@ -347,7 +358,8 @@ class RazorpayCreateOrderView(APIView):
                 order.razorpay_order_id = razorpay_order_id
                 order.save(update_fields=["razorpay_order_id"])
 
-            except Exception:
+            except PaymentGatewayError:
+                logger.exception("Razorpay order creation failed for order %s.", order.id)
                 return Response(
                     {"detail": ("Unable to create Razorpay payment order.")},
                     status=status.HTTP_502_BAD_GATEWAY,
@@ -364,12 +376,6 @@ class RazorpayCreateOrderView(APIView):
             },
             status=status.HTTP_200_OK,
         )
-
-
-class InsufficientStockError(Exception):
-    """Raised when there is not enough stock to complete a paid order."""
-
-    pass
 
 
 class RazorpayVerifyPaymentView(APIView):
@@ -406,174 +412,62 @@ class RazorpayVerifyPaymentView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Create Razorpay client
-        client = razorpay.Client(
-            auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
-        )
-
-        # Verify Razorpay payment signature
+        client = get_razorpay_client()
         try:
-            client.utility.verify_payment_signature(
-                {
-                    "razorpay_order_id": razorpay_order_id,
-                    "razorpay_payment_id": razorpay_payment_id,
-                    "razorpay_signature": razorpay_signature,
-                }
+            verify_razorpay_payment(
+                client,
+                razorpay_order_id=razorpay_order_id,
+                razorpay_payment_id=razorpay_payment_id,
+                razorpay_signature=razorpay_signature,
+                expected_amount=amount_in_paise(order.total_amount),
             )
-
-            # Fetch payment details directly from Razorpay
-            payment = client.payment.fetch(razorpay_payment_id)
-
-            # Verify payment belongs to the correct Razorpay order
-            if payment.get("order_id") != razorpay_order_id:
-                return Response(
-                    {"detail": "Payment does not belong to this order."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            # Verify amount and currency
-            expected_amount = int(order.total_amount * 100)
-
-            if (
-                payment.get("amount") != expected_amount
-                or payment.get("currency") != "INR"
-            ):
-                return Response(
-                    {"detail": "Payment amount or currency mismatch."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            # Capture payment if it is only authorized
-            if payment.get("status") == "authorized":
-                client.payment.capture(razorpay_payment_id, expected_amount)
-
-                payment = client.payment.fetch(razorpay_payment_id)
-
-            # Payment must be captured successfully
-            if payment.get("status") != "captured":
-                return Response(
-                    {"detail": "Payment has not been captured."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-        except Exception:
+        except PaymentVerificationError as error:
+            return Response(
+                {"detail": error.detail},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except PaymentGatewayError:
+            logger.exception(
+                "Razorpay payment verification failed for order %s.", order_id
+            )
             return Response(
                 {"detail": "Payment verification failed."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
-
-            with transaction.atomic():
-
-                # Lock the order to prevent duplicate processing
-                order = get_object_or_404(
-                    Order.objects.select_for_update(), id=order_id, user=request.user
-                )
-
-                # Handle repeated verification requests safely
-                if order.payment_status == Order.PaymentStatus.PAID:
-
-                    if order.razorpay_payment_id == razorpay_payment_id:
-                        return Response(
-                            {
-                                "detail": "Payment already verified.",
-                                "order": OrderSerializer(order).data,
-                            },
-                            status=status.HTTP_200_OK,
-                        )
-
-                    return Response(
-                        {"detail": "This order has already been paid."},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-                # Make sure the order is still awaiting payment
-                if order.order_status != Order.OrderStatus.PENDING:
-                    return Response(
-                        {"detail": "This order is no longer awaiting payment."},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-                # Deduct stock only after successful payment
-                order_items = list(order.items.all())
-
-                for item in order_items:
-
-                    updated = PhysicalVariant.objects.filter(
-                        id=item.variant_id,
-                        is_available=True,
-                        stock_quantity__gte=item.quantity,
-                    ).update(stock_quantity=F("stock_quantity") - item.quantity)
-
-                    if updated == 0:
-                        raise InsufficientStockError
-
-                # Mark the order as paid and confirmed
-                order.razorpay_payment_id = razorpay_payment_id
-                order.payment_status = Order.PaymentStatus.PAID
-                order.order_status = Order.OrderStatus.CONFIRMED
-
-                order.save(
-                    update_fields=[
-                        "razorpay_payment_id",
-                        "payment_status",
-                        "order_status",
-                        "updated_at",
-                    ]
-                )
-
-                # Clear the cart only if it still matches this order.
-                cart = Cart.objects.filter(user=request.user).first()
-
-                if cart:
-
-                    current_cart_items = list(cart.items.all())
-
-                    cart_quantities = {}
-
-                    for cart_item in current_cart_items:
-                        cart_quantities[cart_item.variant_id] = (
-                            cart_quantities.get(cart_item.variant_id, 0)
-                            + cart_item.quantity
-                        )
-
-                    order_quantities = {}
-
-                    for item in order_items:
-                        order_quantities[item.variant_id] = (
-                            order_quantities.get(item.variant_id, 0) + item.quantity
-                        )
-
-                    if cart_quantities == order_quantities:
-                        cart.items.all().delete()
-
+            order, already_verified = finalize_razorpay_order(
+                order_id,
+                request.user.id,
+                razorpay_payment_id,
+            )
+        except OrderAlreadyPaidError:
+            return Response(
+                {"detail": "This order has already been paid."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except OrderNotAwaitingPaymentError:
+            return Response(
+                {"detail": "This order is no longer awaiting payment."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except InsufficientStockError:
-
-            # Payment was captured, but stock is no longer available.
-            # Request a refund rather than leaving the customer charged.
             try:
-                client.payment.refund(
+                request_razorpay_refund(
+                    client,
                     razorpay_payment_id,
                     {
-                        "notes": {
-                            "reason": "Insufficient stock",
-                            "books_blooms_order_id": str(order_id),
-                        }
+                        "reason": "Insufficient stock",
+                        "books_blooms_order_id": str(order_id),
                     },
                 )
 
-                return Response(
-                    {
-                        "detail": (
-                            "Payment was received, but stock is unavailable. "
-                            "A refund has been requested."
-                        )
-                    },
-                    status=status.HTTP_409_CONFLICT,
+            except PaymentGatewayError:
+                logger.exception(
+                    "Refund request failed for Razorpay payment %s (order %s).",
+                    razorpay_payment_id,
+                    order_id,
                 )
-
-            except Exception:
                 return Response(
                     {
                         "detail": (
@@ -584,7 +478,25 @@ class RazorpayVerifyPaymentView(APIView):
                     status=status.HTTP_409_CONFLICT,
                 )
 
-        # Return the confirmed order
+            return Response(
+                {
+                    "detail": (
+                        "Payment was received, but stock is unavailable. "
+                        "A refund has been requested."
+                    )
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        if already_verified:
+            return Response(
+                {
+                    "detail": "Payment already verified.",
+                    "order": OrderSerializer(order).data,
+                },
+                status=status.HTTP_200_OK,
+            )
+
         return Response(
             {
                 "detail": "Payment verified successfully.",
