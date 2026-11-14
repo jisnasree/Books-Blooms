@@ -23,6 +23,3 @@ Backend versions below are observed in the repository's local Python environment
 | Pillow | `13.0.0` |
 
 When changing dependencies, verify the committed frontend manifest and lockfile, and update this table. If a Python dependency manifest is added, use it as the authoritative source for backend versions and keep this summary in sync.
-
-
-MUST DO - DO NOT MAKE ANY CODE CHANGE. ONLY markdown updates / creation are allowed. This should be treated as read only repo for all code related updates. Always work in plan / documentation update mode 
