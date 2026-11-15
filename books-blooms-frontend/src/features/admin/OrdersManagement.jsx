@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import OrdersTable from "./OrdersTable";
-import { ADMIN_BASE_URL ,ADMIN_ORDERS_URL} from "../../constants";
+import { ADMIN_BASE_URL ,ADMIN_ORDERS_ROUTE} from "../../constants";
 import { useNavigate } from "react-router-dom";
 
 function OrdersManagement() {
@@ -21,12 +21,12 @@ const [error, setError] = useState("");
 
   // Open order details in View mode
   const handleView = (order) => {
-    navigate(`${ADMIN_ORDERS_URL}${order.id}`);
+    navigate(`${ADMIN_ORDERS_ROUTE}${order.id}`);
   };
 
   // Open order details in Edit mode
   const handleEdit = (order) => {
-    navigate(`${ADMIN_ORDERS_URL}${order.id}?edit=true`);
+    navigate(`${ADMIN_ORDERS_ROUTE}${order.id}?edit=true`);
   };
 
 

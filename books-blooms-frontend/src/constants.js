@@ -56,5 +56,6 @@ export const ERROR_UNABLE_TO_PROCESS = 'Unable to process your request.'
 
 //UI ROUTES
 
-export const HOME_URL = '/'
-export const ADMIN_URL = '/admin'
+export const HOME_ROUTE = '/'
+export const ADMIN_ROUTE = '/admin'
+export const ADMIN_ORDERS_ROUTE = '/admin/orders/'

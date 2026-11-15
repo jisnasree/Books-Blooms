@@ -97,7 +97,7 @@ function App() {
               <Route path="categories" element={<CategoriesManagement />} />
               <Route path="customers" element={<CustomersManagement />} />
               <Route path="coupons" element={<CouponsManagement />} />
-              <Route path=" offers" element={<OffersManagement />} />
+              <Route path="offers" element={<OffersManagement />} />
             </Route>
         </Route>
 

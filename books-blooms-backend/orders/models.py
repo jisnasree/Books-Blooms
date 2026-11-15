@@ -92,21 +92,19 @@ class Order(models.Model):
     )
 
     razorpay_payment_id = models.CharField(
-    max_length=100,
-    blank=True,
+        max_length=100,
+        blank=True,
     )
 
-    cancellation_reason = models.TextField(
-         blank=True,
-         null=True
-    ) 
+    cancellation_reason = models.TextField(blank=True, null=True)
 
-    cancelled_at = models.DateTimeField(
-        null=True,
-        blank=True
-    )
+    cancelled_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # delivered_at = models.DateTimeField(
+    # null=True,
+    # blank=True,
+#)
 
     def __str__(self):
         return f"Order #{self.id} - {self.user}"
@@ -142,6 +140,7 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.book_title} x {self.quantity}"
 
+
 class Coupon(models.Model):
     code = models.CharField(max_length=50, unique=True)
     discount_percent = models.PositiveIntegerField()  # e.g. 10 = 10% off
@@ -150,3 +149,38 @@ class Coupon(models.Model):
 
     def __str__(self):
         return f"{self.code} ({self.discount_percent}% off)"
+
+
+class OrderReturn(models.Model):
+
+    class ReturnStatus(models.TextChoices):
+        REQUESTED = "REQUESTED", "Requested"
+        APPROVED = "APPROVED", "Approved"
+        REJECTED = "REJECTED", "Rejected"
+        PICKUP_SCHEDULED = "PICKUP_SCHEDULED", "Pickup Scheduled"
+        RECEIVED = "RECEIVED", "Received"
+        REFUNDED = "REFUNDED", "Refunded"
+
+    order = models.OneToOneField(
+        Order,
+        on_delete=models.PROTECT,
+        related_name="return_request",
+    )
+
+    reason = models.CharField(max_length=100)
+
+    comments = models.TextField(
+        blank=True,
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=ReturnStatus.choices,
+        default=ReturnStatus.REQUESTED,
+    )
+
+    requested_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Return for Order #{self.order.id}"

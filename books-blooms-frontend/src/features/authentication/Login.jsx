@@ -4,10 +4,10 @@ import { Link } from 'react-router-dom'
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AUTH_LOGIN_URL } from "../../constants";
-import { HOME_URL } from "../../constants";
+import { HOME_ROUTE } from "../../constants";
 import { useContext } from "react";
 import { UserContext } from "../../context/UserContext";
-import { ADMIN_URL } from "../../constants";
+import { ADMIN_ROUTE } from "../../constants";
 import GoogleLoginButton from "./GoogleLoginButton"
 import loginImage from "../../assets/login.png";
 import { CartContext } from "../../context/CartContext";
@@ -61,11 +61,11 @@ function Login() {
             //setUser({ isAdmin: data.isAdmin, isAuthenticated: data.isAuthenticated, first_name: data.first_name })
             setUser(data)
          
-            data.isAdmin ? navigate(ADMIN_URL) : navigate(HOME_URL);
+            data.isAdmin ? navigate(ADMIN_ROUTE) : navigate(HOME_ROUTE);
             setLoading(false)
 
             // // Navigate to the admin dashboard.
-            //navigate(HOME_URL);
+            //navigate(HOME_ROUTE);
         } catch (err) {
             setError("Unable to connect to the server. Please try again.");
         } finally {

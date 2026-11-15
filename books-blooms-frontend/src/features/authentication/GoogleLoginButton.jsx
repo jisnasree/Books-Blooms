@@ -2,7 +2,7 @@
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
-import { AUTH_BASE_URL, HOME_URL, ADMIN_URL } from "../../constants";
+import { AUTH_BASE_URL, HOME_ROUTE, ADMIN_ROUTE } from "../../constants";
 import { UserContext } from "../../context/UserContext";
 
 function GoogleLoginButton() {
@@ -43,9 +43,9 @@ function GoogleLoginButton() {
       setUser(data);
 
       if (data.isAdmin) {
-        navigate(ADMIN_URL);
+        navigate(ADMIN_ROUTE);
       } else {
-        navigate(HOME_URL);
+        navigate(HOME_ROUTE);
       }
     } catch (err) {
       setError("Unable to connect to the server. Please try again.");

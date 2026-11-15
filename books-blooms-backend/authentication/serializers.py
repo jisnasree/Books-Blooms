@@ -122,6 +122,13 @@ class SetNewPasswordSerializer(serializers.Serializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    isAdmin = serializers.BooleanField(source="is_staff", read_only=True)
+    isAuthenticated = serializers.SerializerMethodField()
+
+    def get_isAuthenticated(self, obj):
+        request = self.context.get("request")
+        return bool(request and request.user.is_authenticated)
+    
     class Meta:
         model = User
         fields = [
@@ -130,6 +137,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "phone_number",
+            "isAdmin",
+            "isAuthenticated",
             "profile_image",
         ]
         read_only_fields = ["id", "email"]
