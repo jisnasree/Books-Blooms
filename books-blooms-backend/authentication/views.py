@@ -538,12 +538,7 @@ class SetNewPasswordView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            try:
-                password_validation.validate_password(new_password, user)
-            except ValidationError as error:
-                return Response(
-                    {"new_password": error.messages}, status=status.HTTP_400_BAD_REQUEST
-                )
+            
 
             user.set_password(new_password)
             user.save(update_fields=["password"])

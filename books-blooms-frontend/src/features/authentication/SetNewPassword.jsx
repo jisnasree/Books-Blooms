@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { AUTH_SET_NEW_PWD_URL } from "../../constants";
+import { validatePassword } from "../../utils/validation";
 
 function SetNewPassword() {
-    
+
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
@@ -16,61 +17,63 @@ function SetNewPassword() {
     const navigate = useNavigate();
     const location = useLocation();
     const resetToken = location.state?.resetToken;
-   
-const handleSubmit = async (event) => {
-    event.preventDefault()
-    setError("");
 
-    if (password.length < 8) {
-        setError("Password must be at least 8 characters.");
-        return;
-    }
+    const handleSubmit = async (event) => {
+        event.preventDefault()
+        setError("");
 
-    if (password !== confirmPassword) {
-        setError("Passwords do not match.");
-        return;
-    }
+        const passwordError = validatePassword(password);
 
-    if (!resetToken) {
-        setError("Reset token is missing. Please start again.");
-        return;
-    }
-    setLoading(true);
-
-    try {
-        const response = await fetch(
-            AUTH_SET_NEW_PWD_URL,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    reset_token: resetToken,
-                    new_password: password,
-                }),
-            }
-        );
-
-        const data = await response.json()
-
-        if (!response.ok) {
-            setError(
-                Object.values(data).flat().join(" ") ||
-                "Unable to update your password."
-            );
+        if (passwordError) {
+            setError(passwordError);
             return;
         }
-        navigate("/password-update-success", {
-            replace: true,
-        });
-    } catch (error) {
-        console.error("Request failed:", error);
-        setError("Unable to connect to the server. Please try again.");
-    } finally {
-        setLoading(false);
-    }
-};
+
+        if (password !== confirmPassword) {
+            setError("Passwords do not match.");
+            return;
+        }
+
+        if (!resetToken) {
+            setError("Reset token is missing. Please start again.");
+            return;
+        }
+        setLoading(true);
+
+        try {
+            const response = await fetch(
+                AUTH_SET_NEW_PWD_URL,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        reset_token: resetToken,
+                        new_password: password,
+                    }),
+                }
+            );
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                setError(
+                    Object.values(data).flat().join(" ") ||
+                    "Unable to update your password."
+                );
+                return;
+            }
+            navigate("/password-update-success", {
+                replace: true,
+            });
+        } catch (error) {
+            console.error("Request failed:", error);
+            setError("Unable to connect to the server. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
     return (
@@ -93,7 +96,7 @@ const handleSubmit = async (event) => {
                                 placeholder="Enter password"
                                 value={password}
                                 minLength={8}
-                                onChange={(e)=>setPassword(e.target.value)}
+                                onChange={(e) => setPassword(e.target.value)}
                                 className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none focus:border-rose-800 focus:ring-2 focus:ring-rose-200"
                                 required
                             />
@@ -109,7 +112,7 @@ const handleSubmit = async (event) => {
                                 placeholder="Re-enter your password"
                                 value={confirmPassword}
                                 minLength={8}
-                                onChange={(e)=>setConfirmPassword(e.target.value)}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
                                 className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none focus:border-rose-800 focus:ring-2 focus:ring-rose-200"
                                 required
                             />
@@ -121,7 +124,11 @@ const handleSubmit = async (event) => {
                         >
                             UPDATE PASSWORD
                         </button>
-
+                        {error && (
+                            <p className="text-sm text-red-600" role="alert">
+                                {error}
+                            </p>
+                        )}
                         <p className="mt-6 text-center text-sm text-gray-500">
                             Use at least 8 characters with a mix of numbers and characters
                         </p>

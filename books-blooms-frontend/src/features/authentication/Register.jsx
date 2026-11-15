@@ -4,6 +4,7 @@ import Footer from "../../components/Footer"
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom"
 import { AUTH_REGISTER_URL } from "../../constants";
+import { validatePassword, validateName } from "../../utils/validation";
 
 function Register() {
 
@@ -31,11 +32,29 @@ function Register() {
     }
 
     const handleSubmit = async (event) => {
-
         event.preventDefault()
         setError("")
 
+        const firstNameError = validateName(formData.first_name, "First name");
 
+        if (firstNameError) {
+            setError(firstNameError);
+            return;
+        }
+
+        const lastNameError = validateName(formData.last_name, "Last name");
+
+        if (lastNameError) {
+            setError(lastNameError);
+            return;
+        }
+
+        const passwordError = validatePassword(formData.password);
+
+        if (passwordError) {
+            setError(passwordError);
+            return;
+        }
         if (formData.password !== formData.confirm_password) {
             setError("Passwords do not match.")
             return
