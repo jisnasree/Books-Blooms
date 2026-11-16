@@ -30,7 +30,11 @@ function Profile() {
     setError("");
     setMessage("");
     setSaving(true);
-
+    
+    if (phoneNumber && !/^\d{10}$/.test(phoneNumber)) {
+      setError("Phone number must contain exactly 10 digits.");
+      return;
+    }
     try {
       const token = sessionStorage.getItem("authToken");
 
@@ -258,20 +262,21 @@ function Profile() {
                 />
               </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Phone Number
-                </label>
+              <input
+                type="tel"
+                value={phoneNumber}
+                onChange={(event) => {
+                  const value = event.target.value;
 
-                <input
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(event) =>
-                    setPhoneNumber(event.target.value)
+                  // Allow only digits and a maximum of 10 characters.
+                  if (/^\d{0,10}$/.test(value)) {
+                    setPhoneNumber(value);
                   }
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
-                />
-              </div>
+                }}
+                maxLength={10}
+                placeholder="Enter 10-digit phone number"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+              />
 
               {error && (
                 <p role="alert" className="text-sm text-red-600">

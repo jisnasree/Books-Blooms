@@ -63,11 +63,11 @@ class CartItemListCreateView(ListCreateAPIView):
         quantity = serializer.validated_data["quantity"]
 
         # Do not allow unavailable book formats.
-        if not variant.is_available:
-            return Response(
-                {"error": "This book format is currently unavailable."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        if not variant.is_available or variant.stock_quantity <= 0:
+         return Response(
+           {"error": "This book is currently out of stock."},
+          status=status.HTTP_400_BAD_REQUEST,
+       )
 
         # Check whether the requested quantity is in stock.
         if quantity > variant.stock_quantity:
@@ -93,10 +93,15 @@ class CartItemListCreateView(ListCreateAPIView):
 
             # Check the combined quantity against available stock.
             if new_quantity > variant.stock_quantity:
-                return Response(
-                    {"error": "Not enough stock available."},
-                    status=status.HTTP_400_BAD_REQUEST,
+             return Response(
+             {
+                "error": (
+                    f"You already have the maximum available quantity "
+                    f"({variant.stock_quantity}) in your cart."
                 )
+             },
+             status=status.HTTP_400_BAD_REQUEST,
+         )
 
             # Save the increased quantity.
             cart_item.quantity = new_quantity

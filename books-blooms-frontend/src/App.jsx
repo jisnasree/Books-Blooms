@@ -88,17 +88,17 @@ function App() {
         {/* Admin section */}
         <Route element={<ProtectedRoute />}>
           <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="books" element={<BooksManagement />} />
-              <Route path="orders" element={<OrdersManagement />} />
-              <Route path="orders/:id" element={<AdminOrderDetails />} />
-              <Route path="authors" element={<AuthorsManagement />} />
-              <Route path="categories" element={<CategoriesManagement />} />
-              <Route path="customers" element={<CustomersManagement />} />
-              <Route path="coupons" element={<CouponsManagement />} />
-              <Route path="offers" element={<OffersManagement />} />
-            </Route>
+            <Route index element={<AdminDashboard />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="books" element={<BooksManagement />} />
+            <Route path="orders" element={<OrdersManagement />} />
+            <Route path="orders/:id" element={<AdminOrderDetails />} />
+            <Route path="authors" element={<AuthorsManagement />} />
+            <Route path="categories" element={<CategoriesManagement />} />
+            <Route path="customers" element={<CustomersManagement />} />
+            <Route path="coupons" element={<CouponsManagement />} />
+            <Route path="offers" element={<OffersManagement />} />
+          </Route>
         </Route>
 
         {/* Catalogs */}

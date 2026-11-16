@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import AddressForm from "../../components/AddressForm";
 
 import {
     CART_LIST_URL,
@@ -59,10 +60,10 @@ function Checkout() {
     const [couponError, setCouponError] = useState("");
     const [applyingCoupon, setApplyingCoupon] = useState(false);
     const [availableCoupons, setAvailableCoupons] = useState([]);
+
     const paymentHandledRef = useRef(false);
 
     // Stores the actual Razorpay payment failure message.
-    // This allows us to display it even after the popup closes.
     const paymentFailureRef = useRef("");
 
 
@@ -92,25 +93,20 @@ function Checkout() {
     const { refreshCart } = useContext(CartContext);
 
 
-    // Handle changes in address form inputs
-    function handleAddressChange(e) {
-
-        const { name, value, type, checked } = e.target;
-
-        setAddressForm((previousForm) => ({
-            ...previousForm,
-            [name]: type === "checkbox" ? checked : value,
-        }));
-    }
-
-
     // Save new address
     async function handleSaveAddress() {
 
-        try {
+        // Clear previous messages
+        setAddressError("");
+        setAddressSuccess("");
 
-            setAddressError("");
-            setAddressSuccess("");
+        // Validate the phone number before making the API request
+        if (!/^\d{10}$/.test(addressForm.phone_number)) {
+            setAddressError("Please enter a valid 10-digit phone number.");
+            return;
+        }
+
+        try {
 
             setSavingAddress(true);
 
@@ -270,17 +266,31 @@ function Checkout() {
                 if (defaultAddress) {
                     setSelectedAddressId(defaultAddress.id);
                 }
-                // Fetch available coupons (optional — don't break checkout on failure)
+
+
+                // Fetch available coupons
+                // Coupon loading is optional and should not break checkout
                 try {
-                    const couponsResponse = await fetch(`${ORDERS_URL}coupons/`, { headers });
+
+                    const couponsResponse = await fetch(
+                        `${ORDERS_URL}coupons/`,
+                        { headers }
+                    );
+
                     if (couponsResponse.ok) {
+
                         const couponsData = await couponsResponse.json();
+
                         setAvailableCoupons(
-                            Array.isArray(couponsData) ? couponsData : couponsData.results || []
+                            Array.isArray(couponsData)
+                                ? couponsData
+                                : couponsData.results || []
                         );
+
                     }
+
                 } catch {
-                    // Coupons are optional — ignore failures
+                    // Ignore coupon loading failures
                 }
 
             } catch (error) {
@@ -299,7 +309,7 @@ function Checkout() {
     }, []);
 
 
-    // Apply coupon: validate with the backend and show the discount live
+    // Apply coupon
     async function handleApplyCoupon() {
 
         const code = couponCode.trim();
@@ -310,19 +320,25 @@ function Checkout() {
         }
 
         try {
+
             setCouponError("");
             setApplyingCoupon(true);
 
             const token = sessionStorage.getItem("authToken");
 
-            const response = await fetch(`${ORDERS_URL}coupons/validate/`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Token ${token}`,
-                },
-                body: JSON.stringify({ code }),
-            });
+            const response = await fetch(
+                `${ORDERS_URL}coupons/validate/`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Token ${token}`,
+                    },
+
+                    body: JSON.stringify({ code }),
+                }
+            );
 
             const data = await response.json();
 
@@ -331,23 +347,35 @@ function Checkout() {
             }
 
             setAppliedCoupon(data);
-            setPendingOrder(null);   // price changed → create a fresh order
+
+            // Price changed, so create a fresh order
+            setPendingOrder(null);
 
         } catch (error) {
+
             setCouponError(error.message);
             setAppliedCoupon(null);
+
         } finally {
+
             setApplyingCoupon(false);
+
         }
     }
 
+
     // Remove the applied coupon
     function handleRemoveCoupon() {
+
         setAppliedCoupon(null);
         setCouponCode("");
         setCouponError("");
-        setPendingOrder(null);   // price changed → create a fresh order
+
+        // Price changed, so create a fresh order
+        setPendingOrder(null);
     }
+
+
     // Place order
     async function handlePlaceOrder() {
 
@@ -407,6 +435,7 @@ function Checkout() {
                     setPendingOrder(orderData);
                 }
             }
+
 
             // 2. COD payment
             if (paymentMethod === "COD") {
@@ -520,7 +549,7 @@ function Checkout() {
                         }
 
 
-                        // 7. Payment verified successfully
+                        // Payment verified successfully
                         await refreshCart();
 
 
@@ -543,8 +572,7 @@ function Checkout() {
                 },
 
 
-                // 8. Handle Razorpay popup dismissal
-
+                // 7. Handle Razorpay popup dismissal
                 modal: {
 
                     ondismiss: function () {
@@ -578,18 +606,22 @@ function Checkout() {
             };
 
 
-            // 9. Create Razorpay Checkout instance
+            // 8. Create Razorpay Checkout instance
             const razorpay = new window.Razorpay(options);
 
 
-            // 10. Handle actual payment failure
+            // 9. Handle actual payment failure
             razorpay.on("payment.failed", function (response) {
+
                 console.log("FAILED HANDLER FIRED");
 
-                paymentHandledRef.current = true;   // mark handled FIRST
+                // Mark handled first
+                paymentHandledRef.current = true;
 
                 setPlacingOrder(false);
-                razorpay.close(); 
+
+                razorpay.close();
+
                 const failureMessage =
                     response.error?.description &&
                         response.error.description !== "Payment failed"
@@ -615,7 +647,8 @@ function Checkout() {
 
             });
 
-            // 11. Open Razorpay Checkout
+
+            // 10. Open Razorpay Checkout
             razorpay.open();
 
 
@@ -631,15 +664,11 @@ function Checkout() {
 
 
     // Calculate subtotal
-    const subtotal =
-        cart?.items?.reduce((total, item) => {
+    const subtotal = cart?.items?.reduce((total, item) => {
+        const itemPrice = item.final_price || item.price;
+        return total + Number(itemPrice) * Number(item.quantity);
+    }, 0) || 0;
 
-            return (
-                total +
-                Number(item.price) * Number(item.quantity)
-            );
-
-        }, 0) || 0;
 
     // Coupon discount on the subtotal
     const discountAmount = appliedCoupon
@@ -648,12 +677,16 @@ function Checkout() {
 
     const discountedSubtotal = subtotal - discountAmount;
 
-    // Free delivery above ₹2,000 (after discount), otherwise ₹100
+
+    // Free delivery above ₹2,000, otherwise ₹100
     const deliveryCharge = discountedSubtotal > 2000 ? 0 : 100;
 
-    // Tax rate: 8.25% on the discounted subtotal
+
+    // Tax rate: 8.25%
     const taxRate = 0.0825;
+
     const taxAmount = discountedSubtotal * taxRate;
+
 
     // Final payable amount
     const totalAmount = discountedSubtotal + deliveryCharge + taxAmount;
@@ -708,9 +741,6 @@ function Checkout() {
                     {!loading && !loadError && (
 
                         <>
-
-
-
 
                             <div className="grid gap-8 lg:grid-cols-3">
 
@@ -850,222 +880,12 @@ function Checkout() {
 
                                         <div className="space-y-4">
 
-
-                                            {/* Address type */}
-                                            <div>
-
-                                                <label className="mb-2 block text-sm font-medium text-gray-700">
-                                                    Address Type
-                                                </label>
-
-                                                <select
-                                                    name="label"
-                                                    value={addressForm.label}
-                                                    onChange={handleAddressChange}
-                                                    className={inputClass}
-                                                >
-
-                                                    <option value="HOME">Home</option>
-                                                    <option value="WORK">Work</option>
-                                                    <option value="OTHER">Other</option>
-
-                                                </select>
-
-                                            </div>
-
-
-
-                                            {/* Full name */}
-                                            <div>
-
-                                                <label className="mb-2 block text-sm font-medium text-gray-700">
-                                                    Full Name
-                                                </label>
-
-                                                <input
-                                                    type="text"
-                                                    name="full_name"
-                                                    placeholder="Enter full name"
-                                                    className={inputClass}
-                                                    value={addressForm.full_name}
-                                                    onChange={handleAddressChange}
-                                                    required
-                                                />
-
-                                            </div>
-
-
-
-                                            {/* Phone */}
-                                            <div>
-
-                                                <label className="mb-2 block text-sm font-medium text-gray-700">
-                                                    Phone Number
-                                                </label>
-
-                                                <input
-                                                    type="tel"
-                                                    name="phone_number"
-                                                    placeholder="Enter phone number"
-                                                    className={inputClass}
-                                                    value={addressForm.phone_number}
-                                                    onChange={handleAddressChange}
-                                                    required
-                                                />
-
-                                            </div>
-
-
-
-                                            {/* Address line 1 */}
-                                            <div>
-
-                                                <label className="mb-2 block text-sm font-medium text-gray-700">
-                                                    Address Line 1
-                                                </label>
-
-                                                <input
-                                                    type="text"
-                                                    name="address_line_1"
-                                                    placeholder="House number, street name"
-                                                    className={inputClass}
-                                                    value={addressForm.address_line_1}
-                                                    onChange={handleAddressChange}
-                                                    required
-                                                />
-
-                                            </div>
-
-
-
-                                            {/* Address line 2 */}
-                                            <div>
-
-                                                <label className="mb-2 block text-sm font-medium text-gray-700">
-                                                    Address Line 2 (Optional)
-                                                </label>
-
-                                                <input
-                                                    type="text"
-                                                    name="address_line_2"
-                                                    placeholder="Apartment, suite, landmark"
-                                                    className={inputClass}
-                                                    value={addressForm.address_line_2}
-                                                    onChange={handleAddressChange}
-                                                />
-
-                                            </div>
-
-
-
-                                            {/* City and State */}
-                                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-
-                                                <div>
-
-                                                    <label className="mb-2 block text-sm font-medium text-gray-700">
-                                                        City
-                                                    </label>
-
-                                                    <input
-                                                        type="text"
-                                                        name="city"
-                                                        placeholder="City"
-                                                        className={inputClass}
-                                                        value={addressForm.city}
-                                                        onChange={handleAddressChange}
-                                                        required
-                                                    />
-
-                                                </div>
-
-
-                                                <div>
-
-                                                    <label className="mb-2 block text-sm font-medium text-gray-700">
-                                                        State
-                                                    </label>
-
-                                                    <input
-                                                        type="text"
-                                                        name="state"
-                                                        placeholder="State"
-                                                        className={inputClass}
-                                                        value={addressForm.state}
-                                                        onChange={handleAddressChange}
-                                                        required
-                                                    />
-
-                                                </div>
-
-                                            </div>
-
-
-
-                                            {/* Postal code and country */}
-                                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-
-                                                <div>
-
-                                                    <label className="mb-2 block text-sm font-medium text-gray-700">
-                                                        ZIP / Postal Code
-                                                    </label>
-
-                                                    <input
-                                                        type="text"
-                                                        name="postal_code"
-                                                        placeholder="Postal code"
-                                                        className={inputClass}
-                                                        value={addressForm.postal_code}
-                                                        onChange={handleAddressChange}
-                                                        required
-                                                    />
-
-                                                </div>
-
-
-                                                <div>
-
-                                                    <label className="mb-2 block text-sm font-medium text-gray-700">
-                                                        Country
-                                                    </label>
-
-                                                    <input
-                                                        type="text"
-                                                        name="country"
-                                                        value={addressForm.country}
-                                                        onChange={handleAddressChange}
-                                                        className={inputClass}
-                                                        required
-                                                    />
-
-                                                </div>
-
-                                            </div>
-
-
-
-                                            {/* Default address */}
-                                            <div className="flex items-center gap-2">
-
-                                                <input
-                                                    type="checkbox"
-                                                    id="defaultAddress"
-                                                    name="is_default"
-                                                    checked={addressForm.is_default}
-                                                    onChange={handleAddressChange}
-                                                    className="h-4 w-4 accent-rose-700"
-                                                />
-
-                                                <label
-                                                    htmlFor="defaultAddress"
-                                                    className="text-sm text-gray-600"
-                                                >
-                                                    Set as default address
-                                                </label>
-
-                                            </div>
-
+                                            {/* Reusable address form */}
+                                            <AddressForm
+                                                formData={addressForm}
+                                                setFormData={setAddressForm}
+                                                inputClass={inputClass}
+                                            />
 
 
                                             {/* Address error */}
@@ -1088,7 +908,6 @@ function Checkout() {
                                             )}
 
 
-
                                             <button
                                                 type="button"
                                                 onClick={handleSaveAddress}
@@ -1101,7 +920,6 @@ function Checkout() {
                                                     : "Save Address"}
 
                                             </button>
-
 
                                         </div>
 
@@ -1156,12 +974,29 @@ function Checkout() {
                                                     </div>
 
 
-                                                    <p className="whitespace-nowrap text-gray-700">
-                                                        ₹{(
-                                                            Number(item.price) *
-                                                            Number(item.quantity)
-                                                        ).toFixed(2)}
-                                                    </p>
+                                                    {item.final_price ? (
+                                                        <>
+                                                            <div className="text-right">
+                                                                {item.discount_percentage > 0 && (
+                                                                    <p className="text-xs text-gray-400 line-through">
+                                                                        ₹{(Number(item.price) * Number(item.quantity)).toFixed(2)}
+                                                                    </p>
+                                                                )}
+                                                                <p className={`font-medium ${item.discount_percentage > 0 ? 'text-orange-700' : 'text-gray-700'}`}>
+                                                                    ₹{(Number(item.final_price) * Number(item.quantity)).toFixed(2)}
+                                                                </p>
+                                                                {item.discount_percentage > 0 && (
+                                                                    <p className="text-xs text-emerald-700 font-medium">
+                                                                        {item.applied_offer?.name}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <p className="whitespace-nowrap text-gray-700">
+                                                            ₹{(Number(item.price) * Number(item.quantity)).toFixed(2)}
+                                                        </p>
+                                                    )}
 
                                                 </div>
 
@@ -1185,7 +1020,9 @@ function Checkout() {
 
                                                 </div>
 
+
                                                 {appliedCoupon && (
+
                                                     <div className="flex justify-between text-sm">
 
                                                         <span className="text-green-700">
@@ -1197,34 +1034,52 @@ function Checkout() {
                                                         </span>
 
                                                     </div>
+
                                                 )}
+
+
+
                                                 {/* Coupon */}
                                                 <div className="mt-4">
+
                                                     {/* Available coupons list */}
                                                     {availableCoupons.length > 0 && !appliedCoupon && (
+
                                                         <div className="mb-3">
+
                                                             <p className="mb-2 text-sm font-medium text-gray-700">
                                                                 Available coupons
                                                             </p>
+
                                                             <div className="max-h-40 space-y-2 overflow-y-auto pr-1">
-                                                            {availableCoupons.map((coupon) => (
-                                                                <button
-                                                                    key={coupon.id}
-                                                                    type="button"
-                                                                    onClick={() => setCouponCode(coupon.code)}
-                                                                    className="flex w-full items-center justify-between rounded-lg border border-dashed border-rose-300 bg-rose-50 px-4 py-2 text-sm cursor-pointer"
-                                                                >
-                                                                    <span className="font-semibold text-rose-700">
-                                                                        {coupon.code}
-                                                                    </span>
-                                                                    <span className="text-gray-600">
-                                                                        {coupon.discount_percent}% off
-                                                                    </span>
-                                                                </button>
-                                                            ))}
+
+                                                                {availableCoupons.map((coupon) => (
+
+                                                                    <button
+                                                                        key={coupon.id}
+                                                                        type="button"
+                                                                        onClick={() => setCouponCode(coupon.code)}
+                                                                        className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-dashed border-rose-300 bg-rose-50 px-4 py-2 text-sm"
+                                                                    >
+
+                                                                        <span className="font-semibold text-rose-700">
+                                                                            {coupon.code}
+                                                                        </span>
+
+                                                                        <span className="text-gray-600">
+                                                                            {coupon.discount_percent}% off
+                                                                        </span>
+
+                                                                    </button>
+
+                                                                ))}
+
+                                                            </div>
+
                                                         </div>
-                                                        </div>
+
                                                     )}
+
 
 
                                                     {appliedCoupon ? (
@@ -1273,10 +1128,13 @@ function Checkout() {
 
                                                     )}
 
+
                                                     {couponError && (
+
                                                         <p className="mt-2 text-sm text-red-600">
                                                             {couponError}
                                                         </p>
+
                                                     )}
 
                                                 </div>
@@ -1324,172 +1182,186 @@ function Checkout() {
 
                                             </div>
 
-                                            </div>
+                                        </div>
 
                                     )}
 
 
 
-                                            {/* PAYMENT METHOD */}
-                                            <div className="mt-6 border-t border-gray-200 pt-5">
+                                    {/* PAYMENT METHOD */}
+                                    <div className="mt-6 border-t border-gray-200 pt-5">
 
 
-                                                <h3 className="mb-4 font-semibold text-gray-800">
-                                                    3. Payment Method
-                                                </h3>
+                                        <h3 className="mb-4 font-semibold text-gray-800">
+                                            3. Payment Method
+                                        </h3>
 
 
-                                                <div className="space-y-3">
+                                        <div className="space-y-3">
 
 
-                                                    {/* COD */}
-                                                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-4 hover:border-rose-400">
+                                            {/* COD */}
+                                            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-4 hover:border-rose-400">
 
-                                                        <input
-                                                            type="radio"
-                                                            name="paymentMethod"
-                                                            value="COD"
-                                                            checked={paymentMethod === "COD"}
-                                                            onChange={() => {
-                                                                setPaymentMethod("COD");
-                                                                setError("");
-                                                            }}
-                                                            className="h-4 w-4 accent-rose-700"
-                                                        />
+                                                <input
+                                                    type="radio"
+                                                    name="paymentMethod"
+                                                    value="COD"
+                                                    checked={paymentMethod === "COD"}
+                                                    onChange={() => {
+                                                        setPaymentMethod("COD");
+                                                        setError("");
+                                                    }}
+                                                    className="h-4 w-4 accent-rose-700"
+                                                />
 
-                                                        <div>
+                                                <div>
 
-                                                            <p className="font-medium text-gray-800">
-                                                                Cash on Delivery
-                                                            </p>
+                                                    <p className="font-medium text-gray-800">
+                                                        Cash on Delivery
+                                                    </p>
 
-                                                            <p className="text-xs text-gray-500">
-                                                                Pay when your order arrives
-                                                            </p>
-
-                                                        </div>
-
-                                                    </label>
-
-
-
-                                                    {/* Razorpay */}
-                                                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-4 hover:border-rose-400">
-
-                                                        <input
-                                                            type="radio"
-                                                            name="paymentMethod"
-                                                            value="RAZORPAY"
-                                                            checked={paymentMethod === "RAZORPAY"}
-                                                            onChange={() => {
-                                                                setPaymentMethod("RAZORPAY");
-                                                                setError("");
-                                                            }}
-                                                            className="h-4 w-4 accent-rose-700"
-                                                        />
-
-                                                        <div>
-
-                                                            <p className="font-medium text-gray-800">
-                                                                Pay online
-                                                            </p>
-
-                                                            <p className="text-xs text-gray-500">
-                                                                (Razorpay)
-                                                            </p>
-
-                                                        </div>
-
-                                                    </label>
-
+                                                    <p className="text-xs text-gray-500">
+                                                        Pay when your order arrives
+                                                    </p>
 
                                                 </div>
 
-                                            </div>
+                                            </label>
 
 
 
-                                            {/* PLACE ORDER */}
-                                            <button
-                                                type="button"
-                                                disabled={
-                                                    !cart?.items?.length ||
-                                                    !selectedAddressId ||
-                                                    placingOrder
-                                                }
-                                                onClick={handlePlaceOrder}
-                                                className="mt-6 w-full rounded-lg bg-rose-700 px-4 py-3 font-medium text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:bg-gray-300"
-                                            >
+                                            {/* Razorpay */}
+                                            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-4 hover:border-rose-400">
 
-                                                {placingOrder
-                                                    ? "Processing..."
-                                                    : paymentMethod === "RAZORPAY"
-                                                        ? "Pay Now"
-                                                        : "Place Order"}
+                                                <input
+                                                    type="radio"
+                                                    name="paymentMethod"
+                                                    value="RAZORPAY"
+                                                    checked={paymentMethod === "RAZORPAY"}
+                                                    onChange={() => {
+                                                        setPaymentMethod("RAZORPAY");
+                                                        setError("");
+                                                    }}
+                                                    className="h-4 w-4 accent-rose-700"
+                                                />
 
-                                            </button>
+                                                <div>
 
-
-
-                                            <Link
-                                                to="/cart"
-                                                className="mt-4 block text-center text-sm text-gray-600 hover:text-rose-700"
-                                            >
-                                                Return to Cart
-                                            </Link>
-
-                                            {/* Payment Error Message */}
-                                            {error && (
-                                                <div
-                                                    role="alert"
-                                                    className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700"
-                                                >
-                                                    <p className="font-semibold">
-                                                        Payment Failed
+                                                    <p className="font-medium text-gray-800">
+                                                        Pay online
                                                     </p>
 
-                                                    <p className="mt-2 text-sm">
-                                                        {error}
+                                                    <p className="text-xs text-gray-500">
+                                                        (Razorpay)
                                                     </p>
 
-                                                    {paymentReference?.paymentId && (
-                                                        <div className="mt-4 border-t border-red-200 pt-3">
-
-                                                            <p className="text-xs font-semibold uppercase">
-                                                                Payment Reference ID
-                                                            </p>
-
-                                                            <p className="mt-1 break-all font-mono text-sm">
-                                                                {paymentReference.paymentId}
-                                                            </p>
-
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    navigator.clipboard.writeText(
-                                                                        paymentReference.paymentId
-                                                                    )
-                                                                }
-                                                                className="mt-2 text-xs font-medium underline cursor-pointer"
-                                                            >
-                                                                Copy Payment ID
-                                                            </button>
-
-                                                        </div>
-                                                    )}
-
-                                                    {paymentReference?.orderId && (
-                                                        <p className="mt-3 text-xs">
-                                                            Razorpay Order ID: {paymentReference.orderId}
-                                                        </p>
-                                                    )}
-
-                                                    <p className="mt-3 text-xs text-red-600">
-                                                        If money was deducted, please contact Books & Blooms support with your payment reference ID.
-                                                    </p>
                                                 </div>
+
+                                            </label>
+
+
+                                        </div>
+
+                                    </div>
+
+
+
+                                    {/* PLACE ORDER */}
+                                    <button
+                                        type="button"
+                                        disabled={
+                                            !cart?.items?.length ||
+                                            !selectedAddressId ||
+                                            placingOrder
+                                        }
+                                        onClick={handlePlaceOrder}
+                                        className="mt-6 w-full rounded-lg bg-rose-700 px-4 py-3 font-medium text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:bg-gray-300"
+                                    >
+
+                                        {placingOrder
+                                            ? "Processing..."
+                                            : paymentMethod === "RAZORPAY"
+                                                ? "Pay Now"
+                                                : "Place Order"}
+
+                                    </button>
+
+
+
+                                    <Link
+                                        to="/cart"
+                                        className="mt-4 block text-center text-sm text-gray-600 hover:text-rose-700"
+                                    >
+                                        Return to Cart
+                                    </Link>
+
+
+
+                                    {/* Payment Error Message */}
+                                    {error && (
+
+                                        <div
+                                            role="alert"
+                                            className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700"
+                                        >
+
+                                            <p className="font-semibold">
+                                                Payment Failed
+                                            </p>
+
+                                            <p className="mt-2 text-sm">
+                                                {error}
+                                            </p>
+
+
+                                            {paymentReference?.paymentId && (
+
+                                                <div className="mt-4 border-t border-red-200 pt-3">
+
+                                                    <p className="text-xs font-semibold uppercase">
+                                                        Payment Reference ID
+                                                    </p>
+
+                                                    <p className="mt-1 break-all font-mono text-sm">
+                                                        {paymentReference.paymentId}
+                                                    </p>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            navigator.clipboard.writeText(
+                                                                paymentReference.paymentId
+                                                            )
+                                                        }
+                                                        className="mt-2 cursor-pointer text-xs font-medium underline"
+                                                    >
+                                                        Copy Payment ID
+                                                    </button>
+
+                                                </div>
+
                                             )}
-                                        </aside>
+
+
+                                            {paymentReference?.orderId && (
+
+                                                <p className="mt-3 text-xs">
+                                                    Razorpay Order ID: {paymentReference.orderId}
+                                                </p>
+
+                                            )}
+
+
+                                            <p className="mt-3 text-xs text-red-600">
+                                                If money was deducted, please contact Books & Blooms support with your payment reference ID.
+                                            </p>
+
+                                        </div>
+
+                                    )}
+
+                                </aside>
 
                             </div>
 

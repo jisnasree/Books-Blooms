@@ -394,7 +394,11 @@ function BookCatalog() {
                                                     <p className="mt-1 truncate text-left text-sm text-slate-500">
                                                         {book.author_name}
                                                     </p>
-
+                                                    {book.categories && book.categories.length > 0 && (
+                                                        <p className="mt-1 text-left text-xs text-orange-700 font-medium">
+                                                            {book.categories.map(c => c.name).join(", ")}
+                                                        </p>
+                                                    )}
                                                     {/* Price and Offer */}
                                                     <div className="mt-3">
                                                         {variant ? (

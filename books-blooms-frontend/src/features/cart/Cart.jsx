@@ -143,10 +143,12 @@ function Cart() {
     // For each item, multiply its price by its quantity, then add the results
     // If the cart or items array is missing, use 0 as the subtotal
     const subtotal = cart?.items?.reduce(
-        (total, item) =>
-            total + Number(item.price) * Number(item.quantity),
+        (total, item) => {
+            const itemPrice = item.final_price || item.price;
+            return total + Number(itemPrice) * Number(item.quantity);
+        },
         0
-    ) ?? 0;
+    ) || 0;
 
 
     return (
@@ -156,7 +158,7 @@ function Cart() {
             <main className="min-h-screen bg-[#FBFAF7] px-4 py-10 sm:px-6">
                 <div className="mx-auto max-w-6xl">
 
-                  
+
                     <h1 className="text-3xl font-semibold text-gray-800">
                         My Shopping Cart
                     </h1>
@@ -221,9 +223,32 @@ function Cart() {
                                                             Format: {item.format}
                                                         </p>
 
-                                                        <p className="mt-2 font-medium text-gray-800">
-                                                            ₹{Number(item.price).toFixed(2)}
-                                                        </p>
+                                                        <div className="mt-2">
+                                                            {item.final_price && Number(item.discount_amount) > 0 ? (
+                                                                <>
+                                                                    <p className="text-sm text-gray-400 line-through">
+                                                                        ₹{Number(item.price).toFixed(2)}
+                                                                    </p>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <p className="font-medium text-orange-700">
+                                                                            ₹{Number(item.final_price).toFixed(2)}
+                                                                        </p>
+                                                                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700">
+                                                                            {Number(item.discount_percentage).toFixed(0)}% OFF
+                                                                        </span>
+                                                                    </div>
+                                                                    {item.applied_offer && (
+                                                                        <p className="mt-1 text-xs font-medium text-emerald-700">
+                                                                            {item.applied_offer.name}
+                                                                        </p>
+                                                                    )}
+                                                                </>
+                                                            ) : (
+                                                                <p className="font-medium text-gray-800">
+                                                                    ₹{Number(item.price).toFixed(2)}
+                                                                </p>
+                                                            )}
+                                                        </div>
 
                                                         <div className="mt-4 flex flex-wrap items-center gap-3">
 
@@ -266,10 +291,10 @@ function Cart() {
                                                                 +
                                                             </button>
                                                             {quantityError && (
-    <p className="text-sm text-red-600" role="alert">
-        {quantityError}
-    </p>
-)}
+                                                                <p className="text-sm text-red-600" role="alert">
+                                                                    {quantityError}
+                                                                </p>
+                                                            )}
                                                             <button
                                                                 type="button"
                                                                 disabled={updatingItemId === item.id}
@@ -304,9 +329,10 @@ function Cart() {
                                         </div>
                                         <button
                                             type="button"
-                                            onClick={() => {navigate('/checkout')
+                                            onClick={() => {
+                                                navigate('/checkout')
                                             }}
-                                            
+
                                             className="mt-6 w-full rounded-lg bg-rose-600 px-5 py-3 font-medium text-white hover:bg-rose-700"
                                         >
                                             Proceed to Checkout

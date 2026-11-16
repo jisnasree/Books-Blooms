@@ -128,7 +128,20 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def get_isAuthenticated(self, obj):
         request = self.context.get("request")
         return bool(request and request.user.is_authenticated)
-    
+
+    def validate_phone_number(self, value):
+
+        # Allow an empty phone number.
+        if not value:
+            return value
+
+        # Check that the phone number contains exactly 10 digits.
+        if not value.isdigit() or len(value) != 10:
+            raise serializers.ValidationError(
+                "Phone number must contain exactly 10 digits."
+            )
+
+        return value
     class Meta:
         model = User
         fields = [

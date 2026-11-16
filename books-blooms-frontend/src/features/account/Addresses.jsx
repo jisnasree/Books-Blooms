@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import { ADDRESS_BASE_URL } from "../../constants";
+import AddressForm from "../../components/AddressForm";
 
 function Addresses() {
     // Stores the user's saved addresses
@@ -28,16 +30,6 @@ function Addresses() {
     const [editingAddress, setEditingAddress] = useState(null);
 
 
-    function handleChange(e) {
-        const { name, value, type, checked } = e.target;
-
-        setFormData({
-            ...formData,
-            [name]: type === "checkbox" ? checked : value,
-        });
-    }
-
-
     function handleEdit(address) {
         setEditingAddress(address);
 
@@ -61,7 +53,10 @@ function Addresses() {
 
     async function handleSubmit(e) {
         e.preventDefault();
-
+        if (!/^\d{10}$/.test(formData.phone_number)) {
+            alert("Please enter a valid 10-digit phone number.");
+            return;
+        }
         try {
             const token = sessionStorage.getItem("authToken");
 
@@ -69,7 +64,7 @@ function Addresses() {
             const isEditing = editingAddress !== null;
 
             const url = isEditing
-                ? `ADDRESS_BASE_URL${editingAddress.id}/`
+                ? `${ADDRESS_BASE_URL}${editingAddress.id}/`
                 : ADDRESS_BASE_URL;
 
             const response = await fetch(url, {
@@ -142,7 +137,7 @@ function Addresses() {
             const token = sessionStorage.getItem("authToken");
 
             const response = await fetch(
-                `ADDRESS_BASE_URL${addressId}/`,
+                `${ADDRESS_BASE_URL}${addressId}/`,
                 {
                     method: "DELETE",
                     headers: {
@@ -358,215 +353,10 @@ function Addresses() {
                             </button>
                         </div>
 
-                        {/* Address form fields */}
-                        <div className="grid gap-5 sm:grid-cols-2">
-
-                            {/* Address label */}
-                            <div>
-                                <label
-                                    htmlFor="label"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
-                                >
-                                    Address Type
-                                </label>
-
-                                <select
-                                    id="label"
-                                    name="label"
-                                    value={formData.label}
-                                    onChange={handleChange}
-                                    required
-                                    defaultValue="HOME"
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-3 outline-none focus:border-rose-600"
-                                >
-                                    <option value="HOME">Home</option>
-                                    <option value="WORK">Work</option>
-                                    <option value="OTHER">Other</option>
-                                </select>
-                            </div>
-
-                            {/* Full name */}
-                            <div>
-                                <label
-                                    htmlFor="full_name"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
-                                >
-                                    Full Name
-                                </label>
-
-                                <input
-                                    id="full_name"
-                                    name="full_name"
-                                    value={formData.full_name}
-                                    onChange={handleChange}
-                                    type="text"
-                                    required
-                                    placeholder="Enter full name"
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-3 outline-none focus:border-rose-600"
-                                />
-                            </div>
-
-                            {/* Phone number */}
-                            <div>
-                                <label
-                                    htmlFor="phone_number"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
-                                >
-                                    Phone Number
-                                </label>
-
-                                <input
-                                    id="phone_number"
-                                    name="phone_number"
-                                    value={formData.phone_number}
-                                    onChange={handleChange}
-                                    type="tel"
-                                    required
-                                    placeholder="Enter phone number"
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-3 outline-none focus:border-rose-600"
-                                />
-                            </div>
-
-                            {/* Address line 1 */}
-                            <div>
-                                <label
-                                    htmlFor="address_line_1"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
-                                >
-                                    Address Line 1
-                                </label>
-
-                                <input
-                                    id="address_line_1"
-                                    name="address_line_1"
-                                    value={formData.address_line_1}
-                                    onChange={handleChange}
-                                    type="text"
-                                    required
-                                    placeholder="Street address"
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-3 outline-none focus:border-rose-600"
-                                />
-                            </div>
-
-                            {/* Address line 2 */}
-                            <div>
-                                <label
-                                    htmlFor="address_line_2"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
-                                >
-                                    Address Line 2 (Optional)
-                                </label>
-
-                                <input
-                                    id="address_line_2"
-                                    name="address_line_2"
-                                    value={formData.address_line_2}
-                                    onChange={handleChange}
-                                    type="text"
-                                    placeholder="Apartment, suite, etc."
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-3 outline-none focus:border-rose-600"
-                                />
-                            </div>
-
-                            {/* City */}
-                            <div>
-                                <label
-                                    htmlFor="city"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
-                                >
-                                    City
-                                </label>
-
-                                <input
-                                    id="city"
-                                    name="city"
-                                    value={formData.city}
-                                    onChange={handleChange}
-                                    type="text"
-                                    required
-                                    placeholder="Enter city"
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-3 outline-none focus:border-rose-600"
-                                />
-                            </div>
-
-                            {/* State */}
-                            <div>
-                                <label
-                                    htmlFor="state"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
-                                >
-                                    State
-                                </label>
-
-                                <input
-                                    id="state"
-                                    name="state"
-                                    value={formData.state}
-                                    onChange={handleChange}
-                                    type="text"
-                                    required
-                                    placeholder="Enter state"
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-3 outline-none focus:border-rose-600"
-                                />
-                            </div>
-
-                            {/* Postal code */}
-                            <div>
-                                <label
-                                    htmlFor="postal_code"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
-                                >
-                                    ZIP / Postal Code
-                                </label>
-
-                                <input
-                                    id="postal_code"
-                                    name="postal_code"
-                                    value={formData.postal_code}
-                                    onChange={handleChange}
-                                    type="text"
-                                    required
-                                    placeholder="Enter postal code"
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-3 outline-none focus:border-rose-600"
-                                />
-                            </div>
-
-                            {/* Country */}
-                            <div>
-                                <label
-                                    htmlFor="country"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
-                                >
-                                    Country
-                                </label>
-
-                                <input
-                                    id="country"
-                                    name="country"
-                                    value={formData.country}
-                                    onChange={handleChange}
-                                    type="text"
-                                    required
-                                    defaultValue="India"
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-3 outline-none focus:border-rose-600"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Default address checkbox */}
-                        <div className="mt-5">
-                            <label className="flex items-center gap-3 text-sm text-gray-700">
-                                <input
-                                    type="checkbox"
-                                    name="is_default"
-                                    checked={formData.is_default}
-                                    onChange={handleChange}
-                                    className="h-4 w-4 accent-rose-700"
-                                />
-
-                                Set as default address
-                            </label>
-                        </div>
+                        <AddressForm
+                            formData={formData}
+                            setFormData={setFormData}
+                        />
 
                         {/* Popup action buttons */}
                         <div className="mt-8 flex justify-end gap-3">

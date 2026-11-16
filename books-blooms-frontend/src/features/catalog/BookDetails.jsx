@@ -62,6 +62,12 @@ function BookDetails() {
   // Get the first physical variant of the book
   const variant = book.physical_variants?.[0];
 
+  // Check actual stock availability.
+  const isInStock =
+    variant &&
+    variant.is_available &&
+    Number(variant.stock_quantity) > 0;
+
   // Check whether this book is already in the wishlist
   const isWishlisted = wishlist.some(
     (item) => item.book === book.id
@@ -77,7 +83,7 @@ function BookDetails() {
       return;
     }
 
-    if (!variant || !variant.is_available) {
+    if (!isInStock) {
       setCartMessage("This book format is currently unavailable.");
       setCartMessageType("error");
       return;
@@ -183,16 +189,16 @@ function BookDetails() {
               {/* Book information */}
               <div className="flex flex-col justify-center p-6 sm:p-10 lg:p-12">
                 <div className="mb-5 flex flex-wrap items-center gap-2">
-                  
+
 
                   {variant && (
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold tracking-wide ring-1 ring-inset ${variant.is_available
+                      className={`rounded-full px-3 py-1 text-xs font-semibold tracking-wide ring-1 ring-inset ${isInStock
                         ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
                         : "bg-slate-100 text-slate-600 ring-slate-200"
                         }`}
                     >
-                      {variant.is_available ? "In stock" : "Unavailable"}
+                      {isInStock ? "In stock" : "Out of stock"}
                     </span>
                   )}
                 </div>
@@ -207,6 +213,12 @@ function BookDetails() {
                     {book.author_name}
                   </span>
                 </p>
+                
+                {book.categories && book.categories.length > 0 && (
+                  <p className="mt-1 text-sm text-orange-700 font-medium">
+                    {book.categories.map(c => c.name).join(", ")}
+                  </p>
+                )}
 
                 {/* Rating */}
                 <div className="mt-5 flex items-center gap-2">
@@ -296,9 +308,7 @@ function BookDetails() {
                 <button
                   type="button"
                   onClick={handleAddToCart}
-                  disabled={
-                    !variant || !variant.is_available || addingToCart
-                  }
+                  disabled={!isInStock || addingToCart}
                   className="mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-orange-600 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-200 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 disabled:shadow-none"
                 >
                   {addingToCart ? "Adding..." : "Add to Cart"}
