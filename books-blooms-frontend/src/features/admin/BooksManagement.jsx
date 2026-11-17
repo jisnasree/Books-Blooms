@@ -84,13 +84,17 @@ function BooksManagement() {
 
 
   // Get Authors list
+  // Get Authors list
   useEffect(() => {
     const fetchAuthors = async () => {
       try {
         const token = sessionStorage.getItem("authToken");
+        const params = new URLSearchParams();
+        params.set("page", 1);
+        params.set("page_size", 1000); // Get all authors
 
         const response = await fetch(
-          CATALOG_AUTHORS_URL,
+          `${CATALOG_AUTHORS_URL}?${params.toString()}`,
           {
             headers: {
               Authorization: `Token ${token}`,
@@ -103,7 +107,6 @@ function BooksManagement() {
         }
 
         const data = await response.json();
-
         setAuthors(Array.isArray(data) ? data : data.results || []);
       } catch (err) {
         setError(err.message || "Failed to load authors.");
