@@ -577,21 +577,28 @@ function Checkout() {
 
                     ondismiss: function () {
 
-                        // payment.failed already navigated to the failure page
-                        if (paymentHandledRef.current) {
+                       
+
+                        // If payment failed, navigate to failure page
+                        if (paymentHandledRef.current && window.paymentFailureData) {
+                           
+                            navigate("/order-failure", {
+                                state: window.paymentFailureData,
+                            });
+                            window.paymentFailureData = null;
                             return;
                         }
 
+                        // If payment was handled (success), don't navigate
+                        if (paymentHandledRef.current) {
+                           
+                            return;
+                        }
+
+                        // User closed the popup without payment attempting
                         setPlacingOrder(false);
 
-                        // Customer closed popup without completing payment
-                        navigate("/order-failure", {
-                            state: {
-                                order: orderData,
-                                errorMessage:
-                                    "Payment cancelled. You closed the payment window before completing the payment.",
-                            },
-                        });
+                        setError("Payment cancelled. You closed the payment window.");
 
                     },
 
@@ -609,18 +616,12 @@ function Checkout() {
             // 8. Create Razorpay Checkout instance
             const razorpay = new window.Razorpay(options);
 
-
             // 9. Handle actual payment failure
             razorpay.on("payment.failed", function (response) {
-
-                console.log("FAILED HANDLER FIRED");
-
-                // Mark handled first
+                // Mark handled FIRST
                 paymentHandledRef.current = true;
 
                 setPlacingOrder(false);
-
-                razorpay.close();
 
                 const failureMessage =
                     response.error?.description &&
@@ -637,13 +638,13 @@ function Checkout() {
 
                 paymentFailureRef.current = failureMessage;
 
-                navigate("/order-failure", {
-                    state: {
-                        order: orderData,
-                        errorMessage: failureMessage,
-                        paymentId: response.error?.metadata?.payment_id,
-                    },
-                });
+                // Store error state without navigating
+                // Will navigate in ondismiss after Razorpay closes
+                window.paymentFailureData = {
+                    order: orderData,
+                    errorMessage: failureMessage,
+                    paymentId: response.error?.metadata?.payment_id,
+                };
 
             });
 
