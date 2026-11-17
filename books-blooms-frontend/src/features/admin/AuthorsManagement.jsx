@@ -11,16 +11,29 @@ function AuthorsManagement() {
   const [formError, setFormError] = useState("");
   const [editingAuthorId, setEditingAuthorId] = useState(null);
   const [editedAuthorName, setEditedAuthorName] = useState("");
+  const [originalAuthorName, setOriginalAuthorName] = useState("");
   const [deletingAuthorId, setDeletingAuthorId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalAuthors, setTotalAuthors] = useState(0);
+  const [pageSize] = useState(10);
+
+  const totalPages = Math.ceil(totalAuthors / pageSize);
 
   useEffect(() => {
     async function fetchAuthors() {
       try {
-        const response = await fetch(CATALOG_AUTHORS_URL, {
-          headers: {
-            Authorization: `Token ${sessionStorage.getItem("authToken")}`,
-          },
-        });
+        const params = new URLSearchParams();
+        params.set("page", currentPage);
+        params.set("page_size", pageSize);
+
+        const response = await fetch(
+          `${CATALOG_AUTHORS_URL}?${params.toString()}`,
+          {
+            headers: {
+              Authorization: `Token ${sessionStorage.getItem("authToken")}`,
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch authors.");
@@ -28,11 +41,15 @@ function AuthorsManagement() {
 
         const data = await response.json();
 
-        if (!Array.isArray(data)) {
-          throw new Error("The authors response was not a list.");
+        if (data.results) {
+          setAuthors(data.results);
+          setTotalAuthors(data.count);
+        } else if (Array.isArray(data)) {
+          setAuthors(data);
+          setTotalAuthors(data.length);
+        } else {
+          throw new Error("The authors response was not valid.");
         }
-
-        setAuthors(data);
       } catch (fetchError) {
         setError(fetchError.message);
       } finally {
@@ -41,7 +58,7 @@ function AuthorsManagement() {
     }
 
     fetchAuthors();
-  }, []);
+  }, [currentPage, pageSize]);
 
   async function handleAddAuthor(event) {
     event.preventDefault();
@@ -69,15 +86,10 @@ function AuthorsManagement() {
         throw new Error(data.name?.[0] || "Failed to create author.");
       }
 
-      const newAuthor = await response.json();
-
-      setAuthors((previousAuthors) =>
-        [...previousAuthors, newAuthor].sort((a, b) =>
-          a.name.localeCompare(b.name)
-        )
-      );
+      await response.json();
       setAuthorName("");
       setShowForm(false);
+      setCurrentPage(1);
     } catch (requestError) {
       setFormError(requestError.message);
     }
@@ -151,6 +163,7 @@ function AuthorsManagement() {
       setAuthors((previousAuthors) =>
         previousAuthors.filter((item) => item.id !== author.id)
       );
+      setCurrentPage(1);
     } catch (requestError) {
       setActionError(requestError.message);
     } finally {
@@ -236,7 +249,7 @@ function AuthorsManagement() {
       )}
 
       <div className="overflow-x-auto rounded-lg border border-gray-300 bg-white">
-       <table className="w-full border-collapse border border-gray-200 bg-white text-sm">
+        <table className="w-full border-collapse border border-gray-200 bg-white text-sm">
           <thead className="bg-[#203746] text-white border">
             <tr>
               <th scope="col" className="px-4 py-3 border">ID</th>
@@ -269,7 +282,8 @@ function AuthorsManagement() {
 
                       <button
                         type="submit"
-                        className="rounded-lg bg-green-700 px-3 py-2 text-white hover:bg-green-800"
+                        disabled={editedAuthorName === originalAuthorName || !editedAuthorName.trim()}
+                        className="rounded-lg bg-green-700 px-3 py-2 text-white hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         Save
                       </button>
@@ -305,6 +319,7 @@ function AuthorsManagement() {
                         onClick={() => {
                           setEditingAuthorId(author.id);
                           setEditedAuthorName(author.name);
+                          setOriginalAuthorName(author.name);
                           setFormError("");
                           setActionError("");
                         }}
@@ -337,6 +352,44 @@ function AuthorsManagement() {
           </tbody>
         </table>
       </div>
+      {/* Pagination Controls */}
+      {totalAuthors > 0 && (
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {/* Result count */}
+          <p className="text-sm text-gray-500">
+            Showing{" "}
+            {totalAuthors === 0 ? 0 : (currentPage - 1) * pageSize + 1}
+            {" "}–{" "}
+            {Math.min(currentPage * pageSize, totalAuthors)}
+            {" "}of {totalAuthors} authors
+          </p>
+
+          {/* Previous and Next buttons */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => page - 1)}
+              disabled={currentPage === 1 || loading}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </button>
+
+            <span className="text-sm text-gray-600">
+              Page {currentPage} of {Math.max(1, totalPages)}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => page + 1)}
+              disabled={currentPage === totalPages || loading}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

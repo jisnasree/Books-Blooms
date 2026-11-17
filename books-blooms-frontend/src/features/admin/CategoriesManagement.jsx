@@ -10,12 +10,24 @@ function CategoriesManagement() {
   const [categoryName, setCategoryName] = useState("");
   const [editingCategoryId, setEditingCategoryId] = useState(null);
   const [editedCategoryName, setEditedCategoryName] = useState("");
+  const [originalCategoryName, setOriginalCategoryName] = useState("");
   const [deletingCategoryId, setDeletingCategoryId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCategories, setTotalCategories] = useState(0);
+  const [pageSize] = useState(10);
+
+  const totalPages = Math.ceil(totalCategories / pageSize);
 
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const response = await fetch(CATALOG_CATEGORIES_URL);
+        const params = new URLSearchParams();
+        params.set("page", currentPage);
+        params.set("page_size", pageSize);
+
+        const response = await fetch(
+          `${CATALOG_CATEGORIES_URL}?${params.toString()}`
+        );
 
         if (!response.ok) {
           throw new Error(
@@ -25,11 +37,15 @@ function CategoriesManagement() {
 
         const data = await response.json();
 
-        if (!Array.isArray(data)) {
-          throw new Error("The categories response was not a list.");
+        if (data.results) {
+          setCategories(data.results);
+          setTotalCategories(data.count);
+        } else if (Array.isArray(data)) {
+          setCategories(data);
+          setTotalCategories(data.length);
+        } else {
+          throw new Error("The categories response was not valid.");
         }
-
-        setCategories(data);
       } catch (fetchError) {
         setError(fetchError.message);
       } finally {
@@ -38,7 +54,7 @@ function CategoriesManagement() {
     }
 
     fetchCategories();
-  }, []);
+  }, [currentPage, pageSize]);
 
   async function handleAddCategory(event) {
     event.preventDefault();
@@ -272,7 +288,8 @@ function CategoriesManagement() {
                         />
                         <button
                           type="submit"
-                          className="rounded-lg bg-green-700 px-3 py-2 text-white hover:bg-green-800"
+                          disabled={editedCategoryName === originalCategoryName || !editedCategoryName.trim()}
+                          className="rounded-lg bg-green-700 px-3 py-2 text-white hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Save
                         </button>
@@ -300,6 +317,7 @@ function CategoriesManagement() {
                           onClick={() => {
                             setEditingCategoryId(category.id);
                             setEditedCategoryName(category.name);
+                            setOriginalCategoryName(category.name);
                             setActionError("");
                           }}
                           className="font-medium text-green-700 hover:text-green-900 cursor-pointer"
@@ -323,6 +341,44 @@ function CategoriesManagement() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+      {/* Pagination Controls */}
+      {totalCategories > 0 && (
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {/* Result count */}
+          <p className="text-sm text-gray-500">
+            Showing{" "}
+            {totalCategories === 0 ? 0 : (currentPage - 1) * pageSize + 1}
+            {" "}–{" "}
+            {Math.min(currentPage * pageSize, totalCategories)}
+            {" "}of {totalCategories} categories
+          </p>
+
+          {/* Previous and Next buttons */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => page - 1)}
+              disabled={currentPage === 1 || loading}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </button>
+
+            <span className="text-sm text-gray-600">
+              Page {currentPage} of {Math.max(1, totalPages)}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => page + 1)}
+              disabled={currentPage === totalPages || loading}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
     </div>

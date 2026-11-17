@@ -103,6 +103,7 @@ class BookDetailView(RetrieveUpdateDestroyAPIView):
 class AuthorsListView(ListCreateAPIView):
     queryset = Author.objects.all().order_by("name")
     serializer_class = AuthorSerializer
+    pagination_class = BookPagination
 
     def get_permissions(self):
         if self.request.method == "GET":
@@ -119,6 +120,7 @@ class AuthorDetailView(RetrieveUpdateDestroyAPIView):
 class CategoryListView(ListCreateAPIView):
     queryset = Category.objects.all().order_by("name")
     serializer_class = CategorySerializer
+    pagination_class = BookPagination
 
     def get_permissions(self):
         if self.request.method == "GET":

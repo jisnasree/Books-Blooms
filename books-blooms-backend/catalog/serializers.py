@@ -19,11 +19,7 @@ class AuthorSerializer(serializers.ModelSerializer):
         if not value:
             raise serializers.ValidationError("Author name is required.")
 
-        if not re.fullmatch(
-            r"[^\W\d_]+(?:[ .'-][^\W\d_]+)*\.?",
-            value,
-            re.UNICODE
-        ):
+        if not re.fullmatch(r"[^\W\d_]+(?:[ .'-][^\W\d_]+)*\.?", value, re.UNICODE):
             raise serializers.ValidationError(
                 "Author name can contain only letters, spaces, hyphens, apostrophes and periods."
             )
@@ -40,8 +36,15 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
     def validate_name(self, value):
+        # Remove extra spaces
+        value = value.strip()
+
+        # Check whether the category already exists
         if Category.objects.filter(name__iexact=value).exists():
             raise serializers.ValidationError("Category already exists.")
+
+        # Return the validated category name
+        return value
 
 
 class PhysicalVariantSerializer(serializers.ModelSerializer):

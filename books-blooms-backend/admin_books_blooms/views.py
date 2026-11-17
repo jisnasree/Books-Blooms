@@ -30,6 +30,12 @@ from admin_books_blooms.serializers import (
 User = get_user_model()
 
 
+class AdminOrderPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+
 class AdminDashboardSummaryView(APIView):
     permission_classes = [IsAdminUser]
 
@@ -42,6 +48,7 @@ class AdminDashboardSummaryView(APIView):
                 "totalCustomers": User.objects.count(),
                 "totalOrders": Order.objects.count(),
                 "totalCoupons": Coupon.objects.count(),
+                "totalOffers": Offer.objects.count(),
             }
         )
 
@@ -49,6 +56,10 @@ class AdminDashboardSummaryView(APIView):
 class CustomerListView(ListAPIView):
     serializer_class = CustomerSerializer
     permission_classes = [IsAdminUser]
+    pagination_class = AdminOrderPagination
+    filter_backends = [SearchFilter] 
+    search_fields = ["first_name", "last_name", "email"] 
+
 
     def get_queryset(self):
         return User.objects.filter(is_staff=False, is_superuser=False).order_by(
@@ -90,12 +101,6 @@ class CustomerBlockView(APIView):
                 "is_blocked": customer.is_blocked,
             }
         )
-
-
-class AdminOrderPagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = "page_size"
-    max_page_size = 100
 
 
 class AdminOrderListView(ListAPIView):

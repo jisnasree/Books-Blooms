@@ -12,6 +12,9 @@ function BooksManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalBooks, setTotalBooks] = useState(0);
+  const [pageSize] = useState(10);
   const [formData, setFormData] = useState({
     title: "",
     author: "",
@@ -29,7 +32,9 @@ function BooksManagement() {
   const [authors, setAuthors] = useState([]);
   const [categories, setCategories] = useState([]);
 
-  // Fetch all books from the Django API
+  const totalPages = Math.ceil(totalBooks / pageSize);
+
+  // Fetch books from the Django API with pagination
   useEffect(() => {
     async function fetchBooks() {
       const token = sessionStorage.getItem("authToken");
@@ -41,7 +46,15 @@ function BooksManagement() {
       }
 
       try {
-        const response = await fetch(CATALOG_BOOKS_URL, {
+        const params = new URLSearchParams();
+        params.set("page", currentPage);
+        params.set("page_size", pageSize);
+
+        if (searchTerm.trim()) {
+          params.set("search", searchTerm.trim());
+        }
+
+        const response = await fetch(`${CATALOG_BOOKS_URL}?${params.toString()}`, {
           method: "GET",
           headers: {
             Authorization: `Token ${token}`,
@@ -58,6 +71,7 @@ function BooksManagement() {
 
         // Supports either a plain array or DRF paginated results.
         setBooks(Array.isArray(data) ? data : data.results ?? []);
+        setTotalBooks(data.count || data.length);
       } catch (err) {
         setError(err.message || "Unable to load books.");
       } finally {
@@ -66,17 +80,7 @@ function BooksManagement() {
     }
 
     fetchBooks();
-  }, []);
-
-
-  // Filter books by title or author
-  const filteredBooks = books.filter((book) => {
-    const search = searchTerm.trim().toLowerCase();
-    return (
-      book.title?.toLowerCase().includes(search) ||
-      book.author_name?.toLowerCase().includes(search)
-    );
-  });
+  }, [currentPage, searchTerm, pageSize]);
 
 
   // Get Authors list
@@ -177,8 +181,8 @@ function BooksManagement() {
           )
         );
       } else {
-        // Add the new book to the list.
-        setBooks((previousBooks) => [...previousBooks, data]);
+        // Reset to first page to see the new book
+        setCurrentPage(1);
       }
 
       setEditingBook(null);
@@ -226,6 +230,11 @@ function BooksManagement() {
       setBooks((previousBooks) =>
         previousBooks.filter((item) => item.id !== book.id)
       );
+
+      // Refresh current page if no books left
+      if (books.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
     } catch (err) {
       setError(err.message || "Something went wrong.");
     }
@@ -288,6 +297,7 @@ function BooksManagement() {
       </p>
     );
   }
+
   return (
     <div className="p-6">
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -324,7 +334,10 @@ function BooksManagement() {
           <input
             type="text"
             value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
+            onChange={(event) => {
+              setSearchTerm(event.target.value);
+              setCurrentPage(1);
+            }}
             placeholder="Search by book title or author..."
             className="w-full rounded-lg border border-gray-300 bg-white py-3 pl-10 pr-4 text-sm outline-none focus:border-green-700 focus:ring-1 focus:ring-green-700"
           />
@@ -349,7 +362,10 @@ function BooksManagement() {
 
         <button
           type="button"
-          onClick={() => setSearchTerm("")}
+          onClick={() => {
+            setSearchTerm("");
+            setCurrentPage(1);
+          }}
           disabled={!searchTerm}
           className="shrink-0 rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
@@ -361,7 +377,7 @@ function BooksManagement() {
 
       {/* Books table */}
       <BooksTable
-        books={filteredBooks}
+        books={books}
         onEdit={(book) => {
           setEditingBook(book);
           setFormData({
@@ -384,10 +400,52 @@ function BooksManagement() {
         }}
         onDelete={handleDelete}
       />
-      {/* Result count */}
-      <p className="mt-4 text-sm text-gray-500">
-        Showing {filteredBooks.length} of {books.length} books
-      </p>
+
+      {/* Pagination Controls */}
+      {totalBooks > 0 && (
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {/* Result count */}
+          <p className="text-sm text-gray-500">
+            Showing{" "}
+            {totalBooks === 0 ? 0 : (currentPage - 1) * pageSize + 1}
+            {" "}–{" "}
+            {Math.min(currentPage * pageSize, totalBooks)}
+            {" "}of {totalBooks} books
+          </p>
+
+          {/* Previous and Next buttons */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => page - 1)}
+              disabled={currentPage === 1 || loading}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </button>
+
+            <span className="text-sm text-gray-600">
+              Page {currentPage} of {Math.max(1, totalPages)}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => page + 1)}
+              disabled={currentPage === totalPages || loading}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Result count - only show if no pagination needed */}
+      {totalBooks <= pageSize && (
+        <p className="mt-4 text-sm text-gray-500">
+          Showing {books.length} books
+        </p>
+      )}
     </div>
   );
 }
