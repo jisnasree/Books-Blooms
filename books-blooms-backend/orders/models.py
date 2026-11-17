@@ -149,38 +149,3 @@ class Coupon(models.Model):
 
     def __str__(self):
         return f"{self.code} ({self.discount_percent}% off)"
-
-
-class OrderReturn(models.Model):
-
-    class ReturnStatus(models.TextChoices):
-        REQUESTED = "REQUESTED", "Requested"
-        APPROVED = "APPROVED", "Approved"
-        REJECTED = "REJECTED", "Rejected"
-        PICKUP_SCHEDULED = "PICKUP_SCHEDULED", "Pickup Scheduled"
-        RECEIVED = "RECEIVED", "Received"
-        REFUNDED = "REFUNDED", "Refunded"
-
-    order = models.OneToOneField(
-        Order,
-        on_delete=models.PROTECT,
-        related_name="return_request",
-    )
-
-    reason = models.CharField(max_length=100)
-
-    comments = models.TextField(
-        blank=True,
-    )
-
-    status = models.CharField(
-        max_length=20,
-        choices=ReturnStatus.choices,
-        default=ReturnStatus.REQUESTED,
-    )
-
-    requested_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"Return for Order #{self.order.id}"
